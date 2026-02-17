@@ -9,37 +9,24 @@
     <style>
         :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; --purple: #bc13fe; --bg: #0a0a0a; }
         body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; touch-action: none; color: white; }
-        
-        /* الواجهة العلوية */
         #ui-header { position: absolute; top: 0; width: 100%; height: 85px; background: rgba(0,0,0,0.95); display: none; justify-content: space-between; align-items: center; z-index: 1000; border-bottom: 2px solid #333; padding: 5px 15px 0 15px; box-sizing: border-box; }
         .stat-group { display: flex; flex-direction: column; gap: 2px; min-width: 90px; }
         .stat-item { font-size: 13px; font-weight: bold; }
         .pause-btn { background: none; border: 1.5px solid white; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; }
-
-        /* القوائم */
         .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.96); }
         .menu-box { background: #151515; padding: 20px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 90%; max-width: 400px; }
         .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #333; transition: 0.2s; }
         .btn:active { transform: scale(0.95); }
-
-        /* المتجر */
         .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; margin: 10px 0; padding: 10px; background: #111; border-radius: 15px; border: 1px solid #222; }
         .skin-item { background: #222; height: 80px; border-radius: 12px; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; position: relative; }
         .price-tag { font-size: 9px; margin-top: 6px; font-weight: bold; }
-
-        /* الأزرار العائمة */
-        #nuke-btn { position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; background: var(--red); border-radius: 50%; border: 3px solid white; font-size: 30px; display: none; z-index: 5000; box-shadow: 0 0 20px var(--red); }
         #notify { position: fixed; top: 95px; left: 50%; transform: translateX(-50%); padding: 8px 15px; border-radius: 20px; font-size: 12px; display: none; z-index: 7000; font-weight: bold; text-align: center; }
-
-        /* زر الواتساب */
-        .wa-btn { background: #25D366; color: white; text-decoration: none; padding: 12px; border-radius: 12px; display: block; margin-top: 10px; font-size: 14px; font-weight: bold; border: 1px solid #fff; }
+        .wa-btn { background: #25D366; color: white; text-decoration: none; padding: 10px; border-radius: 10px; display: block; margin-top: 10px; font-size: 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-
     <div id="notify"></div>
-    <button id="nuke-btn" onclick="useNuke()">💣</button>
-
     <div id="loading-screen" class="overlay"><h2 style="color:var(--neon)">SAM CLOUD CONNECT...</h2></div>
 
     <div id="main-menu" class="overlay" style="display:none">
@@ -56,29 +43,22 @@
         <div class="menu-box">
             <h3 style="color:var(--purple); margin:0;">EXCHANGE & ITEMS</h3>
             <button class="btn" style="background:var(--gold); color:black; font-size:11px" onclick="exchangeCoinsForCash()">CONVERT: 50,000 💰 ➔ 10 💵</button>
-            <button class="btn" style="background:var(--red)" onclick="buyNuke()">BUY NUKE 💣 (10 💵)</button>
-            
             <h3 style="color:var(--neon); margin-top:10px; margin-bottom:5px;">SKINS</h3>
             <div id="shop-grid" class="shop-grid"></div>
-            
-            <a href="https://wa.me/201287837118?text=أنا عاوز أشحن كاش في لعبة Blocksam" target="_blank" class="wa-btn">RECHARGE CASH 💬 (01287837118)</a>
-            
+            <a href="https://wa.me/201287837118?text=Hello Sam! I want to recharge cash" target="_blank" class="wa-btn">RECHARGE VIA WHATSAPP 💬</a>
             <button class="btn" onclick="closeShop()" style="margin-top:10px">BACK</button>
         </div>
     </div>
 
     <div id="ui-header">
         <div class="stat-group">
-            <div style="color:#888; font-size:9px">SAM_Op</div>
+            <div style="color:#888; font-size:9px">PLAYER</div>
             <div class="stat-item"><span id="p1-score-ui" style="color:var(--gold)">0</span> 💰</div>
             <div class="stat-item"><span id="p1-cash-ui" style="color:var(--green)">0</span> 💵</div>
         </div>
-        <div style="text-align: center;">
-            <div style="font-size: 10px; color: var(--gold);">LVL: <span id="lvl-display">1</span></div>
-            <button class="pause-btn" onclick="togglePause()">⏸️</button>
-        </div>
+        <button class="pause-btn" onclick="togglePause()">⏸️</button>
         <div id="p2-ui" class="stat-group" style="text-align: right; opacity: 0;">
-            <div style="color:#888; font-size:9px">Dark_SAM</div>
+            <div style="color:#888; font-size:9px">OPPONENT</div>
             <div class="stat-item">💰 <span id="p2-score-ui" style="color:var(--gold)">0</span></div>
         </div>
     </div>
@@ -86,29 +66,7 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
-    // --- 🔊 نظام الصوت ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(freq, type, duration) {
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type; 
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
-    }
-
-    // --- 📱 نظام الـ PWA ---
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); deferredPrompt = e;
-        document.getElementById('install-btn').style.display = 'block';
-    });
-
-    // --- ☁️ إعدادات APPWRITE ---
-    const { Client, Account, Databases, ID, Functions } = Appwrite;
+    const { Client, Account, Databases, ID } = Appwrite;
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -119,14 +77,16 @@
 
     const DB_ID = '69943bf8001373c3c286', COL_ID = 'players';
     let playerDocId = localStorage.getItem('blocksam_id');
-    let game = { active: false, paused: false, level: 1, nukes: 0 };
+    let game = { active: false, paused: false };
     let p1 = { x: 200, y: 300, tx: 200, ty: 300, score: 0, cash: 0, icon: '🥷' };
+    let p2 = { x: -200, y: -200, score: 0, active: false, icon: '🤖' };
     let items = [], monsters = [], p1_lives = 3;
 
-    // --- بيانات المتجر ---
     const skinsData = [
         {icon:'🥷', price:0, type:'coin'}, {icon:'🦊', price:2000, type:'coin'}, {icon:'🦁', price:5000, type:'coin'},
-        {icon:'👽', price:5, type:'cash'}, {icon:'🐲', price:10, type:'cash'}, {icon:'🤖', price:30, type:'cash'}
+        {icon:'🐼', price:8000, type:'coin'}, {icon:'🐯', price:10000, type:'coin'}, {icon:'👽', price:5, type:'cash'},
+        {icon:'🐲', price:10, type:'cash'}, {icon:'👺', price:15, type:'cash'}, {icon:'🤡', price:20, type:'cash'},
+        {icon:'👻', price:25, type:'cash'}, {icon:'🤖', price:30, type:'cash'}, {icon:'🦄', price:50, type:'cash'}
     ];
 
     async function initCloud() {
@@ -136,8 +96,9 @@
                 const doc = await databases.getDocument(DB_ID, COL_ID, playerDocId);
                 p1.score = doc.coins; p1.cash = doc.cash; p1.icon = doc.current_skin;
             } else { await createNewUser(); }
-        } catch(e) { console.log("Cloud Error"); }
-        hideLoading();
+        } catch(e) {}
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
     }
 
     async function createNewUser() {
@@ -145,46 +106,21 @@
         playerDocId = d.$id; localStorage.setItem('blocksam_id', playerDocId);
     }
 
-    function hideLoading() {
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('main-menu').style.display = 'flex';
-    }
-
     async function sync() {
         if(!playerDocId) return;
-        try {
-            await databases.updateDocument(DB_ID, COL_ID, playerDocId, { 
-                coins: p1.score, cash: p1.cash, current_skin: p1.icon 
-            });
-        } catch(e) {}
+        try { await databases.updateDocument(DB_ID, COL_ID, playerDocId, { coins: p1.score, cash: p1.cash, current_skin: p1.icon }); } catch(e) {}
     }
 
-    // --- وظائف المتجر المدمجة ---
-    function exchangeCoinsForCash() {
-        if(p1.score >= 50000) {
-            p1.score -= 50000; p1.cash += 10;
-            playSound(800, 'square', 0.2);
-            showMsg("تم التحويل بنجاح! +10 💵", "var(--green)"); sync();
-        } else {
-            playSound(150, 'sawtooth', 0.3);
-            showMsg("محتاج 50,000 كوين!", "var(--red)");
-        }
-    }
-
-    function buySkin(index) {
-        const s = skinsData[index];
-        if (s.type === 'coin' && p1.score >= s.price) {
-            p1.score -= s.price; p1.icon = s.icon; playSound(600, 'sine', 0.2); sync();
-        } else if (s.type === 'cash' && p1.cash >= s.price) {
-            p1.cash -= s.price; p1.icon = s.icon; playSound(900, 'sine', 0.3); sync();
-        }
-        openShop();
-    }
-
-    function buyNuke() {
-        if(p1.cash >= 10) { 
-            p1.cash -= 10; game.nukes++; playSound(400, 'square', 0.4); sync();
-        } else showMsg("محتاج 10 كاش!", "orange");
+    function searchForPlayer() {
+        document.getElementById('main-menu').style.display = 'none';
+        const screen = document.createElement('div'); screen.className = 'overlay';
+        screen.innerHTML = '<div style="text-align:center"><div style="border:4px solid var(--neon); border-top:4px solid transparent; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px"></div><h3>SEARCHING FOR PLAYER...</h3></div>'; 
+        document.body.appendChild(screen);
+        setTimeout(() => { 
+            screen.remove(); p2.active = true; 
+            document.getElementById('p2-ui').style.opacity = '1'; 
+            startMode('multi'); 
+        }, 2500);
     }
 
     function openShop() {
@@ -192,12 +128,20 @@
         const grid = document.getElementById('shop-grid'); grid.innerHTML = '';
         skinsData.forEach((s, i) => {
             const d = document.createElement('div'); d.className = 'skin-item';
-            d.innerHTML = `<div>${s.icon}</div><div class="price-tag">${s.price}</div>`;
-            d.onclick = () => buySkin(i); grid.appendChild(d);
+            d.innerHTML = `<div>${s.icon}</div><div class="price-tag" style="color:${s.type==='coin'?'var(--gold)':'var(--green)'}">${s.price}</div>`;
+            d.onclick = () => {
+                if(s.type==='coin' && p1.score >= s.price) { p1.score-=s.price; p1.icon=s.icon; sync(); }
+                else if(s.type==='cash' && p1.cash >= s.price) { p1.cash-=s.price; p1.icon=s.icon; sync(); }
+                openShop();
+            };
+            grid.appendChild(d);
         });
     }
 
-    function closeShop() { document.getElementById('shop-screen').style.display = 'none'; }
+    function exchangeCoinsForCash() {
+        if(p1.score >= 50000) { p1.score -= 50000; p1.cash += 10; sync(); showMsg("CONVERTED!", "green"); }
+        else showMsg("NEED 50,000!", "red");
+    }
 
     function startMode() {
         game.active = true;
@@ -210,19 +154,24 @@
         if (!game.active || game.paused) { requestAnimationFrame(animate); return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // رسم اللاعب
         p1.x += (p1.tx - p1.x) * 0.15; p1.y += (p1.ty - p1.y) * 0.15;
-        ctx.font = "50px serif"; ctx.fillText(p1.icon, p1.x, p1.y);
+        ctx.font = "50px serif"; ctx.textAlign = "center"; ctx.fillText(p1.icon, p1.x, p1.y);
 
-        // العناصر والوحوش
-        items.forEach((it, i) => {
-            ctx.font = "30px serif"; ctx.fillText(it.type==='cash'?"💵":"💰", it.x, it.y);
-            if(Math.hypot(p1.x-it.x, p1.y-it.y) < 40) {
-                items.splice(i,1); 
-                if(it.type==='cash') { p1.cash++; playSound(1200, 'sine', 0.1); } 
-                else { p1.score+=500; playSound(800, 'sine', 0.1); }
-                sync();
+        if (p2.active) {
+            let target = items.find(i => i.active);
+            if (target) {
+                let angle = Math.atan2(target.y - p2.y, target.x - p2.x);
+                p2.x += Math.cos(angle) * 3; p2.y += Math.sin(angle) * 3;
+                if(Math.hypot(p2.x-target.x, p2.y-target.y) < 30) { target.active = false; p2.score += 500; }
             }
+            ctx.fillText(p2.icon, p2.x, p2.y);
+            document.getElementById('p2-score-ui').innerText = p2.score;
+        }
+
+        items.forEach((it, i) => {
+            if(!it.active) return;
+            ctx.font = "30px serif"; ctx.fillText(it.type==='cash'?"💵":"💰", it.x, it.y);
+            if(Math.hypot(p1.x-it.x, p1.y-it.y) < 40) { it.active = false; if(it.type==='cash') p1.cash++; else p1.score+=500; sync(); }
         });
 
         document.getElementById('p1-score-ui').innerText = p1.score;
@@ -230,14 +179,11 @@
         requestAnimationFrame(animate);
     }
 
-    function showMsg(t, c) { 
-        const n = document.getElementById('notify'); n.innerText = t; 
-        n.style.background = c; n.style.display = 'block'; 
-        setTimeout(()=>n.style.display='none', 2000); 
-    }
-
+    function closeShop() { document.getElementById('shop-screen').style.display = 'none'; }
+    function togglePause() { game.paused = !game.paused; }
+    function showMsg(t, c) { const n = document.getElementById('notify'); n.innerText = t; n.style.background = c; n.style.display = 'block'; setTimeout(()=>n.style.display='none', 2000); }
     canvas.addEventListener('touchmove', (e) => { p1.tx = e.touches[0].clientX; p1.ty = e.touches[0].clientY; });
-    setInterval(() => { if(game.active) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.08?'cash':'coin' }); }, 2000);
+    setInterval(() => { if(game.active) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.08?'cash':'coin', active: true }); }, 2000);
 
     initCloud();
 </script>
