@@ -1,0 +1,21 @@
+{
+  "short_name": "BlockSam",
+  "name": "BLOCKSAM v1.0 - MEGA MARKET",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "cover.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#0a0a0a",
+  "theme_color": "#00f2ff",
+  "display": "standalone",
+  "orientation": "portrait"
+}
