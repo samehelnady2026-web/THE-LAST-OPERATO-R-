@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM v3.6 - MARKET FIXED</title>
+    <title>BLOCKSAM v3.7 - MEGA MARKET</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; --bg: #0a0a0a; }
@@ -15,9 +15,10 @@
         .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.96); }
         .menu-box { background: #151515; padding: 20px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 90%; max-width: 400px; }
         .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #333; }
-        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; margin: 10px 0; padding: 10px; background: #111; border-radius: 15px; }
-        .skin-item { background: #222; height: 75px; border-radius: 12px; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; position: relative; }
-        .price-tag { font-size: 9px; margin-top: 4px; font-weight: bold; }
+        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; margin: 10px 0; padding: 10px; background: #111; border-radius: 15px; border: 1px solid #222; }
+        .skin-item { background: #222; height: 80px; border-radius: 12px; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; position: relative; transition: 0.2s; }
+        .skin-item:active { transform: scale(0.9); }
+        .price-tag { font-size: 9px; margin-top: 6px; font-weight: bold; }
         #nuke-btn { position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; background: var(--red); border-radius: 50%; border: 3px solid white; font-size: 30px; display: none; z-index: 5000; box-shadow: 0 0 20px var(--red); }
         #notify { position: fixed; top: 95px; left: 50%; transform: translateX(-50%); padding: 8px 15px; border-radius: 20px; font-size: 12px; display: none; z-index: 7000; font-weight: bold; }
     </style>
@@ -30,7 +31,7 @@
     <div id="loading-screen" class="overlay"><h2 style="color:var(--neon)">SAm CLOUD CONNECT...</h2></div>
 
     <div id="main-menu" class="overlay" style="display:none">
-        <h1 style="color:var(--neon); margin:0;">BLOCKSAM v3.6</h1>
+        <h1 style="color:var(--neon); margin:0;">BLOCKSAM v3.7</h1>
         <div class="menu-box">
             <button class="btn" style="background:var(--gold); color:black" onclick="startMode('solo')">SOLO MISSION</button>
             <button class="btn" style="background:var(--neon); color:black" onclick="searchForPlayer()">SEARCH FOR PLAYER 🌐</button>
@@ -78,12 +79,16 @@
     let p2 = { x: -200, y: -200, score: 0, cash: 0, icon: '🤖', active: false };
     let items = [], monsters = [], portal = { active: false }, p1_lives = 3;
     
-    // إعدادات السكينات والأسعار
+    // إعدادات السكينات والأسعار (مصفوفة كائنات مصلحة)
     const skinsData = [
-        {icon:'🥷', price:0, type:'coin'}, {icon:'🦊', price:5000, type:'coin'},
-        {icon:'🐼', price:10000, type:'coin'}, {icon:'🦁', price:20000, type:'coin'},
-        {icon:'👽', price:5, type:'cash'}, {icon:'🐲', price:10, type:'cash'},
-        {icon:'🤖', price:15, type:'cash'}, {icon:'💀', price:20, type:'cash'}
+        {icon:'🥷', price:0, type:'coin'}, {icon:'🦊', price:2000, type:'coin'}, {icon:'🦁', price:5000, type:'coin'}, {icon:'🐼', price:8000, type:'coin'},
+        {icon:'🐯', price:10000, type:'coin'}, {icon:'🐱', price:12000, type:'coin'}, {icon:'🐭', price:15000, type:'coin'}, {icon:'🐹', price:20000, type:'coin'},
+        {icon:'👽', price:5, type:'cash'}, {icon:'🐲', price:10, type:'cash'}, {icon:'👺', price:15, type:'cash'}, {icon:'🤡', price:20, type:'cash'},
+        {icon:'👻', price:25, type:'cash'}, {icon:'🤖', price:30, type:'cash'}, {icon:'🐰', price:35, type:'cash'}, {icon:'🐻', price:40, type:'cash'},
+        {icon:'🐨', price:45, type:'cash'}, {icon:'🐮', price:50, type:'cash'}, {icon:'🐷', price:55, type:'cash'}, {icon:'🐸', price:60, type:'cash'},
+        {icon:'🐵', price:65, type:'cash'}, {icon:'🐔', price:70, type:'cash'}, {icon:'🐧', price:75, type:'cash'}, {icon:'🐦', price:80, type:'cash'},
+        {icon:'🐤', price:85, type:'cash'}, {icon:'🐣', price:90, type:'cash'}, {icon:'🐥', price:95, type:'cash'}, {icon:'🐺', price:100, type:'cash'},
+        {icon:'🐗', price:110, type:'cash'}, {icon:'🦄', price:150, type:'cash'}
     ];
 
     async function initCloud() {
@@ -110,23 +115,22 @@
         if (s.type === 'coin' && p1.score >= s.price) {
             p1.score -= s.price; p1.icon = s.icon; showMsg("EQUIPPED!", "green"); sync();
         } else if (s.type === 'cash' && p1.cash >= s.price) {
-            p1.cash -= s.price; p1.icon = s.icon; showMsg("VIP SKIN ON!", "#bc13fe"); sync();
+            p1.cash -= s.price; p1.icon = s.icon; showMsg("VIP SKIN!", "#bc13fe"); sync();
+        } else if (s.price === 0) {
+            p1.icon = s.icon; showMsg("EQUIPPED!", "gray"); sync();
         } else {
             showMsg("NOT ENOUGH FUNDS!", "red");
         }
-        openShop(); // تحديث العرض
+        openShop();
     }
 
     function buyNuke() {
-        if(p1.cash >= 10) { p1.cash -= 10; game.nukes++; showMsg("NUKE BOUGHT! 💣", "red"); sync(); }
+        if(p1.cash >= 10) { p1.cash -= 10; game.nukes++; showMsg("NUKE READY! 💣", "red"); sync(); }
         else showMsg("NEED 10 CASH!", "orange");
     }
 
     function useNuke() {
-        if(game.nukes > 0) {
-            game.nukes--; monsters = []; showMsg("BOOM!", "black");
-            if(game.nukes <= 0) document.getElementById('nuke-btn').style.display = 'none';
-        }
+        if(game.nukes > 0) { game.nukes--; monsters = []; showMsg("BOOM!", "black"); if(game.nukes <= 0) document.getElementById('nuke-btn').style.display = 'none'; }
     }
 
     function openShop() {
@@ -143,9 +147,15 @@
     function searchForPlayer() {
         document.getElementById('main-menu').style.display = 'none';
         const screen = document.createElement('div'); screen.className = 'overlay';
-        screen.innerHTML = '<h3>Searching...</h3>'; document.body.appendChild(screen);
-        setTimeout(() => { screen.remove(); p2.active = true; p2.icon = '👺'; document.getElementById('p2-ui').style.opacity = '1'; startMode('multi'); }, 2000);
+        screen.innerHTML = '<div style="text-align:center"><div style="border:4px solid var(--neon); border-top:4px solid transparent; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px"></div><h3>Searching...</h3></div>'; 
+        document.body.appendChild(screen);
+        setTimeout(() => { screen.remove(); p2.active = true; p2.icon = '👺'; document.getElementById('p2-ui').style.opacity = '1'; startMode('multi'); }, 2500);
     }
+    
+    // إضافة أنيميشن Spinner بسيط
+    const style = document.createElement('style');
+    style.innerHTML = '@keyframes spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
 
     function startMode(m) {
         game.active = true; document.getElementById('main-menu').style.display = 'none';
@@ -218,4 +228,4 @@
     initCloud();
 </script>
 </body>
-                </html>
+    </html>
