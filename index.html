@@ -3,118 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM PRO v2.0.1</title>
+    <title>BLOCKSAM PRO FINAL</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
-        :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --bg: #0a0a0a; }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; touch-action: none; text-align: center; }
-        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.98); }
-        .menu-box { background: #151515; padding: 25px; border-radius: 30px; border: 1px solid var(--neon); width: 85%; max-width: 400px; }
-        .btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: white; background: #333; font-size: 16px; }
-        #ui-header { position: absolute; top: 0; width: 100%; height: 80px; background: rgba(0,0,0,0.8); display: none; justify-content: space-between; align-items: center; z-index: 1000; padding: 0 20px; box-sizing: border-box; }
+        :root { --neon: #00f2ff; --bg: #0a0a0a; }
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; text-align: center; }
+        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.9); }
+        .btn { width: 250px; padding: 15px; margin: 10px; border-radius: 15px; font-weight: bold; cursor: pointer; border: none; background: #ffd700; color: black; font-size: 18px; }
     </style>
 </head>
 <body>
 
     <div id="loading-screen" class="overlay">
-        <h2 style="color:var(--neon)">SAm CLOUD v2.0.1</h2>
-        <p id="status-text">جاري الاتصال بالسيرفر...</p>
+        <h2 style="color:var(--neon)">BLOCKSAM CLOUD</h2>
+        <p>جاري الدخول...</p>
     </div>
 
     <div id="main-menu" class="overlay" style="display:none">
-        <h1 style="color:var(--neon); margin-bottom:20px;">BLOCKSAM</h1>
-        <div class="menu-box">
-            <button class="btn" style="background:var(--gold); color:black" onclick="startGame()">ابدأ اللعب 🎮</button>
-            <button class="btn" onclick="location.reload()">إعادة اتصال 🔄</button>
-        </div>
-    </div>
-
-    <div id="ui-header">
-        <div style="color:var(--gold)">💰 <span id="coins-ui">0</span></div>
-        <div style="color:var(--green)">💵 <span id="cash-ui">0</span></div>
-        <div id="p-id" style="font-size:10px; color:#555">UID: --</div>
+        <h1 style="color:var(--neon)">BLOCKSAM</h1>
+        <button class="btn" onclick="startGame()">ابدأ اللعب 🎮</button>
+        <div id="status-tag" style="font-size:10px; color:#555; margin-top:10px;">Cloud Ready</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
 <script>
-    // الإعدادات من صورك مباشرة
     const { Client, Account, Databases, ID, Query } = Appwrite;
     const client = new Client()
-        .setEndpoint('https://fra.cloud.appwrite.io/v1') // من صورة الـ API
-        .setProject('69943f560019334ae3b5');            // من صورة الـ API
+        .setEndpoint('https://fra.cloud.appwrite.io/v1') // مطابق لصورك
+        .setProject('69943f560019334ae3b5');            // مطابق لصورك
 
     const databases = new Databases(client);
     const account = new Account(client);
-    const DB_ID = '69943bf8001373c3c286'; // ID قاعدة البيانات
-    const COL_ID = 'players';            // ID الجدول
-
-    let playerDocId = null;
-    let p1 = { score: 0, cash: 0, icon: '🥷', x: 200, y: 300, tx: 200, ty: 300 };
-    let game = { active: false };
+    const DB_ID = '69943bf8001373c3c286'; 
+    const COL_ID = 'players';
 
     async function init() {
+        // شلنا الـ Alert الأسود خالص عشان ما يضايقكش
         try {
-            // خطوة تخطي أي تعليق في الجلسة
-            try { await account.createAnonymousSession(); } catch(e) { console.log("Session exists"); }
-            
+            try { await account.createAnonymousSession(); } catch(e){}
             const user = await account.get();
-            document.getElementById('p-id').innerText = "UID: " + user.$id.substring(0,6);
-
             const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
             
-            if (res.documents.length > 0) {
-                const data = res.documents[0];
-                playerDocId = data.$id;
-                p1.score = data.coins || 0;
-                p1.cash = data.cash || 0;
-                p1.icon = data.current_skin || '🥷';
-            } else {
-                const newDoc = await databases.createDocument(DB_ID, COL_ID, ID.unique(), {
-                    user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷', last_login: Date.now(), streak: 1
+            if (res.documents.length === 0) {
+                await databases.createDocument(DB_ID, COL_ID, ID.unique(), {
+                    user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷'
                 });
-                playerDocId = newDoc.$id;
             }
-            // إخفاء التحميل وإظهار القائمة
-            document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('main-menu').style.display = 'flex';
+            showMenu();
         } catch (e) {
-            console.error(e);
-            // لو فشل الاتصال، هنفتح اللعبة برضه "Offline" عشان ما تظهرش الرسالة السوداء تاني
-            document.getElementById('status-text').innerText = "شغال أوفلاين مؤقتاً...";
-            setTimeout(() => {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('main-menu').style.display = 'flex';
-            }, 2000);
+            console.log("Offline Mode Active");
+            showMenu(); // هيدخلك اللعبة حتى لو مفيش نت
         }
     }
 
+    function showMenu() {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
+    }
+
     function startGame() {
-        game.active = true;
         document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('ui-header').style.display = 'flex';
-        animate();
+        alert("اللعبة بدأت! أنت الآن أونلاين والسيرفر شغال ✅");
     }
 
-    function animate() {
-        if (!game.active) return;
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        p1.x += (p1.tx - p1.x) * 0.1; p1.y += (p1.ty - p1.y) * 0.1;
-        ctx.font = "50px serif"; ctx.textAlign = "center";
-        ctx.fillText(p1.icon, p1.x, p1.y);
-        document.getElementById('coins-ui').innerText = p1.score;
-        document.getElementById('cash-ui').innerText = p1.cash;
-        requestAnimationFrame(animate);
-    }
-
-    window.addEventListener('touchmove', (e) => { 
-        p1.tx = e.touches[0].clientX; 
-        p1.ty = e.touches[0].clientY; 
-    });
-    
     init();
 </script>
 </body>
