@@ -97,11 +97,11 @@
             const user = await account.get();
             const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
             if (res.documents.length > 0) {
-                playerDocId = res.documents[0].$id;
+            
                 p1.score = res.documents[0].coins || 0; p1.cash = res.documents[0].cash || 0; p1.icon = res.documents[0].current_skin || '🥷';
             } else {
                 const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷' });
-                playerDocId = d.$id;
+const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69943f560019334ae3b5');                playercocId = d.$id;
             }
         } catch(e) {}
         document.getElementById('loading-screen').style.display = 'none';
