@@ -10,40 +10,23 @@
         :root { 
             --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; 
             --purple: #bc13fe; 
-            /* خلفية هادئة مريحة للعين بدل الأسود */
             --bg: #1a1c2c; 
             --ui-bg: rgba(20, 21, 38, 0.95);
         }
         body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; color: white; display: flex; flex-direction: column; }
-        
-        /* الواجهة العلوية */
-        #ui-header { 
-            width: 100%; height: 85px; background: var(--ui-bg); 
-            display: none; justify-content: space-between; align-items: center; 
-            z-index: 1000; border-bottom: 2px solid #334; padding: 5px 15px 0 15px; box-sizing: border-box; 
-        }
-        
-        /* بوردة اللعب بخلفية متدرجة هادئة */
-        #gameCanvas { 
-            flex-grow: 1; width: 100%; 
-            background: radial-gradient(circle, #232741 0%, #1a1c2c 100%); 
-            display: block; 
-        }
-
+        #ui-header { width: 100%; height: 85px; background: var(--ui-bg); display: none; justify-content: space-between; align-items: center; z-index: 1000; border-bottom: 2px solid #334; padding: 5px 15px 0 15px; box-sizing: border-box; }
+        #gameCanvas { flex-grow: 1; width: 100%; background: radial-gradient(circle, #232741 0%, #1a1c2c 100%); display: block; }
         .stat-group { display: flex; flex-direction: column; gap: 2px; min-width: 90px; }
         .controls-group { display: flex; gap: 10px; align-items: center; }
         .nav-btn { background: none; border: 1.5px solid white; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.3s; }
         .nav-btn:active { background: white; color: black; }
-
         .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(10, 11, 20, 0.97); }
         .menu-box { background: #25283d; padding: 25px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 85%; max-width: 400px; box-shadow: 0 0 20px rgba(0,242,255,0.2); }
         .btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #3d415e; transition: 0.2s; font-size: 14px; }
         .btn:active { transform: scale(0.95); opacity: 0.8; }
-        
         .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #1a1c2c; border-radius: 15px; }
         .skin-item { background: #3d415e; height: 80px; border-radius: 12px; border: 1px solid #555; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
         .price-tag { font-size: 10px; margin-top: 6px; font-weight: bold; }
-
         .wa-btn { background: #25D366; color: white; text-decoration: none; padding: 12px; border-radius: 12px; display: block; margin-top: 10px; font-weight: bold; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -100,6 +83,10 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
+    // --- متغيرات البوابة الحلزونية الجديدة ---
+    let gates = [];
+    let spiralAngle = 0;
+
     function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - (document.getElementById('ui-header').offsetHeight || 85);
@@ -153,10 +140,8 @@
         const screen = document.createElement('div'); screen.className = 'overlay';
         screen.innerHTML = `<div style="text-align:center"><div style="border:4px solid var(--neon); border-top:4px solid transparent; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px"></div><h3>FINDING OPPONENT...</h3><div style="width:150px; height:6px; background:#333; margin:auto; border-radius:3px; overflow:hidden;"><div id="pbar" style="width:0%; height:100%; background:var(--neon); transition:5s linear"></div></div></div>`; 
         document.body.appendChild(screen);
-        
         setTimeout(() => document.getElementById('pbar').style.width = "100%", 10);
         try { await databases.updateDocument(DB_ID, COL_ID, playerDocId, { is_online: true }); } catch(e){}
-
         setTimeout(async () => {
             try {
                 const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('is_online', true), Query.notEqual('$id', playerDocId), Query.limit(1)]);
@@ -175,7 +160,6 @@
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('ui-header').style.display = 'flex';
         resize();
-
         if (mode === 'solo') {
             p2.active = false; 
             document.getElementById('p2-ui').style.opacity = '0';
@@ -198,12 +182,14 @@
         if (!game.active || game.paused) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        spiralAngle += 0.15; // سرعة دوران الحلزون
+
         // رسم اللاعب
         p1.x += (p1.tx - p1.x) * 0.15; p1.y += (p1.ty - p1.y) * 0.15;
         ctx.font = "50px serif"; ctx.textAlign = "center";
         ctx.fillText(p1.icon, p1.x, p1.y);
 
-        // رسم البوت/الخصم فقط لو مفعل
+        // رسم البوت
         if (p2.active) {
             let target = items.find(it => it.active);
             if (target) {
@@ -216,7 +202,37 @@
             document.getElementById('p2-score-ui').innerText = p2.score;
         }
 
-        // رسم العملات والكاش
+        // رسم البوابات الحلزونية
+        gates.forEach((g) => {
+            if(!g.active) return;
+            g.timer++;
+            if(g.timer > 180) { // تغير مكانها كل 3 ثواني
+                g.x = Math.random() * (canvas.width - 100) + 50;
+                g.y = Math.random() * (canvas.height - 150) + 100;
+                g.timer = 0;
+            }
+            ctx.save();
+            ctx.translate(g.x, g.y);
+            ctx.rotate(spiralAngle);
+            for(let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.strokeStyle = g.type === 'good' ? `rgba(0, 242, 255, ${1 - i*0.2})` : `rgba(255, 71, 87, ${1 - i*0.2})`;
+                ctx.lineWidth = 3;
+                ctx.arc(0, 0, (12 * (i + 1)), 0, Math.PI * 1.5);
+                ctx.stroke();
+            }
+            ctx.restore();
+            ctx.font = "bold 14px sans-serif"; ctx.fillStyle = "white";
+            ctx.fillText((g.value > 0 ? "+" : "") + g.value, g.x, g.y + 5);
+            if(Math.hypot(p1.x - g.x, p1.y - g.y) < 40) {
+                p1.score += g.value; if (p1.score < 0) p1.score = 0;
+                g.active = false;
+                showMsg(g.value > 0 ? "WARP SPEED! 🌀" : "SYSTEM ERROR! 💀", g.type === 'good' ? 'var(--neon)' : 'var(--red)');
+                sync();
+            }
+        });
+
+        // رسم العملات
         items.forEach(it => {
             if(!it.active) return;
             ctx.font = "32px serif"; 
@@ -275,7 +291,22 @@
         if(items.length > 20) items.shift();
     }, 1800);
 
+    // توليد الحلزونات كل 5 ثواني
+    setInterval(() => {
+        if(game.active && !game.paused) {
+            const isGood = Math.random() > 0.3;
+            gates.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                type: isGood ? 'good' : 'bad',
+                value: isGood ? 5000 : -3000,
+                active: true, timer: 0
+            });
+            if(gates.length > 3) gates.shift();
+        }
+    }, 5000);
+
     initCloud();
 </script>
 </body>
-</html>
+                </html>
