@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM PRO v2.0</title>
+    <title>BLOCKSAM PRO v2.0.1</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --bg: #0a0a0a; }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; touch-action: none; }
-        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.95); }
-        .menu-box { background: #151515; padding: 25px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 85%; max-width: 400px; }
-        .btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: white; background: #333; }
-        #ui-header { position: absolute; top: 0; width: 100%; height: 80px; background: rgba(0,0,0,0.8); display: none; justify-content: space-between; align-items: center; z-index: 1000; padding: 0 20px; box-sizing: border-box; width: 100%; }
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; touch-action: none; text-align: center; }
+        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.98); }
+        .menu-box { background: #151515; padding: 25px; border-radius: 30px; border: 1px solid var(--neon); width: 85%; max-width: 400px; }
+        .btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: white; background: #333; font-size: 16px; }
+        #ui-header { position: absolute; top: 0; width: 100%; height: 80px; background: rgba(0,0,0,0.8); display: none; justify-content: space-between; align-items: center; z-index: 1000; padding: 0 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div id="loading-screen" class="overlay">
-        <h2 style="color:var(--neon)">SAm CLOUD v2.0</h2>
-        <p>جاري مزامنة بياناتك...</p>
+        <h2 style="color:var(--neon)">SAm CLOUD v2.0.1</h2>
+        <p id="status-text">جاري الاتصال بالسيرفر...</p>
     </div>
 
     <div id="main-menu" class="overlay" style="display:none">
-        <h1 style="color:var(--neon)">BLOCKSAM</h1>
+        <h1 style="color:var(--neon); margin-bottom:20px;">BLOCKSAM</h1>
         <div class="menu-box">
             <button class="btn" style="background:var(--gold); color:black" onclick="startGame()">ابدأ اللعب 🎮</button>
-            <button class="btn" onclick="openShop()">المتجر 🛒</button>
+            <button class="btn" onclick="location.reload()">إعادة اتصال 🔄</button>
         </div>
     </div>
 
@@ -38,15 +38,16 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
+    // الإعدادات من صورك مباشرة
     const { Client, Account, Databases, ID, Query } = Appwrite;
     const client = new Client()
-        .setEndpoint('https://fra.cloud.appwrite.io/v1')
-        .setProject('69943f560019334ae3b5'); // Project ID من صورتك
+        .setEndpoint('https://fra.cloud.appwrite.io/v1') // من صورة الـ API
+        .setProject('69943f560019334ae3b5');            // من صورة الـ API
 
     const databases = new Databases(client);
     const account = new Account(client);
-    const DB_ID = '69943bf8001373c3c286'; 
-    const COL_ID = 'players';            
+    const DB_ID = '69943bf8001373c3c286'; // ID قاعدة البيانات
+    const COL_ID = 'players';            // ID الجدول
 
     let playerDocId = null;
     let p1 = { score: 0, cash: 0, icon: '🥷', x: 200, y: 300, tx: 200, ty: 300 };
@@ -54,11 +55,14 @@
 
     async function init() {
         try {
-            try { await account.createAnonymousSession(); } catch(e){}
+            // خطوة تخطي أي تعليق في الجلسة
+            try { await account.createAnonymousSession(); } catch(e) { console.log("Session exists"); }
+            
             const user = await account.get();
             document.getElementById('p-id').innerText = "UID: " + user.$id.substring(0,6);
 
             const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
+            
             if (res.documents.length > 0) {
                 const data = res.documents[0];
                 playerDocId = data.$id;
@@ -71,11 +75,17 @@
                 });
                 playerDocId = newDoc.$id;
             }
+            // إخفاء التحميل وإظهار القائمة
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
         } catch (e) {
             console.error(e);
-            alert("تأكد من وضع النجمة * في Hostname الـ Platform");
+            // لو فشل الاتصال، هنفتح اللعبة برضه "Offline" عشان ما تظهرش الرسالة السوداء تاني
+            document.getElementById('status-text').innerText = "شغال أوفلاين مؤقتاً...";
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('main-menu').style.display = 'flex';
+            }, 2000);
         }
     }
 
@@ -100,8 +110,12 @@
         requestAnimationFrame(animate);
     }
 
-    window.addEventListener('touchmove', (e) => { p1.tx = e.touches[0].clientX; p1.ty = e.touches[0].clientY; });
+    window.addEventListener('touchmove', (e) => { 
+        p1.tx = e.touches[0].clientX; 
+        p1.ty = e.touches[0].clientY; 
+    });
+    
     init();
 </script>
 </body>
-    </html>
+</html>
