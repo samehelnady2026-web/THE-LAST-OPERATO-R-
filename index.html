@@ -124,23 +124,19 @@
     });
 
     async function initCloud() {
-        try {
-            try { await account.createAnonymousSession(); } catch(e){}
-            if (playerDocId) {
-                const doc = await databases.getDocument(DB_ID, COL_ID, playerDocId);
-                p1.score = doc.coins; p1.cash = doc.cash; p1.icon = doc.current_skin;
-            } else { await createNewUser(); }
-        } catch(e) {}
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('main-menu').style.display = 'flex';
-        resize();
-    }
-
+    // 1. إنشاء مستخدم جديد
     async function createNewUser() {
-        const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { coins: 0, cash: 0, current_skin: '🥷', is_online: false });
-        playerDocId = d.$id; localStorage.setItem('blocksam_id', playerDocId);
+        const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { 
+            coins: 0, 
+            cash: 0, 
+            current_skin: '🥷', 
+            is_online: false 
+        });
+        playerDocId = d.$id; 
+        localStorage.setItem('blocksam_id', playerDocId);
     }
 
+    // 2. البحث عن لاعب (للأونلاين فقط)
     async function searchForPlayer() {
         document.getElementById('main-menu').style.display = 'none';
         const screen = document.createElement('div'); screen.className = 'overlay';
@@ -148,28 +144,50 @@
         document.body.appendChild(screen);
         
         setTimeout(() => document.getElementById('pbar').style.width = "100%", 10);
+        
+        // ببلغ السيرفر إني بدأت أبحث (أنا أونلاين)
         await databases.updateDocument(DB_ID, COL_ID, playerDocId, { is_online: true });
 
         setTimeout(async () => {
             try {
-                const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('is_online', true), Query.notEqual('$id', playerDocId), Query.limit(1)]);
+                const res = await databases.listDocuments(DB_ID, COL_ID, [
+                    Query.equal('is_online', true), 
+                    Query.notEqual('$id', playerDocId), 
+                    Query.limit(1)
+                ]);
+                
                 if (res.documents.length > 0) {
-                    p2.icon = res.documents[0].current_skin; p2.isBot = false;
+                    p2.icon = res.documents[0].current_skin; 
+                    p2.isBot = false; // وجدنا لاعب حقيقي
                 } else {
-                    p2.icon = '🤖'; p2.isBot = true;
+                    p2.icon = '🤖'; 
+                    p2.isBot = true; // مفيش حد.. شغل البوت
                 }
-                screen.remove(); startMode();
-            } catch(e) { screen.remove(); startMode(); }
+                screen.remove(); 
+                startMode('online'); // بنبعت كلمة online هنا
+            } catch(e) { screen.remove(); startMode('online'); }
         }, 5000);
     }
 
-    function startMode() {
+    // 3. فنكشن بدء اللعبة (القلب النابض)
+    function startMode(mode) {
         game.active = true;
+        game.paused = false; // تأكد إنها مش paused
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('ui-header').style.display = 'flex';
         resize();
-        p2.active = true; document.getElementById('p2-ui').style.opacity = '1';
-        animate();
+
+        if (mode === 'solo') {
+            p2.active = false; // في الوضع الفردي الخصم ميتشغلش
+            document.getElementById('p2-ui').style.opacity = '0';
+        } else {
+            p2.active = true; // في وضع البحث الخصم يشتغل (سواء بوت أو حقيقي)
+            document.getElementById('p2-ui').style.opacity = '1';
+            // ريست لمكان الخصم عشان يبدأ من بعيد
+            p2.x = canvas.width; p2.y = canvas.height; p2.score = 0;
+        }
+        
+        animate(); // ابدأ الحركة
     }
 
     function exitToDashboard() {
