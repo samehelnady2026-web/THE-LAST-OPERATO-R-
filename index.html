@@ -3,169 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM v2.2 - OPERATOR EDITION</title>
+    <title>BLOCKSAM - PRO EDITION</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
-        :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --orange: #ff6600; --bg: #f0f2f5; }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; touch-action: none; }
-
-        /* HUD - البار العلوي */
-        #ui-header { position: absolute; top: 10px; width: 95%; left: 50%; transform: translateX(-50%); display: none; justify-content: space-between; z-index: 1000; align-items: center; }
-        .glass-stat { background: #1a1a1a; padding: 6px 12px; border-radius: 15px; color: white; border: 2px solid var(--neon); box-shadow: 0 0 10px var(--neon); display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 13px; }
-        .vip-glow { border-color: var(--gold) !important; box-shadow: 0 0 15px var(--gold) !important; }
-
-        /* القوائم */
-        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(255,255,255,0.96); }
-        .menu-box { background: white; padding: 20px; border-radius: 30px; border: 1px solid #ddd; text-align: center; width: 88%; max-width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #333; font-size: 14px; }
-
-        /* المتجر المدمج (ستايل v1.5) */
-        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; background: #f9f9f9; border-radius: 20px; max-height: 180px; overflow-y: auto; margin: 10px 0; }
-        .skin-item { background: white; height: 50px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #eee; position: relative; }
-        .skin-item.active { border-color: var(--gold); background: #fffce0; }
-        .price-tag { font-size: 7px; font-weight: bold; position: absolute; bottom: 2px; }
-
-        /* لوحة الأوبرايتر VIP */
-        .operator-panel { margin-top: 10px; padding: 12px; border: 2px solid var(--green); border-radius: 20px; background: #f0fff4; }
-        .btn-call { background: var(--orange); margin-bottom: 5px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-        
-        input { width: 65%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; text-align: center; font-size: 12px; }
+        :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; --bg: #0a0a0a; }
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; }
+        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.96); }
+        .menu-box { background: #151515; padding: 25px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 85%; max-width: 400px; }
+        .btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: white; background: #333; transition: 0.3s; }
+        #ui-header { position: absolute; top: 0; width: 100%; height: 90px; background: rgba(0,0,0,0.9); display: none; justify-content: space-between; align-items: center; z-index: 1000; border-bottom: 2px solid #222; padding: 10px 20px; box-sizing: border-box; }
+        .stat-item { font-size: 14px; font-weight: bold; margin: 2px 0; }
+        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 200px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #000; border-radius: 15px; }
+        .skin-item { background: #1a1a1a; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid #333; }
+        .recharge-box { background: #0d1a0d; padding: 15px; border-radius: 20px; border: 1px dashed var(--green); margin-top: 10px; }
+        #notify { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 25px; font-size: 12px; display: none; z-index: 7000; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="main-menu" class="overlay">
-        <h1 style="font-size: 2.8em; margin: 0;">BLOCK<span style="color:var(--neon)">SAM</span></h1>
-        <p style="font-size: 12px; margin-bottom: 20px;">OPERATOR v2.2 | 🌙</p>
+    <div id="notify"></div>
+
+    <div id="reward-screen" class="overlay" style="display:none">
+        <div class="menu-box" style="border-color:var(--gold)">
+            <h2 style="color:var(--gold)">🎁 هدية مـلكية</h2>
+            <p id="reward-msg" style="line-height:1.6"></p>
+            <button class="btn" style="background:var(--gold); color:black" onclick="claimReward()">استلام المكافأة 🚀</button>
+        </div>
+    </div>
+
+    <div id="loading-screen" class="overlay">
+        <h2 style="color:var(--neon)">BLOCKSAM CLOUD</h2>
+        <p style="font-size:12px; color:#666">جاري مزامنة بياناتك مع السيرفر...</p>
+    </div>
+
+    <div id="main-menu" class="overlay" style="display:none">
+        <h1 style="color:var(--neon); margin:0; letter-spacing:3px">BLOCKSAM</h1>
+        <p style="font-size: 10px; color: #444; margin-bottom: 25px;">PRO V2.9 | SYNC SECURE</p>
         <div class="menu-box">
-            <button class="btn" style="background:var(--gold); color:#000" onclick="startMode('single')">SOLO MODE</button>
-            <button class="btn" style="background:var(--neon); color:#000" onclick="startMode('ai')">VERSUS AI 🤖</button>
-            <button class="btn" onclick="openShop()">MARKET & VIP 🛒</button>
+            <button class="btn" style="background:var(--gold); color:black" onclick="startGame()">ابدأ اللعب 🎮</button>
+            <button class="btn" onclick="openShop()">المتجر والشحن 🛒</button>
         </div>
     </div>
 
     <div id="shop-screen" class="overlay" style="display:none">
         <div class="menu-box">
-            <h2 style="margin:0">MARKET</h2>
-            <div style="display:flex; justify-content:center; gap:10px; margin: 5px 0; font-weight: bold;">
-                <span style="color:#b8860b">💰 <span id="shop-coins">0</span></span>
-                <span style="color:var(--green)">💵 <span id="shop-cash">0</span></span>
-            </div>
-            
+            <h3 style="margin:0; color:var(--neon)">المتجر والشحن</h3>
             <div class="shop-grid" id="shop-grid"></div>
-
-            <div class="operator-panel">
-                <p style="font-size: 10px; font-weight: bold; color: var(--orange); margin-bottom: 8px;">VIP RECHARGE (Orange Money)</p>
-                <button class="btn btn-call" onclick="window.location.href='tel:01287837118'">📞 CALL: 01287837118</button>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="promo-input" placeholder="ENTER CODE">
-                    <button class="btn" style="width: 30%; margin:0; background:var(--green)" onclick="checkPromo()">OK</button>
-                </div>
+            
+            <div class="recharge-box">
+                <div style="font-size:11px; color:var(--green); margin-bottom:8px; font-weight:bold">شحن Orange Money</div>
+                <button class="btn" style="background:var(--green); color:black; padding:10px; font-size:11px" onclick="goWhatsApp('باقة 50 كاش / 20 جنيه')">50 💵 = 20 EGP</button>
+                <button class="btn" style="background:var(--green); color:black; padding:10px; font-size:11px" onclick="goWhatsApp('باقة 150 كاش / 50 جنيه')">150 💵 = 50 EGP</button>
             </div>
-            <button class="btn" style="margin-top:10px; background:#eee; color:#333" onclick="closeShop()">CLOSE</button>
+            <button class="btn" style="background:#444" onclick="closeShop()">العودة</button>
         </div>
     </div>
 
     <div id="ui-header">
-        <div style="display:flex; gap:8px;">
-            <div id="p1-box" class="glass-stat"><span id="p1-icon-ui">🥷</span> <span id="p1-score">0</span></div>
-            <div class="glass-stat" style="border-color:var(--green)">💵 <span id="p1-cash">0</span></div>
+        <div class="stat-group">
+            <div class="stat-item" style="color:var(--gold)">💰 <span id="coins-ui">0</span></div>
+            <div class="stat-item" style="color:var(--green)">💵 <span id="cash-ui">0</span></div>
         </div>
-        <div class="glass-stat" style="border-color:#fff">LVL <span id="level-ui">1</span></div>
-        <div id="p2-card" class="glass-stat" style="border-color:#f0f; display:none">🤖 <span id="p2-score">0</span></div>
+        <div id="p-id" style="font-size:10px; color:#555">UID: --</div>
+        <button class="btn" style="width:45px; margin:0" onclick="game.paused = !game.paused">⏸️</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69943f560019334ae3b5');
+    const databases = new Databases(client);
+    const account = new Account(client);
 
-    let p1 = { x:100, y:100, coins:0, cash:0, icon:'🥷', tx:100, ty:100, isVip: false };
-    let p2 = { x:-500, y:-500, score:0, icon:'🤖', active: false };
-    let items = [], gameActive = false, level = 1;
+    const DB_ID = '69943bf8001373c3c286'; // الـ ID من صورتك الأولى
+    const COL_ID = 'players';            // الـ ID من صورتك الثانية
+    const MY_WA = "201287837118";
 
-    const skins = ['🥷','🤖','👽','🦊','🦁','🐯','🐼','🐲','👺','🤡','💀','👻','🧛','🧟','🧙','🤴','👸','🦄','🦖','🦂','🦍','🦓','🐘','🐫','🦒','🦅','🦈','🐙','🐝','🦋'];
-    let owned = ['🥷'];
+    let playerDocId = null;
+    let p1 = { score: 0, cash: 0, icon: '🥷', x: 200, y: 300, tx: 200, ty: 300 };
+    let game = { active: false, paused: false };
 
-    function loadData() {
-        const d = JSON.parse(localStorage.getItem('BLOCKSAM_V22') || '{}');
-        Object.assign(p1, d); owned = d.owned || ['🥷']; updateUI();
+    async function init() {
+        try {
+            try { await account.createAnonymousSession(); } catch(e){}
+            const user = await account.get();
+            document.getElementById('p-id').innerText = "UID: " + user.$id.substring(0,6);
+
+            const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
+            let data;
+            if (res.documents.length > 0) {
+                data = res.documents[0];
+                playerDocId = data.$id;
+                p1.score = data.coins || 0;
+                p1.cash = data.cash || 0;
+                p1.icon = data.current_skin || '🥷';
+            } else {
+                data = await databases.createDocument(DB_ID, COL_ID, ID.unique(), {
+                    user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷', last_login: 0, streak: 0
+                });
+                playerDocId = data.$id;
+            }
+            checkReward(data);
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+        } catch (e) { alert("تأكد من إعداد Permissions في Appwrite!"); }
     }
-    function saveData() { localStorage.setItem('BLOCKSAM_V22', JSON.stringify({...p1, owned})); }
 
-    function updateUI() {
-        document.getElementById('p1-icon-ui').innerText = (p1.isVip ? '👑 ' : '') + p1.icon;
-        if(p1.isVip) document.getElementById('p1-box').classList.add('vip-glow');
+    function checkReward(data) {
+        const now = Date.now();
+        const last = data.last_login || 0;
+        const day = 24 * 60 * 60 * 1000;
+
+        if (now - last > day) {
+            let streak = (now - last < 2 * day) ? (data.streak || 0) + 1 : 1;
+            window.reward = { streak: streak };
+            let m = "";
+            if(streak === 1) { m = "أول يوم ليك! خدي 1000 كوين 💰"; window.reward.val = 1000; window.reward.type = 'coin'; }
+            else if(streak === 3) { m = "عاش! 3 أيام متتالية.. خد 5 كاش 💵"; window.reward.val = 5; window.reward.type = 'cash'; }
+            else if(streak >= 7) { m = "أنت بطل! أسبوع كامل.. هدية تاج الملك 👑"; window.reward.val = '👑'; window.reward.type = 'skin'; }
+            else { m = `يوم ${streak} في السلسلة! خد 500 كوين 💰`; window.reward.val = 500; window.reward.type = 'coin'; }
+            
+            document.getElementById('reward-msg').innerText = m;
+            document.getElementById('reward-screen').style.display = 'flex';
+        }
+    }
+
+    async function claimReward() {
+        const r = window.reward;
+        if(r.type === 'coin') p1.score += r.val;
+        else if(r.type === 'cash') p1.cash += r.val;
+        else if(r.type === 'skin') p1.icon = r.val;
+
+        await databases.updateDocument(DB_ID, COL_ID, playerDocId, {
+            coins: p1.score, cash: p1.cash, current_skin: p1.icon, last_login: Date.now(), streak: r.streak
+        });
+        document.getElementById('reward-screen').style.display = 'none';
+        showMsg("تم استلام الهدية!", "var(--gold)");
+    }
+
+    function goWhatsApp(pack) {
+        window.open(`https://wa.me/${MY_WA}?text=${encodeURIComponent('يا SAm محتاج أشحن ' + pack)}`, '_blank');
     }
 
     function openShop() {
         document.getElementById('shop-screen').style.display = 'flex';
-        document.getElementById('shop-coins').innerText = p1.coins;
-        document.getElementById('shop-cash').innerText = p1.cash;
         const grid = document.getElementById('shop-grid'); grid.innerHTML = '';
-        skins.forEach((s, i) => {
-            let isCash = i >= 10, price = isCash ? (i-9)*10 : i*1000;
-            grid.innerHTML += `<div class="skin-item ${p1.icon===s?'active':''}" onclick="buy('${s}',${price},${isCash})">
-                ${s} <span class="price-tag">${owned.includes(s)?'OWNED':(isCash?'💵':'💰')+price}</span>
-            </div>`;
+        ['🥷','🦊','🦁','🐼','🐯','👽','🐲','🤖','👑','⭐','🔥','🌈'].forEach((icon, i) => {
+            const div = document.createElement('div');
+            div.className = 'skin-item';
+            div.innerHTML = `${icon}<div style="font-size:8px; position:absolute; bottom:2px">${i<2?'FREE':(i*5)+'💵'}</div>`;
+            div.onclick = () => { if(i<2 || p1.cash >= i*5){ p1.icon=icon; sync(); closeShop(); } };
+            grid.appendChild(div);
         });
     }
 
-    window.buy = (s, pr, isCash) => {
-        if(owned.includes(s)) p1.icon = s;
-        else if((!isCash && p1.coins >= pr) || (isCash && p1.cash >= pr)) {
-            if(isCash) p1.cash -= pr; else p1.coins -= pr;
-            owned.push(s); p1.icon = s;
-        } else { alert("Contact Operator to Recharge!"); }
-        saveData(); updateUI(); openShop();
-    };
+    async function sync() {
+        if(playerDocId) await databases.updateDocument(DB_ID, COL_ID, playerDocId, { coins: p1.score, cash: p1.cash, current_skin: p1.icon });
+    }
 
-    window.checkPromo = () => {
-        if(document.getElementById('promo-input').value.toUpperCase() === 'SAM2026') {
-            p1.isVip = true; p1.cash += 100; saveData(); updateUI(); openShop(); alert('VIP ACTIVE! 👑');
-        }
-    };
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-    function startMode(m) {
-        gameActive = true; document.getElementById('main-menu').style.display = 'none';
+    function startGame() {
+        game.active = true; document.getElementById('main-menu').style.display = 'none';
         document.getElementById('ui-header').style.display = 'flex';
-        if(m === 'ai') { p2.active = true; p2.x = 200; document.getElementById('p2-card').style.display = 'flex'; }
-        update();
+        animate();
     }
 
-    function update() {
-        if(!gameActive) return;
-        ctx.fillStyle = '#f0f2f5'; ctx.fillRect(0,0,canvas.width,canvas.height);
-        
-        items.forEach(it => {
-            if(!it.active) return;
-            ctx.font = "24px serif"; ctx.fillText(it.type === 'cash' ? '💵' : '💰', it.x, it.y);
-            if(Math.hypot(p1.x-it.x, p1.y-it.y)<35) { it.active = false; if(it.type==='cash') p1.cash++; else p1.coins+=500; saveData(); }
-            if(p2.active && Math.hypot(p2.x-it.x, p2.y-it.y)<35) { it.active = false; p2.score+=500; }
-        });
-
-        p1.x += (p1.tx - p1.x) * 0.15; p1.y += (p1.ty - p1.y) * 0.15;
-        ctx.font = "35px serif"; ctx.textAlign = "center";
-        ctx.fillText(p1.icon, p1.x, p1.y);
-
-        if(p2.active) {
-            let t = items.find(i=>i.active) || {x:canvas.width/2, y:canvas.height/2};
-            p2.x += (t.x-p2.x)*0.05; p2.y += (t.y-p2.y)*0.05;
-            ctx.fillText(p2.icon, p2.x, p2.y);
-            document.getElementById('p2-score').innerText = p2.score;
-        }
-        
-        document.getElementById('p1-score').innerText = p1.coins;
-        document.getElementById('p1-cash').innerText = p1.cash;
-        requestAnimationFrame(update);
+    function animate() {
+        if (!game.active || game.paused) { requestAnimationFrame(animate); return; }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        p1.x += (p1.tx - p1.x) * 0.1; p1.y += (p1.ty - p1.y) * 0.1;
+        ctx.font = "45px serif"; ctx.textAlign = "center"; ctx.fillText(p1.icon, p1.x, p1.y);
+        document.getElementById('coins-ui').innerText = p1.score;
+        document.getElementById('cash-ui').innerText = p1.cash;
+        requestAnimationFrame(animate);
     }
 
-    canvas.addEventListener('touchstart', (e) => { p1.tx = e.touches[0].clientX; p1.ty = e.touches[0].clientY; });
-    setInterval(() => { if(gameActive) items.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, type:Math.random()<0.1?'cash':'coin', active:true}); }, 2000);
+    canvas.addEventListener('touchmove', (e) => { p1.tx = e.touches[0].clientX; p1.ty = e.touches[0].clientY; });
     function closeShop() { document.getElementById('shop-screen').style.display = 'none'; }
-    window.onload = loadData;
+    function showMsg(t, c) { const n = document.getElementById('notify'); n.innerText = t; n.style.background = c; n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 2000); }
+
+    init();
 </script>
 </body>
-</html>
+                                                                                                   </html>
