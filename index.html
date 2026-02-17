@@ -8,20 +8,26 @@
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; --purple: #bc13fe; --bg: #0a0a0a; }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; touch-action: none; color: white; }
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; touch-action: none; color: white; display: flex; flex-direction: column; }
         
-        /* الواجهة العلوية */
-        #ui-header { position: absolute; top: 0; width: 100%; height: 85px; background: rgba(0,0,0,0.95); display: none; justify-content: space-between; align-items: center; z-index: 1000; border-bottom: 2px solid #333; padding: 5px 15px 0 15px; box-sizing: border-box; }
+        /* الواجهة العلوية ثابتة */
+        #ui-header { 
+            width: 100%; height: 85px; background: rgba(0,0,0,0.95); 
+            display: none; justify-content: space-between; align-items: center; 
+            z-index: 1000; border-bottom: 2px solid #333; padding: 5px 15px 0 15px; box-sizing: border-box; 
+        }
+        
+        /* البوردة تبدأ من تحت الهيدر */
+        #gameCanvas { flex-grow: 1; width: 100%; background: #000; display: block; }
+
         .stat-group { display: flex; flex-direction: column; gap: 2px; min-width: 90px; }
         .controls-group { display: flex; gap: 10px; align-items: center; }
         .nav-btn { background: none; border: 1.5px solid white; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
-        /* القوائم */
         .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.96); }
         .menu-box { background: #151515; padding: 20px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 90%; max-width: 400px; }
         .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #333; transition: 0.2s; }
         
-        /* المتجر */
         .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; margin: 10px 0; padding: 10px; background: #111; border-radius: 15px; }
         .skin-item { background: #222; height: 80px; border-radius: 12px; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
         .price-tag { font-size: 9px; margin-top: 6px; font-weight: bold; }
@@ -78,7 +84,13 @@
     const { Client, Account, Databases, ID, Query } = Appwrite;
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    
+    // ضبط أبعاد الكانفاس لتناسب المساحة المتبقية
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - (document.getElementById('ui-header').offsetHeight || 85);
+    }
+    window.addEventListener('resize', resize);
 
     const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69943f560019334ae3b5');
     const databases = new Databases(client);
@@ -92,35 +104,15 @@
     let items = [];
 
     const skinsData = [
-        // --- 5 سكنات مجانية (Free) ---
-        {icon:'🥷', price:0, type:'coin'},
-        {icon:'🐱', price:0, type:'coin'},
-        {icon:'👮', price:0, type:'coin'},
-        {icon:'🐭', price:0, type:'coin'},
-        {icon:'🤖', price:0, type:'coin'},
-
-        // --- 10 سكنات بالكوينز (استبدال) ---
-        {icon:'🦊', price:2000, type:'coin'},
-        {icon:'🦁', price:5000, type:'coin'},
-        {icon:'🐯', price:10000, type:'coin'},
-        {icon:'🐼', price:15000, type:'coin'},
-        {icon:'🦍', price:25000, type:'coin'},
-        {icon:'🐘', price:40000, type:'coin'},
-        {icon:'🦖', price:60000, type:'coin'},
-        {icon:'🐊', price:85000, type:'coin'},
-        {icon:'🦄', price:120000, type:'coin'},
-        {icon:'🐉', price:200000, type:'coin'},
-
-        // --- 10 سكنات بالكاش فقط (VIP) ---
-        {icon:'👽', price:5, type:'cash'},
-        {icon:'👺', price:10, type:'cash'},
-        {icon:'🧛', price:15, type:'cash'},
-        {icon:'🤡', price:20, type:'cash'},
-        {icon:'👻', price:30, type:'cash'},
-        {icon:'💀', price:50, type:'cash'},
-        {icon:'😈', price:75, type:'cash'},
-        {icon:'👑', price:100, type:'cash'},
-        {icon:'💎', price:250, type:'cash'},
+        {icon:'🥷', price:0, type:'coin'}, {icon:'🐱', price:0, type:'coin'}, {icon:'👮', price:0, type:'coin'},
+        {icon:'🐭', price:0, type:'coin'}, {icon:'🤖', price:0, type:'coin'},
+        {icon:' foxes', icon:'🦊', price:2000, type:'coin'}, {icon:'🦁', price:5000, type:'coin'},
+        {icon:'🐯', price:10000, type:'coin'}, {icon:'🐼', price:15000, type:'coin'}, {icon:'🦍', price:25000, type:'coin'},
+        {icon:'🐘', price:40000, type:'coin'}, {icon:'Rex', icon:'Rex', icon:'🦖', price:60000, type:'coin'}, {icon:'🐊', price:85000, type:'coin'},
+        {icon:'🦄', price:120000, type:'coin'}, {icon:'🐉', price:200000, type:'coin'},
+        {icon:'👽', price:5, type:'cash'}, {icon:'👺', price:10, type:'cash'}, {icon:'🧛', price:15, type:'cash'},
+        {icon:'🤡', price:20, type:'cash'}, {icon:'👻', price:30, type:'cash'}, {icon:'💀', price:50, type:'cash'},
+        {icon:'😈', price:75, type:'cash'}, {icon:'👑', price:100, type:'cash'}, {icon:'💎', price:250, type:'cash'},
         {icon:'⭐', price:500, type:'cash'}
     ];
 
@@ -130,14 +122,6 @@
         e.preventDefault(); deferredPrompt = e;
         document.getElementById('install-btn').style.display = 'block';
     });
-
-    document.getElementById('install-btn').onclick = async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') document.getElementById('install-btn').style.display = 'none';
-        }
-    };
 
     async function initCloud() {
         try {
@@ -149,6 +133,7 @@
         } catch(e) {}
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
+        resize();
     }
 
     async function createNewUser() {
@@ -156,67 +141,33 @@
         playerDocId = d.$id; localStorage.setItem('blocksam_id', playerDocId);
     }
 
-async function searchForPlayer() {
+    async function searchForPlayer() {
         document.getElementById('main-menu').style.display = 'none';
-        const screen = document.createElement('div'); 
-        screen.className = 'overlay';
-        screen.id = "search-overlay";
-        screen.innerHTML = `
-            <div style="text-align:center">
-                <div style="border:4px solid var(--neon); border-top:4px solid transparent; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px"></div>
-                <h3 id="search-status">SEARCHING FOR REAL PLAYER...</h3>
-                <div id="timer-bar" style="width:100%; height:5px; background:#333; margin-top:10px; border-radius:5px; overflow:hidden">
-                    <div id="progress" style="width:0%; height:100%; background:var(--neon); transition:1s linear"></div>
-                </div>
-            </div>`; 
+        const screen = document.createElement('div'); screen.className = 'overlay';
+        screen.innerHTML = `<div style="text-align:center"><div style="border:4px solid var(--neon); border-top:4px solid transparent; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px"></div><h3 id="search-status">SEARCHING...</h3><div style="width:100px; height:4px; background:#333; margin:auto;"><div id="pbar" style="width:0%; height:100%; background:var(--neon); transition:5s linear"></div></div></div>`; 
         document.body.appendChild(screen);
+        
+        setTimeout(() => document.getElementById('pbar').style.width = "100%", 10);
+        await databases.updateDocument(DB_ID, COL_ID, playerDocId, { is_online: true });
 
-        // 1. تحديث حالتي أونلاين فوراً
-        try {
-            await databases.updateDocument(DB_ID, COL_ID, playerDocId, { is_online: true });
-        } catch(e) { console.error("Cloud status error"); }
-
-        let searchTime = 0;
-        const maxWait = 5; // 5 ثواني انتظار
-
-        const searchTick = setInterval(async () => {
-            searchTime++;
-            document.getElementById('progress').style.width = (searchTime / maxWait * 100) + "%";
-
+        setTimeout(async () => {
             try {
-                // البحث عن لاعب حقيقي
-                const res = await databases.listDocuments(DB_ID, COL_ID, [
-                    Query.equal('is_online', true),
-                    Query.notEqual('$id', playerDocId),
-                    Query.limit(1)
-                ]);
-
+                const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('is_online', true), Query.notEqual('$id', playerDocId), Query.limit(1)]);
                 if (res.documents.length > 0) {
-                    clearInterval(searchTick);
-                    const opponent = res.documents[0];
-                    document.getElementById('search-status').innerText = "PLAYER FOUND!";
-                    p2.icon = opponent.current_skin || '👺';
-                    p2.isBot = false;
-                    setTimeout(() => { screen.remove(); startMode(); }, 1000);
-                    return;
+                    p2.icon = res.documents[0].current_skin; p2.isBot = false;
+                } else {
+                    p2.icon = '🤖'; p2.isBot = true;
                 }
-            } catch(e) { console.log("Searching..."); }
-
-            // 2. لو ملقاش حد بعد 5 ثواني.. شغل البوت فوراً
-            if (searchTime >= maxWait) {
-                clearInterval(searchTick);
-                document.getElementById('search-status').innerText = "NO PLAYERS FOUND. BOT ACTIVE!";
-                p2.icon = '🤖';
-                p2.isBot = true;
-                setTimeout(() => { screen.remove(); startMode(); }, 1000);
-            }
-        }, 1000);
+                screen.remove(); startMode();
+            } catch(e) { screen.remove(); startMode(); }
+        }, 5000);
     }
 
     function startMode() {
-        game.active = true; game.paused = false;
+        game.active = true;
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('ui-header').style.display = 'flex';
+        resize();
         p2.active = true; document.getElementById('p2-ui').style.opacity = '1';
         animate();
     }
@@ -226,18 +177,17 @@ async function searchForPlayer() {
         databases.updateDocument(DB_ID, COL_ID, playerDocId, { is_online: false });
         document.getElementById('ui-header').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     function animate() {
-        if (!game.active || game.paused) { requestAnimationFrame(animate); return; }
+        if (!game.active || game.paused) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // لاعب 1
+        // لاعب 1 (الإحداثيات مرتبطة بمكان اللمس ناقص إزاحة الهيدر)
         p1.x += (p1.tx - p1.x) * 0.15; p1.y += (p1.ty - p1.y) * 0.15;
-        ctx.font = "50px serif"; ctx.textAlign = "center"; ctx.fillText(p1.icon, p1.x, p1.y);
+        ctx.font = "50px serif"; ctx.textAlign = "center";
+        ctx.fillText(p1.icon, p1.x, p1.y);
 
-        // الخصم (بوت أو حقيقي - محاكاة حركة)
         if (p2.active) {
             let target = items.find(it => it.active);
             if (target) {
@@ -250,7 +200,6 @@ async function searchForPlayer() {
             document.getElementById('p2-score-ui').innerText = p2.score;
         }
 
-        // العناصر
         items.forEach(it => {
             if(!it.active) return;
             ctx.font = "30px serif"; ctx.fillText(it.type==='cash'?"💵":"💰", it.x, it.y);
@@ -292,11 +241,20 @@ async function searchForPlayer() {
     }
 
     function closeShop() { document.getElementById('shop-screen').style.display = 'none'; }
-    function togglePause() { game.paused = !game.paused; }
+    function togglePause() { game.paused = !game.paused; if(!game.paused) animate(); }
     function showMsg(t, c) { const n = document.getElementById('notify'); n.innerText = t; n.style.background = c; n.style.display = 'block'; setTimeout(()=>n.style.display='none', 2000); }
     
-    canvas.addEventListener('touchmove', (e) => { if(!game.paused) { p1.tx = e.touches[0].clientX; p1.ty = e.touches[0].clientY; } });
-    setInterval(() => { if(game.active && !game.paused) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.08?'cash':'coin', active: true }); }, 2000);
+    canvas.addEventListener('touchmove', (e) => { 
+        if(!game.paused) { 
+            p1.tx = e.touches[0].clientX; 
+            // تعديل Y لتعويض مساحة الهيدر
+            p1.ty = e.touches[0].clientY - 85; 
+        } 
+    });
+
+    setInterval(() => { 
+        if(game.active && !game.paused) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.08?'cash':'coin', active: true }); 
+    }, 2000);
 
     initCloud();
 </script>
