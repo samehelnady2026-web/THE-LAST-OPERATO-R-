@@ -108,7 +108,7 @@ const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setP
         document.getElementById('main-menu').style.display = 'flex';
     }
 
-    async function sync() { if(playerDocId) databases.updateDocument(DB_ID, COL_ID, playerDocId, { coins: p1.score, cash: p1.cash, current_skin: p1.icon }).catch(()=>{}); }
+
 
     function buySkin(index) {
         const s = skinsData[index];
