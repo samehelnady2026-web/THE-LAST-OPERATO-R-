@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
+    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BLOCKSAM v1.0 - MEGA MARKET</title>
@@ -24,6 +25,9 @@
     </style>
 </head>
 <body>
+    <button id="install-btn" class="btn" style="display:none; background:var(--neon); color:black;">
+   INSTALL GAME 📲
+    </button>
 
     <div id="notify"></div>
     <button id="nuke-btn" onclick="useNuke()">💣</button>
@@ -68,6 +72,28 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
+    let deferredPrompt;
+const installBtn = document.getElementById('install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // منع المتصفح من إظهار القائمة التلقائية
+    e.preventDefault();
+    deferredPrompt = e;
+    // إظهار زرار التحميل بتاعنا
+    installBtn.style.display = 'block';
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('User installed the app');
+        }
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+    }
+});
     const { Client, Account, Databases, ID, Query, Functions } = Appwrite; // تم إضافة Functions
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
