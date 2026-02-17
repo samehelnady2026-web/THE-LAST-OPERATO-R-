@@ -68,26 +68,29 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
-    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const { Client, Account, Databases, ID, Query, Functions } = Appwrite; // تم إضافة Functions
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // إعداد الاتصال الصحيح (تم تصحيح cloud)
     const client = new Client()
         .setEndpoint('https://fra.cloud.appwrite.io/v1')
         .setProject('69943f560019334ae3b5');
 
     const databases = new Databases(client);
     const account = new Account(client);
+    const functions = new Functions(client); // تفعيل نظام الفنكشنز
+
     const DB_ID = '69943bf8001373c3c286', COL_ID = 'players';
 
-    let playerDocId = null, game = { active: false, paused: false, level: 1, nukes: 0 };
+    let playerDocId = localStorage.getItem('blocksam_id'); // جلب الـ ID المخزن عشان ما يتكررش
+    let game = { active: false, paused: false, level: 1, nukes: 0 };
     let p1 = { x: 200, y: 300, tx: 200, ty: 300, score: 0, cash: 0, icon: '🥷' };
     let p2 = { x: -200, y: -200, score: 0, cash: 0, icon: '🤖', active: false };
     let items = [], monsters = [], portal = { active: false }, p1_lives = 3;
     
+    // ... (بيانات السكنات كما هي)
     const skinsData = [
         {icon:'🥷', price:0, type:'coin'}, {icon:'🦊', price:2000, type:'coin'}, {icon:'🦁', price:5000, type:'coin'}, {icon:'🐼', price:8000, type:'coin'},
         {icon:'🐯', price:10000, type:'coin'}, {icon:'🐱', price:12000, type:'coin'}, {icon:'🐭', price:15000, type:'coin'}, {icon:'🐹', price:20000, type:'coin'},
@@ -100,23 +103,30 @@
     ];
 
     async function initCloud() {
-        const safety = setTimeout(() => { if(document.getElementById('loading-screen').style.display !== 'none') hideLoading(); }, 2500);
+        const safety = setTimeout(() => hideLoading(), 3000);
         try {
             try { await account.createAnonymousSession(); } catch(e){}
-            const user = await account.get();
-            const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
-            if (res.documents.length > 0) {
-                playerDocId = res.documents[0].$id;
-                p1.score = res.documents[0].coins || 0; 
-                p1.cash = res.documents[0].cash || 0; 
-                p1.icon = res.documents[0].current_skin || '🥷';
-            } else {
-                const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷' });
-                playerDocId = d.$id;
-            }
+            
+            // نظام منع تكرار اللاعبين
+            if (playerDocId) {
+                try {
+                    const doc = await databases.getDocument(DB_ID, COL_ID, playerDocId);
+                    p1.score = doc.coins; p1.cash = doc.cash; p1.icon = doc.current_skin;
+                } catch(e) { createNewUser(); }
+            } else { createNewUser(); }
+
             clearTimeout(safety);
             hideLoading();
         } catch(e) { console.error(e); hideLoading(); }
+    }
+
+    async function createNewUser() {
+        const user = await account.get();
+        const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { 
+            user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷' 
+        });
+        playerDocId = d.$id;
+        localStorage.setItem('blocksam_id', playerDocId);
     }
 
     function hideLoading() {
@@ -124,13 +134,31 @@
         document.getElementById('main-menu').style.display = 'flex';
     }
 
+    // --- نظام المزامنة المحمي الجديد ---
     async function sync() { 
-        if(playerDocId) {
-            await databases.updateDocument(DB_ID, COL_ID, playerDocId, { 
-                coins: p1.score, cash: p1.cash, current_skin: p1.icon 
-            }).catch(()=>{}); 
-        }
+        if(!playerDocId) return;
+
+        const payload = {
+            playerId: playerDocId,
+            newCoins: p1.score,
+            newCash: p1.cash,
+            skin: p1.icon
+        };
+
+        try {
+            const response = await functions.createExecution(
+                'blocksam-logic', // اسم الفنكشن اللي عملناه في Appwrite
+                JSON.stringify(payload)
+            );
+            
+            const result = JSON.parse(response.responseBody);
+            if (!result.success) {
+                console.error("أمن السيرفر: " + result.message);
+                // ممكن هنا ترجع السكور للقديم لو حابب
+            }
+        } catch(e) { console.log("خطأ مزامنة"); }
     }
+    // ---------------------------------
 
     function buySkin(index) {
         const s = skinsData[index];
@@ -151,6 +179,7 @@
         else showMsg("NEED 10 CASH!", "orange");
     }
 
+    // بقية الفنكشنز (animate, search, etc.) كما هي في كودك...
     function useNuke() {
         if(game.nukes > 0) { game.nukes--; monsters = []; showMsg("BOOM!", "black"); if(game.nukes <= 0) document.getElementById('nuke-btn').style.display = 'none'; }
     }
@@ -253,4 +282,4 @@
     initCloud();
 </script>
 </body>
-</html>
+    </html>
