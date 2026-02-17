@@ -157,30 +157,54 @@
     }
 
     async function searchForPlayer() {
+    async function searchForPlayer() {
         document.getElementById('main-menu').style.display = 'none';
         const screen = document.createElement('div'); screen.className = 'overlay';
-        screen.innerHTML = '<div style="text-align:center"><div style="border:4px solid var(--neon); border-top:4px solid transparent; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px"></div><h3 id="search-status">SEARCHING FOR REAL PLAYER...</h3></div>'; 
+        screen.id = "search-overlay"; // أضفنا ID عشان نعرف نمسحه
+        screen.innerHTML = '<div style="text-align:center"><div style="border:4px solid var(--neon); border-top:4px solid transparent; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px"></div><h3 id="search-status">SEARCHING FOR REAL PLAYER...</h3><p id="timer" style="font-size:12px; color:var(--gold)">Wait 5s...</p></div>'; 
         document.body.appendChild(screen);
 
-        // إبلاغ السيرفر أنني أبحث عن تحدي
-        await databases.updateDocument(DB_ID, COL_ID, playerDocId, { is_online: true });
+        // 1. أبلغ السيرفر إني أونلاين
+        try {
+            await databases.updateDocument(DB_ID, COL_ID, playerDocId, { is_online: true });
+        } catch(e) { console.log("Status update failed"); }
 
-        setTimeout(async () => {
+        let secondsLeft = 5;
+        const timerText = document.getElementById('timer');
+
+        // 2. عداد تنازلي للبحث
+        const searchInterval = setInterval(async () => {
+            secondsLeft--;
+            timerText.innerText = `Wait ${secondsLeft}s...`;
+
             try {
-                const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('is_online', true), Query.notEqual('$id', playerDocId), Query.limit(1)]);
-                
+                // محاولة البحث عن لاعب حقيقي
+                const res = await databases.listDocuments(DB_ID, COL_ID, [
+                    Query.equal('is_online', true),
+                    Query.notEqual('$id', playerDocId),
+                    Query.limit(1)
+                ]);
+
                 if (res.documents.length > 0) {
+                    clearInterval(searchInterval); // وقف البحث
                     const opponent = res.documents[0];
                     document.getElementById('search-status').innerText = "PLAYER FOUND!";
-                    p2.icon = opponent.current_skin; p2.isBot = false;
-                } else {
-                    document.getElementById('search-status').innerText = "NO PLAYERS.. STARTING BOT";
-                    p2.icon = '🤖'; p2.isBot = true;
+                    p2.icon = opponent.current_skin || '👺';
+                    p2.isBot = false;
+                    setTimeout(() => { screen.remove(); startMode(); }, 1000);
                 }
-                
-                setTimeout(() => { screen.remove(); startMode(); }, 1500);
-            } catch(e) { screen.remove(); startMode(); }
-        }, 3000);
+            } catch(e) { console.log("Search tick error"); }
+
+            // 3. لو الوقت خلص ومفيش حد.. ادخل بوت
+            if (secondsLeft <= 0) {
+                clearInterval(searchInterval);
+                document.getElementById('search-status').innerText = "NO PLAYERS.. STARTING BOT";
+                p2.icon = '🤖';
+                p2.isBot = true;
+                setTimeout(() => { screen.remove(); startMode(); }, 1000);
+            }
+        }, 1000);
+    }
     }
 
     function startMode() {
