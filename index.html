@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM v3.7 - MEGA MARKET</title>
+    <title>BLOCKSAM v1.0 - MEGA MARKET</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; --bg: #0a0a0a; }
@@ -28,10 +28,10 @@
     <div id="notify"></div>
     <button id="nuke-btn" onclick="useNuke()">💣</button>
 
-    <div id="loading-screen" class="overlay"><h2 style="color:var(--neon)">SAm CLOUD CONNECT...</h2></div>
+    <div id="loading-screen" class="overlay"><h2 style="color:var(--neon)">SAM CLOUD CONNECT...</h2></div>
 
     <div id="main-menu" class="overlay" style="display:none">
-        <h1 style="color:var(--neon); margin:0;">BLOCKSAM v3.7</h1>
+        <h1 style="color:var(--neon); margin:0;">BLOCKSAM v1.0</h1>
         <div class="menu-box">
             <button class="btn" style="background:var(--gold); color:black" onclick="startMode('solo')">SOLO MISSION</button>
             <button class="btn" style="background:var(--neon); color:black" onclick="searchForPlayer()">SEARCH FOR PLAYER 🌐</button>
@@ -51,7 +51,7 @@
 
     <div id="ui-header">
         <div class="stat-group">
-            <div style="color:#888; font-size:9px">SAm_Op</div>
+            <div style="color:#888; font-size:9px">SAM_Op</div>
             <div class="stat-item"><span id="p1-score-ui" style="color:var(--gold)">0</span> 💰</div>
             <div class="stat-item"><span id="p1-cash-ui" style="color:var(--green)">0</span> 💵</div>
         </div>
@@ -60,7 +60,7 @@
             <button class="pause-btn" onclick="togglePause()">⏸️</button>
         </div>
         <div id="p2-ui" class="stat-group" style="text-align: right; opacity: 0;">
-            <div style="color:#888; font-size:9px">Dark_SAm</div>
+            <div style="color:#888; font-size:9px">Dark_SAM</div>
             <div class="stat-item">💰 <span id="p2-score-ui" style="color:var(--gold)">0</span></div>
         </div>
     </div>
@@ -69,7 +69,7 @@
 
 <script>
     const { Client, Account, Databases, ID, Query } = Appwrite;
-    const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69943f560019334ae3b5');
+    const client = new Client().setEndpoint('https://fra.loud.appwrite.io/v1').setProject('69943f560019334ae3b5');
     const databases = new Databases(client);
     const account = new Account(client);
     const DB_ID = '69943bf8001373c3c286', COL_ID = 'players';
