@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM v3.0 - MULTIPLAYER SYSTEM</title>
+    <title>BLOCKSAM v3.1 - FINAL STABLE</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; --bg: #0a0a0a; }
@@ -16,14 +16,9 @@
         .menu-box { background: #151515; padding: 20px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 90%; max-width: 400px; }
         .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #333; }
         .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 280px; overflow-y: auto; margin: 10px 0; padding: 10px; background: #111; border-radius: 15px; border: 1px solid #333; }
-        .skin-item { background: #222; height: 70px; border-radius: 12px; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; position: relative; transition: 0.2s; }
-        .skin-item:active { transform: scale(0.9); background: #333; }
-        .price-tag { font-size: 9px; font-weight: bold; margin-top: 5px; }
+        .skin-item { background: #222; height: 70px; border-radius: 12px; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
         #notify { position: fixed; top: 95px; left: 50%; transform: translateX(-50%); padding: 8px 15px; border-radius: 20px; font-size: 12px; display: none; z-index: 7000; font-weight: bold; }
-        
-        /* انيميشن البحث عن لاعب */
-        .searching-box { display:none; flex-direction: column; align-items: center; gap: 15px; }
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--neon); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid var(--neon); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -31,20 +26,17 @@
 
     <div id="notify"></div>
 
-    <div id="matchmaking-screen" class="overlay" style="display:none">
-        <div class="searching-box" id="searching-ui" style="display:flex">
-            <div class="spinner"></div>
-            <h3>Searching for Operatives...</h3>
-            <p id="search-status" style="font-size:12px; color:#888">Connecting to SAm Cloud...</p>
-        </div>
+    <div id="loading-screen" class="overlay">
+        <h2 style="color:var(--neon)">SAm CLOUD CONNECT...</h2>
     </div>
 
-    <div id="loading-screen" class="overlay">
-        <h2 style="color:var(--neon)">SAm CLOUD READY</h2>
+    <div id="matchmaking-screen" class="overlay" style="display:none">
+        <div class="spinner"></div>
+        <h3 id="search-text">Searching for Operatives...</h3>
     </div>
 
     <div id="main-menu" class="overlay" style="display:none">
-        <h1 style="color:var(--neon); margin:0;">BLOCKSAM v3.0</h1>
+        <h1 style="color:var(--neon); margin:0;">BLOCKSAM v3.1</h1>
         <div class="menu-box">
             <button class="btn" style="background:var(--gold); color:black" onclick="startMode('solo')">SOLO MISSION</button>
             <button class="btn" style="background:var(--neon); color:black" onclick="searchForPlayer()">SEARCH FOR PLAYER 🌐</button>
@@ -52,9 +44,17 @@
         </div>
     </div>
 
+    <div id="shop-screen" class="overlay" style="display:none">
+        <div class="menu-box">
+            <h3 style="color:var(--neon)">MEGA MARKET</h3>
+            <div id="shop-grid" class="shop-grid"></div>
+            <button class="btn" onclick="closeShop()">BACK</button>
+        </div>
+    </div>
+
     <div id="ui-header">
         <div class="stat-group">
-            <div id="cloud-id" style="color:#888; font-size:9px">YOU</div>
+            <div id="cloud-id" style="color:#888; font-size:9px">SAm_Op</div>
             <div class="stat-item"><span id="p1-score-ui" style="color:var(--gold)">0</span> 💰</div>
             <div class="stat-item"><span id="p1-cash-ui" style="color:var(--green)">0</span> 💵</div>
         </div>
@@ -63,7 +63,7 @@
             <button class="pause-btn" onclick="togglePause()">⏸️</button>
         </div>
         <div id="p2-ui" class="stat-group" style="text-align: right; opacity: 0;">
-            <div id="p2-name" style="color:#888; font-size:9px">OPPONENT</div>
+            <div id="p2-name" style="color:#888; font-size:9px">BOT</div>
             <div class="stat-item">💰 <span id="p2-score-ui" style="color:var(--gold)">0</span></div>
             <div class="stat-item">💵 <span id="p2-cash-ui" style="color:var(--green)">0</span></div>
         </div>
@@ -80,87 +80,126 @@
 
     let playerDocId = null, game = { active: false, paused: false, level: 1 };
     let p1 = { x: 200, y: 300, tx: 200, ty: 300, score: 0, cash: 0, icon: '🥷' };
-    let p2 = { x: -100, y: -100, score: 0, cash: 0, icon: '🤖', active: false };
-    let items = [], monsters = [], portal = { active: false }, p1_lives = 3;
+    let p2 = { x: -200, y: -200, score: 0, cash: 0, icon: '🤖', active: false };
+    let items = [], monsters = [], portal = { active: false, x:0, y:0 }, p1_lives = 3;
+    const monsterIcons = ['👾', '👻', '👹', '👺', '🐉', '💀'];
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-    // --- نظام البحث عن لاعبين ---
+    // --- Audio System ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(f, t, d) {
+        try {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
+            o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
+        } catch(e){}
+    }
+    const sfx = { 
+        coin: () => playSfx(800, 'sine', 0.1), 
+        cash: () => { playSfx(600, 'triangle', 0.1); setTimeout(()=>playSfx(900, 'triangle', 0.2), 50); },
+        buy: () => [400, 600, 900].forEach((f,i)=>setTimeout(()=>playSfx(f, 'sine', 0.2), i*80))
+    };
+
+    // --- Cloud Logic ---
+    async function initCloud() {
+        try {
+            try { await account.createAnonymousSession(); } catch(e){}
+            const user = await account.get();
+            const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
+            if (res.documents.length > 0) {
+                playerDocId = res.documents[0].$id;
+                p1.score = res.documents[0].coins || 0; p1.cash = res.documents[0].cash || 0; p1.icon = res.documents[0].current_skin || '🥷';
+            } else {
+                const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷' });
+                playerDocId = d.$id;
+            }
+        } catch(e) {}
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
+    }
+
+    async function sync() { if(playerDocId) databases.updateDocument(DB_ID, COL_ID, playerDocId, { coins: p1.score, cash: p1.cash, current_skin: p1.icon }).catch(()=>{}); }
+
+    // --- Game Logic ---
     function searchForPlayer() {
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('matchmaking-screen').style.display = 'flex';
-        
-        let timeLeft = 3;
-        const interval = setInterval(() => {
-            timeLeft--;
-            if (timeLeft === 2) document.getElementById('search-status').innerText = "Found Player: X_Dark_SAm";
-            if (timeLeft === 1) document.getElementById('search-status').innerText = "Syncing Battle Data...";
-            
-            if (timeLeft <= 0) {
-                clearInterval(interval);
-                document.getElementById('matchmaking-screen').style.display = 'none';
-                p2.active = true;
-                p2.icon = '👺'; // شكل اللاعب الخصم
-                document.getElementById('p2-name').innerText = "X_Dark_SAm";
-                document.getElementById('p2-ui').style.opacity = '1';
-                startMode('multi');
-            }
-        }, 1000);
+        setTimeout(() => { document.getElementById('search-text').innerText = "Player Found: Dark_SAm"; }, 1500);
+        setTimeout(() => {
+            document.getElementById('matchmaking-screen').style.display = 'none';
+            p2.active = true; p2.icon = '👺'; document.getElementById('p2-ui').style.opacity = '1';
+            startMode('multi');
+        }, 3000);
     }
 
-    // --- منطق الريبوت (الذكاء الاصطناعي المعدل) ---
-    function updateAI() {
-        if (!p2.active) return;
-
-        // البحث عن أقرب عملة
-        let nearest = items.find(it => it.active);
-        if (nearest) {
-            let dx = nearest.x - p2.x;
-            let dy = nearest.y - p2.y;
-            let angle = Math.atan2(dy, dx);
-            p2.x += Math.cos(angle) * 3.5;
-            p2.y += Math.sin(angle) * 3.5;
-
-            // تصادم البوت مع العملة (إصلاح مشكلة إنه بيقف عليها)
-            if (Math.hypot(p2.x - nearest.x, p2.y - nearest.y) < 30) {
-                nearest.active = false;
-                if (nearest.type === 'cash') p2.cash++; else p2.score += 500;
-                sfx.coin(); // صوت خفيف للبوت
-            }
-        } else {
-            // لو مفيش عملات، يطارد اللاعب
-            p2.x += (p1.x - p2.x) * 0.02;
-            p2.y += (p1.y - p2.y) * 0.02;
-        }
+    function startMode(m) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        game.active = true; document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('ui-header').style.display = 'flex';
+        animate();
     }
 
-    // --- المحرك الرئيسي ---
     function animate() {
         if (!game.active || game.paused) { requestAnimationFrame(animate); return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Hearts
-        ctx.font = "20px Arial"; ctx.textAlign = "left";
-        ctx.fillText("❤️".repeat(p1_lives), 20, 110);
-
-        // P1
+        // Player 1
         p1.x += (p1.tx - p1.x) * 0.15; p1.y += (p1.ty - p1.y) * 0.15;
-        ctx.font = "50px serif"; ctx.textAlign = "center";
-        ctx.fillText(p1.icon, p1.x, p1.y);
+        ctx.font = "50px serif"; ctx.textAlign = "center"; ctx.fillText(p1.icon, p1.x, p1.y);
 
-        // AI / Opponent
+        // Lives
+        ctx.font = "20px Arial"; ctx.textAlign = "left"; ctx.fillText("❤️".repeat(p1_lives), 20, 110);
+
+        // AI / Opponent Logic
         if (p2.active) {
-            updateAI();
-            ctx.font = "50px serif";
-            ctx.fillText(p2.icon, p2.x, p2.y);
+            let target = items.find(i => i.active);
+            if (target) {
+                let angle = Math.atan2(target.y - p2.y, target.x - p2.x);
+                p2.x += Math.cos(angle) * 3; p2.y += Math.sin(angle) * 3;
+                if(Math.hypot(p2.x-target.x, p2.y-target.y) < 30) {
+                    target.active = false; if(target.type==='cash') p2.cash++; else p2.score+=500;
+                }
+            }
+            ctx.font = "50px serif"; ctx.textAlign = "center"; ctx.fillText(p2.icon, p2.x, p2.y);
         }
 
-        // Monsters, Portal, Items (نفس الكود السابق مع تفعيل تصادم P1)
-        drawItems();
-        drawMonsters();
-        drawPortal();
+        // Monsters
+        monsters.forEach((m, i) => {
+            let angle = Math.atan2(p1.y - m.y, p1.x - m.x);
+            m.x += Math.cos(angle) * m.speed; m.y += Math.sin(angle) * m.speed;
+            ctx.font = m.size + "px serif"; ctx.fillText(m.icon, m.x, m.y);
+            if(Math.hypot(p1.x-m.x, p1.y-m.y) < m.size*0.7) {
+                monsters.splice(i, 1); p1_lives--;
+                if(p1_lives <= 0) { alert("Game Over!"); location.reload(); }
+            }
+        });
 
-        // UI Update
+        // Items
+        items.forEach(it => {
+            if(!it.active) return;
+            ctx.font = "30px serif"; ctx.fillText(it.type==='cash'?"💵":"💰", it.x, it.y);
+            if(Math.hypot(p1.x-it.x, p1.y-it.y) < 40) {
+                it.active = false; if(it.type==='cash') { p1.cash++; sfx.cash(); } else { p1.score+=500; sfx.coin(); }
+                if(p1.score % 5000 === 0) sync();
+            }
+        });
+
+        // Portal
+        if (p1.score >= 10000 && !portal.active) { portal.active = true; portal.x = canvas.width/2; portal.y = canvas.height/2; }
+        if (portal.active) {
+            ctx.font = "60px serif"; ctx.fillText("🌀", portal.x, portal.y);
+            if(Math.hypot(p1.x-portal.x, p1.y-portal.y) < 50) {
+                game.level++; p1.score = 0; portal.active = false; monsters = []; sync();
+            }
+        }
+
+        // UI
         document.getElementById('p1-score-ui').innerText = p1.score.toLocaleString();
         document.getElementById('p1-cash-ui').innerText = p1.cash;
+        document.getElementById('lvl-display').innerText = game.level;
         if(p2.active) {
             document.getElementById('p2-score-ui').innerText = p2.score.toLocaleString();
             document.getElementById('p2-cash-ui').innerText = p2.cash;
@@ -169,59 +208,28 @@
         requestAnimationFrame(animate);
     }
 
-    // --- وظائف مساعدة لفصل الكود وتنظيمه ---
-    function drawItems() {
-        items.forEach(it => {
-            if(!it.active) return;
-            ctx.font = "26px serif"; ctx.fillText(it.type==='cash'?"💵":"💰", it.x, it.y);
-            if(Math.hypot(p1.x-it.x, p1.y-it.y)<35){ 
-                it.active=false; if(it.type==='cash') p1.cash++; else p1.score+=500;
-                sfx.coin(); if(p1.score % 5000 === 0) sync(); 
-            }
-        });
-    }
-
-    function drawMonsters() {
-        monsters.forEach((m, idx) => {
-            let dx = p1.x-m.x, dy = p1.y-m.y, angle = Math.atan2(dy, dx);
-            m.x += Math.cos(angle)*m.speed; m.y += Math.sin(angle)*m.speed;
-            ctx.font = m.size+"px serif"; ctx.fillText(m.icon, m.x, m.y);
-            if(Math.hypot(p1.x-m.x, p1.y-m.y) < m.size*0.7) {
-                monsters.splice(idx, 1); p1_lives--;
-                if(p1_lives<=0) { alert("GAME OVER"); location.reload(); }
-            }
-        });
-    }
-
-    function drawPortal() {
-        if (p1.score >= 10000 && !portal.active) { portal.active = true; portal.x = canvas.width/2; portal.y = canvas.height/2; }
-        if (portal.active) {
-            ctx.font = "60px serif"; ctx.fillText("🌀", portal.x, portal.y);
-            if(Math.hypot(p1.x-portal.x, p1.y-portal.y)<50){ 
-                game.level++; p1.score=0; portal.active=false; monsters=[]; sync();
-            }
-        }
-    }
-
-    // (بقية الكود الخاص بـ Appwrite والمتجر والأصوات يظل كما هو)
-    // ... (تكملة الوظائف initCloud, sync, startMode, togglePause) ...
-    
-    // دوال التشغيل
-    function startMode(m) { game.active = true; document.getElementById('main-menu').style.display = 'none'; document.getElementById('ui-header').style.display = 'flex'; animate(); }
+    // --- Helpers ---
+    function showMsg(t, c) { const n = document.getElementById('notify'); n.innerText = t; n.style.background = c; n.style.display = 'block'; setTimeout(()=>n.style.display='none', 2000); }
     function togglePause() { game.paused = !game.paused; }
-    canvas.addEventListener('touchmove', (e) => { p1.tx = e.touches[0].clientX; p1.ty = Math.max(e.touches[0].clientY, 90); });
-    setInterval(() => { if(game.active) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.1?'cash':'coin', active: true }); }, 2000);
-    setInterval(() => { if(game.active) {
-        let monsterIndex = Math.min(game.level - 1, monsterIcons.length - 1);
-        monsters.push({ x: -50, y: Math.random()*canvas.height, speed: 1+(game.level*0.4), icon: monsterIcons[monsterIndex], size: 40+(game.level*5) });
-    }}, 4000);
+    function openShop() { 
+        document.getElementById('shop-screen').style.display = 'flex';
+        const grid = document.getElementById('shop-grid'); grid.innerHTML = '';
+        ['🥷','🦊','🦁','🐼','🐯','👽','🐲','👹'].forEach(icon => {
+            const d = document.createElement('div'); d.className = 'skin-item'; d.innerText = icon;
+            d.onclick = () => { p1.icon = icon; sync(); showMsg("EQUIPPED!", "green"); closeShop(); };
+            grid.appendChild(d);
+        });
+    }
+    function closeShop() { document.getElementById('shop-screen').style.display = 'none'; }
 
-    const monsterIcons = ['👾', '👻', '👹', '👺', '🐉'];
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(f,t,d){ /* نفس كود الصوت السابق */ }
-    const sfx = { coin: () => {}, buy: () => {} }; // تعريف سريع
+    canvas.addEventListener('touchmove', (e) => { p1.tx = e.touches[0].clientX; p1.ty = Math.max(e.touches[0].clientY, 90); });
+    setInterval(() => { if(game.active && !game.paused) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.1?'cash':'coin', active: true }); }, 2000);
+    setInterval(() => { if(game.active && !game.paused) {
+        let mi = Math.min(game.level-1, monsterIcons.length-1);
+        monsters.push({ x: -50, y: Math.random()*canvas.height, speed: 1+(game.level*0.4), icon: monsterIcons[mi], size: 40+(game.level*5) });
+    }}, 4000);
 
     initCloud();
 </script>
 </body>
-                </html>
+    </html>
