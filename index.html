@@ -69,7 +69,16 @@
 
 <script>
     const { Client, Account, Databases, ID, Query } = Appwrite;
-    const client = new Client().setEndpoint('https://fra.loud.appwrite.io/v1').setProject('69943f560019334ae3b5');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // إعداد الاتصال الصحيح (تم تصحيح cloud)
+    const client = new Client()
+        .setEndpoint('https://fra.cloud.appwrite.io/v1')
+        .setProject('69943f560019334ae3b5');
+
     const databases = new Databases(client);
     const account = new Account(client);
     const DB_ID = '69943bf8001373c3c286', COL_ID = 'players';
@@ -79,7 +88,6 @@
     let p2 = { x: -200, y: -200, score: 0, cash: 0, icon: '🤖', active: false };
     let items = [], monsters = [], portal = { active: false }, p1_lives = 3;
     
-    // إعدادات السكينات والأسعار (مصفوفة كائنات مصلحة)
     const skinsData = [
         {icon:'🥷', price:0, type:'coin'}, {icon:'🦊', price:2000, type:'coin'}, {icon:'🦁', price:5000, type:'coin'}, {icon:'🐼', price:8000, type:'coin'},
         {icon:'🐯', price:10000, type:'coin'}, {icon:'🐱', price:12000, type:'coin'}, {icon:'🐭', price:15000, type:'coin'}, {icon:'🐹', price:20000, type:'coin'},
@@ -92,23 +100,37 @@
     ];
 
     async function initCloud() {
+        const safety = setTimeout(() => { if(document.getElementById('loading-screen').style.display !== 'none') hideLoading(); }, 2500);
         try {
             try { await account.createAnonymousSession(); } catch(e){}
             const user = await account.get();
             const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
             if (res.documents.length > 0) {
-            
-                p1.score = res.documents[0].coins || 0; p1.cash = res.documents[0].cash || 0; p1.icon = res.documents[0].current_skin || '🥷';
+                playerDocId = res.documents[0].$id;
+                p1.score = res.documents[0].coins || 0; 
+                p1.cash = res.documents[0].cash || 0; 
+                p1.icon = res.documents[0].current_skin || '🥷';
             } else {
                 const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷' });
-const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69943f560019334ae3b5');                playercocId = d.$id;
+                playerDocId = d.$id;
             }
-        } catch(e) {}
+            clearTimeout(safety);
+            hideLoading();
+        } catch(e) { console.error(e); hideLoading(); }
+    }
+
+    function hideLoading() {
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
     }
 
-
+    async function sync() { 
+        if(playerDocId) {
+            await databases.updateDocument(DB_ID, COL_ID, playerDocId, { 
+                coins: p1.score, cash: p1.cash, current_skin: p1.icon 
+            }).catch(()=>{}); 
+        }
+    }
 
     function buySkin(index) {
         const s = skinsData[index];
@@ -152,7 +174,6 @@ const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setP
         setTimeout(() => { screen.remove(); p2.active = true; p2.icon = '👺'; document.getElementById('p2-ui').style.opacity = '1'; startMode('multi'); }, 2500);
     }
     
-    // إضافة أنيميشن Spinner بسيط
     const style = document.createElement('style');
     style.innerHTML = '@keyframes spin { to { transform: rotate(360deg); } }';
     document.head.appendChild(style);
@@ -218,7 +239,11 @@ const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setP
     function togglePause() { game.paused = !game.paused; }
     function showMsg(t, c) { const n = document.getElementById('notify'); n.innerText = t; n.style.background = c; n.style.display = 'block'; setTimeout(()=>n.style.display='none', 2000); }
 
-    canvas.addEventListener('touchmove', (e) => { p1.tx = e.touches[0].clientX; p1.ty = Math.max(e.touches[0].clientY, 90); });
+    canvas.addEventListener('touchmove', (e) => { 
+        p1.tx = e.touches[0].clientX; 
+        p1.ty = Math.max(e.touches[0].clientY, 90); 
+    });
+
     setInterval(() => { if(game.active && !game.paused) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.08?'cash':'coin', active: true }); }, 2000);
     setInterval(() => { if(game.active && !game.paused) {
         let mi = Math.min(game.level-1, 5);
@@ -228,4 +253,4 @@ const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setP
     initCloud();
 </script>
 </body>
-    </html>
+</html>
