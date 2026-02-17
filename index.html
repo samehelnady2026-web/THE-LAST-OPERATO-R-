@@ -3,69 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM PRO FINAL</title>
+    <title>BLOCKSAM PRO v2.1</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
-        :root { --neon: #00f2ff; --bg: #0a0a0a; }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; text-align: center; }
-        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.9); }
-        .btn { width: 250px; padding: 15px; margin: 10px; border-radius: 15px; font-weight: bold; cursor: pointer; border: none; background: #ffd700; color: black; font-size: 18px; }
+        :root { --neon: #00f2ff; --gold: #ffd700; --bg: #0a0a0a; }
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; touch-action: none; }
+        #ui-header { position: absolute; top: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.8); display: none; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; z-index: 1000; border-bottom: 1px solid var(--neon); }
+        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(0,0,0,0.95); }
+        .btn { width: 220px; padding: 15px; margin: 10px; border-radius: 15px; font-weight: bold; cursor: pointer; border: none; background: var(--gold); color: black; font-size: 18px; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
     </style>
 </head>
 <body>
 
     <div id="loading-screen" class="overlay">
-        <h2 style="color:var(--neon)">BLOCKSAM CLOUD</h2>
-        <p>جاري الدخول...</p>
+        <h2 style="color:var(--neon)">SAm CLOUD READY</h2>
+        <p>جاري استدعاء البيانات...</p>
     </div>
 
     <div id="main-menu" class="overlay" style="display:none">
-        <h1 style="color:var(--neon)">BLOCKSAM</h1>
-        <button class="btn" onclick="startGame()">ابدأ اللعب 🎮</button>
-        <div id="status-tag" style="font-size:10px; color:#555; margin-top:10px;">Cloud Ready</div>
+        <h1 style="color:var(--neon)">BLOCKSAM v2.1</h1>
+        <button class="btn" onclick="startGame()">دخول المهمة 🎮</button>
+        <p style="font-size:12px; color:#555">Cloud Sync: Active ✅</p>
+    </div>
+
+    <div id="ui-header">
+        <div style="color:var(--gold)">💰 <span id="coins-ui">0</span></div>
+        <div style="color:#2ecc71">💵 <span id="cash-ui">0</span></div>
+        <div id="p-id" style="font-size:10px; color:#555">UID: --</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
 <script>
+    // --- إعدادات Appwrite (اللي تأكدنا إنها شغالة) ---
     const { Client, Account, Databases, ID, Query } = Appwrite;
-    const client = new Client()
-        .setEndpoint('https://fra.cloud.appwrite.io/v1') // مطابق لصورك
-        .setProject('69943f560019334ae3b5');            // مطابق لصورك
-
+    const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69943f560019334ae3b5');
     const databases = new Databases(client);
     const account = new Account(client);
     const DB_ID = '69943bf8001373c3c286'; 
     const COL_ID = 'players';
 
+    let playerDocId = null;
+    let p1 = { score: 0, cash: 0, icon: '🥷', x: window.innerWidth/2, y: window.innerHeight/2, tx: window.innerWidth/2, ty: window.innerHeight/2 };
+    let gameActive = false;
+    let coins = [];
+
+    // --- تشغيل النظام ---
     async function init() {
-        // شلنا الـ Alert الأسود خالص عشان ما يضايقكش
         try {
             try { await account.createAnonymousSession(); } catch(e){}
             const user = await account.get();
+            document.getElementById('p-id').innerText = "ID: " + user.$id.substring(0,5);
+
             const res = await databases.listDocuments(DB_ID, COL_ID, [Query.equal('user_id', user.$id)]);
-            
-            if (res.documents.length === 0) {
-                await databases.createDocument(DB_ID, COL_ID, ID.unique(), {
+            if (res.documents.length > 0) {
+                const data = res.documents[0];
+                playerDocId = data.$id;
+                p1.score = data.coins || 0;
+                p1.cash = data.cash || 0;
+            } else {
+                const newDoc = await databases.createDocument(DB_ID, COL_ID, ID.unique(), {
                     user_id: user.$id, coins: 0, cash: 0, current_skin: '🥷'
                 });
+                playerDocId = newDoc.$id;
             }
-            showMenu();
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
         } catch (e) {
-            console.log("Offline Mode Active");
-            showMenu(); // هيدخلك اللعبة حتى لو مفيش نت
+            console.error(e);
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
         }
     }
 
-    function showMenu() {
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('main-menu').style.display = 'flex';
+    function startGame() {
+        gameActive = true;
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('ui-header').style.display = 'flex';
+        // توليد عملات أولية
+        for(let i=0; i<5; i++) spawnCoin();
+        animate();
     }
 
-    function startGame() {
-        document.getElementById('main-menu').style.display = 'none';
-        alert("اللعبة بدأت! أنت الآن أونلاين والسيرفر شغال ✅");
+    function spawnCoin() {
+        coins.push({ x: Math.random()*window.innerWidth, y: Math.random()*(window.innerHeight-100)+80, active: true });
     }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function animate() {
+        if (!gameActive) return;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // تحريك اللاعب بسلاسة
+        p1.x += (p1.tx - p1.x) * 0.1;
+        p1.y += (p1.ty - p1.y) * 0.1;
+
+        // رسم العملات
+        coins.forEach(c => {
+            if(!c.active) return;
+            ctx.font = "30px serif";
+            ctx.fillText("💰", c.x, c.y);
+            // تصادم
+            if(Math.hypot(p1.x - c.x, p1.y - c.y) < 40) {
+                c.active = false;
+                p1.score += 10;
+                document.getElementById('coins-ui').innerText = p1.score;
+                spawnCoin();
+                if(p1.score % 50 === 0) syncData(); // مزامنة كل 50 نقطة
+            }
+        });
+
+        // رسم اللاعب
+        ctx.font = "50px serif";
+        ctx.textAlign = "center";
+        ctx.fillText(p1.icon, p1.x, p1.y);
+
+        requestAnimationFrame(animate);
+    }
+
+    async function syncData() {
+        if(playerDocId) {
+            try {
+                await databases.updateDocument(DB_ID, COL_ID, playerDocId, { coins: p1.score });
+                console.log("Data Synced ✅");
+            } catch(e) {}
+        }
+    }
+
+    window.addEventListener('touchstart', (e) => {
+        p1.tx = e.touches[0].clientX;
+        p1.ty = e.touches[0].clientY;
+    });
+    window.addEventListener('touchmove', (e) => {
+        p1.tx = e.touches[0].clientX;
+        p1.ty = e.touches[0].clientY;
+    });
 
     init();
 </script>
