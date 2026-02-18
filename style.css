@@ -1,0 +1,7 @@
+:root { --neon: #00f2ff; --green: #2ecc71; }
+body { margin: 0; background: #050505; overflow: hidden; touch-action: none; }
+.overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 10; }
+.btn { padding: 15px 30px; background: var(--neon); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+#ui-header { position: absolute; top: 10px; width: 100%; text-align: center; z-index: 5; }
+.level-container { width: 80%; height: 10px; background: #222; margin: 0 auto; border-radius: 5px; }
+#level-bar { width: 0%; height: 100%; background: var(--neon); transition: 0.3s; }
