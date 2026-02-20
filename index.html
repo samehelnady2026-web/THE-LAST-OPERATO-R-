@@ -1,216 +1,229 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKSAM v1.1 - PRO EDITION</title>
+    <title>BLOCKSAM 2026 - ULTIMATE</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
-        :root { 
-            --neon: #00f2ff; --gold: #ffd700; --green: #2ecc71; --red: #ff4757; 
-            --purple: #bc13fe; --bg: #0f101d; --ui-bg: rgba(20, 21, 38, 0.95);
+        :root {
+            --bg: #050505; --primary: #00f2ff; --accent: #ffd700; --danger: #ff4b2b; --glass: rgba(255,255,255,0.1);
         }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; touch-action: none; color: white; display: flex; flex-direction: column; }
+        body, html { margin:0; padding:0; width:100%; height:100%; background:var(--bg); color:#fff; font-family:sans-serif; overflow:hidden; touch-action:none; }
         
-        #ui-header { width: 100%; height: 95px; background: var(--ui-bg); display: none; justify-content: space-between; align-items: center; z-index: 1000; border-bottom: 1px solid #334; padding: 5px 15px; box-sizing: border-box; }
-        #gameCanvas { flex-grow: 1; width: 100%; background: radial-gradient(circle, #1a1c2c 0%, #0f101d 100%); display: block; }
+        /* الواجهات */
+        .screen { position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:var(--bg); z-index:1000; transition:0.3s; }
+        .card { width:90%; max-width:380px; text-align:center; background:var(--glass); padding:25px; border-radius:25px; border:1px solid #333; backdrop-filter: blur(10px); }
+        
+        .btn { padding:12px; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin:5px; transition:0.2s; }
+        .btn-main { background:var(--primary); color:#000; width:100%; }
+        .btn-shop { background:var(--accent); color:#000; font-size:12px; }
 
-        /* ليفل بار (الدوامة الزرقاء) */
-        .level-container { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 150px; height: 4px; background: #333; border-radius: 2px; }
-        #level-bar { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: 0.3s; }
+        /* HUD */
+        #hud { position:fixed; top:0; width:100%; display:none; justify-content:space-between; align-items:center; padding:10px 15px; z-index:2000; box-sizing:border-box; background:rgba(0,0,0,0.5); }
+        .stat-group { display:flex; gap:10px; }
+        .pill { background:#000; padding:5px 12px; border-radius:15px; border:1px solid #444; font-size:13px; font-weight:bold; }
 
-        .stat-group { display: flex; flex-direction: column; gap: 2px; min-width: 80px; }
-        .nav-btn { background: none; border: 1.5px solid white; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; background: rgba(10, 11, 20, 0.98); }
-        .menu-box { background: #1a1c2c; padding: 25px; border-radius: 30px; border: 1px solid var(--neon); text-align: center; width: 85%; max-width: 400px; }
-        .btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #3d415e; }
-        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #0f101d; border-radius: 15px; }
-        .skin-item { background: #3d415e; height: 75px; border-radius: 12px; border: 1px solid #555; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* المتجر */
+        #shop-ui { display:none; z-index:3000; background:rgba(0,0,0,0.9); }
+        .shop-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin:15px 0; max-height:300px; overflow-y:auto; }
+        .item-box { background:var(--glass); padding:10px; border-radius:15px; border:1px solid #444; cursor:pointer; font-size:11px; }
+        .item-box:active { transform:scale(0.95); }
+
+        canvas { display:block; }
     </style>
 </head>
 <body>
 
-    <div id="notify" style="position:fixed; top:110px; left:50%; transform:translateX(-50%); z-index:9000; display:none; padding:10px 20px; border-radius:20px; font-weight:bold; color:white;"></div>
-
-    <div id="loading-screen" class="overlay"><h2>CONNECTING...</h2></div>
-
-    <div id="main-menu" class="overlay" style="display:none">
-        <h1 style="color:var(--neon); margin-bottom:20px;">BLOCKSAM v1.1</h1>
-        <div class="menu-box">
-            <button class="btn" style="background:var(--gold); color:black" onclick="startMode('solo')">SOLO MISSION 🏆</button>
-            <button class="btn" style="background:var(--neon); color:black" onclick="searchForPlayer()">SEARCH FOR PLAYER 🌐</button>
-            <button class="btn" onclick="openShop()">MARKET 🛒</button>
+    <div id="auth-screen" class="screen">
+        <div class="card">
+            <h1 style="color:var(--primary); letter-spacing:4px;">BLOCKSAM</h1>
+            <div id="auth-inputs">
+                <input type="email" id="email" placeholder="البريد الإلكتروني" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:none; background:#111; color:#fff;">
+                <input type="password" id="password" placeholder="كلمة المرور" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:none; background:#111; color:#fff;">
+                <button class="btn btn-main" onclick="handleLogin()">دخول</button>
+            </div>
+            <button class="btn btn-main" style="background:#444; color:#fff; margin-top:10px;" onclick="guestLogin()">دخول كضيف 👤</button>
+            <p style="font-size:12px; color:#666; cursor:pointer;" onclick="isReg=!isReg; this.innerText=isReg?'لديك حساب؟ دخول':'ليس لديك حساب؟ سجل'">ليس لديك حساب؟ سجل</p>
         </div>
     </div>
 
-    <div id="shop-screen" class="overlay" style="display:none">
-        <div class="menu-box">
-            <h3 style="color:var(--purple)">MARKET</h3>
-            <button class="btn" style="background:var(--gold); color:black; font-size:11px" onclick="exchangeCoinsForCash()">50,000 💰 ➔ 10 💵</button>
-            <div id="shop-grid" class="shop-grid"></div>
-            <button class="btn" onclick="closeShop()">BACK</button>
-        </div>
-    </div>
-
-    <div id="ui-header">
+    <div id="hud">
         <div class="stat-group">
-            <div><span id="p1-score-ui" style="color:var(--gold)">0</span> 💰</div>
-            <div><span id="p1-cash-ui" style="color:var(--green)">0</span> 💵</div>
+            <div class="pill" style="color:var(--accent)">🪙 <span id="h-coins">0</span></div>
+            <div class="pill" style="color:#4cd137">💵 <span id="h-cash">0</span></div>
         </div>
-        <div style="text-align:center">
-            <div style="font-size:12px; color:var(--neon)">LEVEL <span id="level-num">1</span></div>
-            <div class="level-container"><div id="level-bar"></div></div>
+        <div class="stat-group">
+            <button class="btn btn-shop" onclick="toggleShop(true)">🛒 السوق</button>
+            <button class="btn" style="background:#ff4b2b; color:#fff; padding:5px 10px;" onclick="location.reload()">II</button>
         </div>
-        <div class="stat-group" style="text-align:right">
-            <button class="nav-btn" onclick="togglePause()">⏸️</button>
-            <button class="nav-btn" onclick="exitToDashboard()" style="border-color:var(--red); margin-top:5px">🏠</button>
+    </div>
+
+    <div id="shop-ui" class="screen">
+        <div class="card" style="max-width:400px;">
+            <h2 style="margin:0 0 15px 0;">سوق الأساطير</h2>
+            <div class="shop-grid">
+                <div class="item-box" onclick="buyItem('laser', 500)">🔫 ليزر<br>500🪙</div>
+                <div class="item-box" onclick="buyItem('bomb', 1500)">💣 قنابل<br>1500🪙</div>
+                <div class="item-box" onclick="setSkin('🤖')">🤖 آلي<br>مجانًا</div>
+                <div class="item-box" onclick="setSkin('🐉')">🐉 تنين<br>1000🪙</div>
+                <div class="item-box" style="border-color:var(--accent)" onclick="exchange()">🔄 صرف<br>1000🪙=10💵</div>
+            </div>
+            <button class="btn btn-main" onclick="toggleShop(false)">إغلاق السوق</button>
         </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
 <script>
-    const { Client, Account, Databases, ID, Query } = Appwrite;
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    let gates = [], items = [], spiralAngle = 0;
-    let game = { active: false, paused: false, level: 1 };
-    let p1 = { x: 200, y: 300, tx: 200, ty: 300, score: 0, cash: 0, icon: '🥷' };
-    let p2 = { x: -100, y: -100, score: 0, active: false, icon: '🤖', isBot: true };
-    let monster = { x: -50, y: -50, icon: '👾' };
-
+    const { Client, Account, Databases, ID } = Appwrite;
     const client = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69943f560019334ae3b5');
-    const databases = new Databases(client);
     const account = new Account(client);
+    const db = new Databases(client);
     const DB_ID = '69943bf8001373c3c286', COL_ID = 'players';
-    let playerDocId = localStorage.getItem('blocksam_id');
 
-    const skinsData = [
-        {icon:'🥷', price:0, type:'coin'}, {icon:'🐱', price:100, type:'coin'}, {icon:'🦁', price:5000, type:'coin'},
-        {icon:'🦖', price:60000, type:'coin'}, {icon:'🥶', price:100, type:'cash'},
-         {icon:'🦄', price:200, type:'cash'}
-        {icon:'💎', price:300, type:'cash'}
-        {icon:'🖐', price:500, type:'cash'}
-    ];
+    let isReg = false;
+    let state = { uid: null, coins: 0, cash: 0, level: 1, skin: '🥷', weapon: 'none' };
+    let gameActive = false, portalActive = false;
+    let entities = [];
+    let bgColors = ['#050505', '#0a1624', '#1a0a24', '#0a2411'];
 
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight - (game.active ? 95 : 0); }
-    window.addEventListener('resize', resize);
-
-    async function initCloud() {
+    // --- نظام الدخول ---
+    async function handleLogin() {
+        const e = document.getElementById('email').value, p = document.getElementById('password').value;
         try {
-            try { await account.createAnonymousSession(); } catch(e){}
-            if (playerDocId) {
-                const doc = await databases.getDocument(DB_ID, COL_ID, playerDocId);
-                p1.score = doc.coins; p1.cash = doc.cash; p1.icon = doc.current_skin;
-            } else { await createNewUser(); }
-        } catch(e){}
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('main-menu').style.display = 'flex';
-        resize();
+            if(isReg) await account.create(ID.unique(), e, p);
+            await account.createEmailSession(e, p);
+            const u = await account.get(); state.uid = u.$id;
+            loadData();
+        } catch(err) { alert(err.message); }
     }
 
-    async function createNewUser() {
-        const d = await databases.createDocument(DB_ID, COL_ID, ID.unique(), { coins: 0, cash: 0, current_skin: '🥷', is_online: false });
-        playerDocId = d.$id; localStorage.setItem('blocksam_id', playerDocId);
+    function guestLogin() {
+        state.uid = "guest_" + Date.now();
+        const local = localStorage.getItem('blocksam_save');
+        if(local) state = JSON.parse(local);
+        startGame();
+    }
+
+    async function loadData() {
+        try {
+            const data = await db.getDocument(DB_ID, COL_ID, state.uid);
+            state.coins = data.coins; state.cash = data.cash;
+        } catch(e) { /* لاعب جديد */ }
+        startGame();
+    }
+
+    // --- المتجر ---
+    function toggleShop(show) { document.getElementById('shop-ui').style.display = show ? 'flex' : 'none'; }
+    
+    function buyItem(type, price) {
+        if(state.coins >= price) {
+            state.coins -= price; state.weapon = type; alert("تم شراء السلاح!");
+            updateUI();
+        } else alert("الكوين غير كافٍ");
+    }
+
+    function setSkin(s) { state.skin = s; updateUI(); }
+
+    function exchange() {
+        if(state.coins >= 1000) {
+            state.coins -= 1000; state.cash += 10; updateUI();
+        } else alert("تحتاج 1000 كوين!");
+    }
+
+    // --- المحرك ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let pX, pY;
+
+    function startGame() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('hud').style.display = 'flex';
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        pX = canvas.width/2; pY = canvas.height/2;
+        gameActive = true;
+        loop();
+    }
+
+    function spawn() {
+        const rand = Math.random();
+        let type = 'monster';
+        if(rand > 0.4) type = 'coin';
+        if(rand > 0.9) type = 'cash';
+        
+        entities.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            type: type,
+            size: type === 'monster' ? 30 : 20
+        });
     }
 
     function updateUI() {
-        document.getElementById('p1-score-ui').innerText = p1.score.toLocaleString();
-        document.getElementById('p1-cash-ui').innerText = p1.cash;
-        game.level = Math.floor(p1.score / 10000) + 1;
-        document.getElementById('level-num').innerText = game.level;
-        let progress = (p1.score % 10000) / 100;
-        document.getElementById('level-bar').style.width = progress + "%";
+        document.getElementById('h-coins').innerText = state.coins;
+        document.getElementById('h-cash').innerText = state.cash;
+        localStorage.setItem('blocksam_save', JSON.stringify(state));
     }
 
-    async function searchForPlayer() {
-        const screen = document.createElement('div'); screen.className = 'overlay';
-        screen.innerHTML = `<div class="menu-box"><h3>SEARCHING...</h3><div style="width:100%; height:10px; background:#333; border-radius:5px; overflow:hidden"><div id="pbar" style="width:0%; height:100%; background:var(--neon); transition:4s linear"></div></div></div>`;
-        document.body.appendChild(screen);
-        setTimeout(() => document.getElementById('pbar').style.width = "100%", 50);
-        setTimeout(() => { screen.remove(); startMode('online'); }, 4000);
-    }
+    function loop() {
+        if(!gameActive) return;
+        ctx.fillStyle = bgColors[(state.level-1) % bgColors.length];
+        ctx.fillRect(0,0,canvas.width, canvas.height);
 
-    function startMode(mode) {
-        game.active = true; game.paused = false;
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('ui-header').style.display = 'flex';
-        resize();
-        updateUI();
-        animate();
-    }
+        if(Math.random() < 0.03) spawn();
 
-    function animate() {
-        if (!game.active || game.paused) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        spiralAngle += 0.15;
-
-        // اللاعب
-        p1.x += (p1.tx - p1.x) * 0.15; p1.y += (p1.ty - p1.y) * 0.15;
-        ctx.font = "50px serif"; ctx.textAlign = "center";
-        ctx.fillText(p1.icon, p1.x, p1.y);
-
-        // الوحش المطارد
-        let mAngle = Math.atan2(p1.y - monster.y, p1.x - monster.x);
-        monster.x += Math.cos(mAngle) * (1.5 + (game.level * 0.2));
-        monster.y += Math.sin(mAngle) * (1.5 + (game.level * 0.2));
-        ctx.fillText(monster.icon, monster.x, monster.y);
-        if(Math.hypot(p1.x - monster.x, p1.y - monster.y) < 40) { p1.score = Math.max(0, p1.score - 50); updateUI(); }
-
-        // الحلزونات
-        gates.forEach((g) => {
-            if(!g.active) return;
-            g.timer++;
-            if(g.timer > 200) { g.x = Math.random()*canvas.width; g.y = Math.random()*canvas.height; g.timer=0; }
-            ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(spiralAngle);
-            for(let i=0; i<5; i++) {
-                ctx.beginPath(); ctx.strokeStyle = g.type==='good'?'var(--neon)':'var(--red)';
-                ctx.arc(0, 0, (11*(i+1)), 0, Math.PI*1.5); ctx.stroke();
+        // رسم البوابة
+        if(state.coins >= 1000 && !portalActive) portalActive = true;
+        if(portalActive) {
+            ctx.font = "60px Arial";
+            ctx.fillText("🌀", canvas.width/2, canvas.height/2);
+            if(Math.hypot(pX - canvas.width/2, pY - canvas.height/2) < 40) {
+                state.level++; state.coins = 0; portalActive = false; entities = [];
+                updateUI();
             }
-            ctx.restore();
-            if(Math.hypot(p1.x-g.x, p1.y-g.y) < 45) { p1.score += g.value; g.active = false; sync(); updateUI(); }
+        }
+
+        entities.forEach((ent, i) => {
+            ctx.font = ent.size + "px Arial";
+            let icon = ent.type === 'coin' ? '🪙' : (ent.type === 'cash' ? '💵' : '👾');
+            ctx.fillText(icon, ent.x, ent.y);
+
+            // تصادم
+            if(Math.hypot(pX - ent.x, pY - ent.y) < 30) {
+                if(ent.type === 'coin') state.coins += 10;
+                else if(ent.type === 'cash') state.cash += 1;
+                else { state.coins = Math.max(0, state.coins - 50); }
+                entities.splice(i, 1);
+                updateUI();
+            }
         });
 
-        // العملات
-        items.forEach(it => {
-            if(!it.active) return;
-            ctx.font = "32px serif"; ctx.fillText(it.type==='cash'?"💵":"💰", it.x, it.y);
-            if(Math.hypot(p1.x-it.x, p1.y-it.y) < 45) { it.active = false; if(it.type==='cash') p1.cash++; else p1.score += 500; sync(); updateUI(); }
-        });
+        // رسم اللاعب والسلاح
+        ctx.font = "50px Arial";
+        ctx.fillText(state.skin, pX, pY);
+        if(state.weapon !== 'none') {
+            ctx.font = "20px Arial";
+            ctx.fillText(state.weapon === 'laser' ? '🔫' : '💣', pX + 30, pY - 30);
+        }
 
-        requestAnimationFrame(animate);
+        requestAnimationFrame(loop);
     }
 
-    function openShop() {
-        document.getElementById('shop-screen').style.display = 'flex';
-        const grid = document.getElementById('shop-grid'); grid.innerHTML = '';
-        skinsData.forEach(s => {
-            const d = document.createElement('div'); d.className = 'skin-item';
-            d.innerHTML = `<div>${s.icon}</div><div style="font-size:10px">${s.price}</div>`;
-            d.onclick = () => {
-                if(s.type==='coin' && p1.score >= s.price) { p1.score-=s.price; p1.icon=s.icon; sync(); updateUI(); }
-                else if(s.type==='cash' && p1.cash >= s.price) { p1.cash-=s.price; p1.icon=s.icon; sync(); updateUI(); }
-                else showMsg("NOT ENOUGH!", "var(--red)");
-            };
-            grid.appendChild(d);
-        });
-    }
+    canvas.addEventListener('touchmove', e => {
+        pX = e.touches[0].clientX; pY = e.touches[0].clientY;
+        e.preventDefault();
+    }, {passive:false});
 
-    async function sync() { if(playerDocId) databases.updateDocument(DB_ID, COL_ID, playerDocId, { coins: p1.score, cash: p1.cash, current_skin: p1.icon }); }
-    function closeShop() { document.getElementById('shop-screen').style.display = 'none'; }
-    function togglePause() { game.paused = !game.paused; if(!game.paused) animate(); }
-    function exitToDashboard() { location.reload(); }
-    function showMsg(t, c) { const n = document.getElementById('notify'); n.innerText = t; n.style.background = c; n.style.display = 'block'; setTimeout(()=>n.style.display='none', 1500); }
-    function exchangeCoinsForCash() { if(p1.score >= 50000) { p1.score -= 50000; p1.cash += 10; sync(); updateUI(); } }
+    // تشغيل
+    document.addEventListener('DOMContentLoaded', () => {
+        const local = localStorage.getItem('blocksam_save');
+        if(local) {
+            state = JSON.parse(local);
+            document.getElementById('auth-inputs').innerHTML += `<button class="btn btn-main" style="background:var(--accent); color:#000;" onclick="startGame()">استمرار كـ ${state.uid.substring(0,5)}</button>`;
+        }
+    });
 
-    canvas.addEventListener('touchmove', (e) => { if(!game.paused) { p1.tx = e.touches[0].clientX; p1.ty = e.touches[0].clientY - 95; } });
-    setInterval(() => { if(game.active && !game.paused) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()<0.08?'cash':'coin', active: true }); }, 1900);
-    setInterval(() => { if(game.active && !game.paused) gates.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, type: Math.random()>0.4?'good':'bad', value: 5000, active: true, timer: 0 }); }, 6000);
-
-    initCloud();
 </script>
 </body>
-                </html>
+                                                                                        </html>
