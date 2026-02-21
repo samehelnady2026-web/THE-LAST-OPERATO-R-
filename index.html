@@ -3,271 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#050508">
-    <title>THE LAST OPERATOR - CLOUD</title>
-    
+    <title>THE LAST OPERATOR | FINAL PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
-        :root { --neon: #00f2ff; --gold: #f1c40f; --cash: #2ecc71; --vip: #e056fd; --bg: #050508; }
-        body, html { margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', Tahoma; color: white; touch-action: none; }
+        :root { --neon: #00f2ff; --bg: #050508; }
+        body, html { margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; touch-action: none; }
         canvas { display: block; }
-
-        .overlay-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .input-box { background: #111; border: 1.5px solid var(--neon); padding: 12px; border-radius: 12px; color: white; width: 260px; margin: 8px; text-align: center; outline: none; }
-        
-        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 450px; margin-top: 15px; }
-        .skin-item { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .skin-item.selected { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); background: rgba(0,242,255,0.05); }
-        .wallet-bar { background: rgba(255,255,255,0.05); border: 1px solid var(--neon); border-radius: 15px; padding: 15px; display: flex; gap: 20px; font-weight: bold; margin-bottom: 10px; }
-
-        .partners { margin-top: 30px; display: flex; gap: 15px; align-items: center; justify-content: center; filter: grayscale(1) opacity(0.6); }
-        .orange-cash { background: #FF7900; color: white; font-size: 9px; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-decoration: none; }
-
-        .btn { border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s; text-decoration: none; text-align: center; width: 250px; margin: 5px; }
-        .btn-main { background: var(--neon); color: black; font-size: 18px; box-shadow: 0 5px 15px rgba(0,242,255,0.3); }
-        .btn-guest { background: #333; color: white; border: 1px solid #555; }
-        .btn-wa { background: #25D366; color: white; font-size: 12px; width: auto; }
-
+        .btn { padding: 12px 25px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; background: var(--neon); color: black; width: 250px; margin: 10px; }
         #hud { position: fixed; top: 10px; width: 100%; display: none; justify-content: center; gap: 8px; z-index: 100; pointer-events: none; }
-        .stat { background: rgba(0,0,0,0.8); border: 1px solid var(--neon); padding: 5px 12px; border-radius: 10px; font-size: 12px; }
+        .stat { background: rgba(0,0,0,0.85); border: 1px solid var(--neon); padding: 6px 14px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="overlay-screen">
-        <h1 style="color: var(--neon); text-shadow: 0 0 15px var(--neon);">NINJA NEON PRO</h1>
+    <div id="auth-screen" class="screen">
+        <h1 style="color: var(--neon); text-shadow: 0 0 15px var(--neon);">THE LAST OPERATOR</h1>
         <input type="email" id="email" class="input-box" placeholder="البريد الإلكتروني">
         <input type="tel" id="phone" class="input-box" placeholder="رقم الموبايل">
-        <button class="btn btn-main" onclick="handleAuth(false)">دخول النظام (Online) 🛡️</button>
-        <button class="btn btn-guest" onclick="handleAuth(true)">دخول كضيف (Offline) ⚡</button>
-        
-        <div class="partners">
-            <a href="https://supabase.com" target="_blank"><img src="https://seeklogo.com/images/S/supabase-logo-DCC4167731-seeklogo.com.png" width="25"></a>
-            <a href="https://www.orange.eg/ar/orange-cash" target="_blank" class="orange-cash">ORANGE CASH</a>
-        </div>
-    </div>
-
-    <div id="shop-screen" class="overlay-screen" style="display:none;">
-        <h2 style="color: var(--neon);">المتجر والتبادل <span id="mode-tag" style="font-size:10px; color:gray;"></span></h2>
-        <div class="wallet-bar">
-            <span>💵 <span id="w-cash">0</span></span>
-            <span>🪙 <span id="w-coins">0</span></span>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button class="btn" style="background:#333; color:white; font-size:10px; width:120px;" onclick="exchange('c2g')">100 🪙 ➔ 2 💵</button>
-            <button class="btn" style="background:var(--cash); color:white; font-size:10px; width:120px;" onclick="exchange('g2c')">2 💵 ➔ 100 🪙</button>
-        </div>
-        <div id="skin-grid" class="shop-grid"></div>
-        <button class="btn btn-main" onclick="startGame()">انطلاق 🚀</button>
-        <div style="margin-top:15px;">
-            <button class="btn btn-wa" onclick="contactWA('تفعيل VIP')">💎 VIP</button>
-            <button class="btn btn-wa" style="background:#444" onclick="contactWA('صرافة')">💰 بيع/شراء</button>
-        </div>
+        <button class="btn" onclick="handleAuth()">تشغيل البروتوكول ⚡</button>
     </div>
 
     <div id="hud">
-        <div class="stat">🌀 LVL: <span id="h-lvl">1</span> <span id="h-mode"></span></div>
-        <div class="stat">💵 <span id="h-cash">0</span></div>
-        <div class="stat">🪙 <span id="h-coins">0</span></div>
         <div class="stat">❤️ <span id="h-lives">5</span></div>
+        <div class="stat">🪙 <span id="h-coins">0</span></div>
+        <div class="stat">💵 <span id="h-cash">0</span></div>
+        <div class="stat">🌀 LVL: <span id="h-lvl">1</span></div>
     </div>
 
     <canvas id="g"></canvas>
 
 <script>
-    // [0] إعدادات الاتصال (مفاتيحك الأصلية)
     const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    const canvas = document.getElementById('g'), ctx = canvas.getContext('2d');
-    const SKINS = [
-        {e:'🥷', p:0, t:'free'}, {e:'👮', p:0, t:'free'},
-        {e:'🐶', p:100, t:'coin'}, {e:'🐱', p:200, t:'coin'}, {e:'🐼', p:300, t:'coin'}, {e:'🐻‍❄️', p:400, t:'coin'}, {e:'🐯', p:500, t:'coin'},
-        {e:'🦓', p:10, t:'cash'}, {e:'🦙', p:20, t:'cash'}, {e:'🐑', p:30, t:'cash'}, {e:'🦃', p:40, t:'cash'}, {e:'🐓', p:50, t:'cash'}, 
-        {e:'🦩', p:60, t:'cash'}, {e:'🦜', p:70, t:'cash'}, {e:'🦚', p:80, t:'cash'}, {e:'🦤', p:90, t:'cash'},
-        {e:'🤹‍♂️', p:200, t:'vip'}, {e:'🤹‍♀️', p:300, t:'vip'}, {e:'🥊', p:400, t:'vip'}, {e:'🏆', p:1000, t:'vip'}
-    ];
+    let user = { email: '', phone: '', cash: 0, coins: 0, owned: ['🥷'], current: '🥷', level: 1, lives: 5 };
+    let gameActive = false, pX, pY, targetX, targetY, monsters = [], projectiles = [], items = [];
 
-    let user = { email:'', phone:'', cash:0, coins:0, owned:['🥷','👮'], current:'🥷', level:1 };
-    let isGuestMode = false, gameActive = false, portalActive = false, isSucking = false, pScale = 1;
-    let monsters = [], items = [], projectiles = [], pX, pY, targetX, targetY, lastFire = 0, flash = 0;
+    async function handleAuth() {
+        const emailInput = document.getElementById('email').value;
+        const phoneInput = document.getElementById('phone').value;
+        if(!emailInput) return alert("أدخل الإيميل!");
 
-    // [1] نظام الدخول المطور
-    async function handleAuth(guest) {
-        isGuestMode = guest;
-        const e = document.getElementById('email').value, p = document.getElementById('phone').value;
+        let { data } = await supabaseClient.from('players').select('*').eq('email', emailInput).single();
 
-        if (!isGuestMode) {
-            if(!e.includes('@')) return alert("أدخل إيميل صحيح!");
-            try {
-                let { data } = await supabaseClient.from('players').select('*').eq('email', e).single();
-                if (data) user = data;
-                else { user.email = e; user.phone = p; await supabaseClient.from('players').insert([user]); }
-            } catch (err) { alert("تعذر الاتصال، جرب وضع الضيف"); return; }
-        } else {
-            const local = localStorage.getItem('ninjaGuest');
-            if(local) user = JSON.parse(local);
-            document.getElementById('mode-tag').innerText = "(وضع الضيف)";
-            document.getElementById('h-mode').innerText = "👤";
+        if (data) { user = { ...user, ...data }; } 
+        else { 
+            user.email = emailInput; user.phone = phoneInput;
+            await supabaseClient.from('players').insert([user]); 
         }
 
         document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('shop-screen').style.display = 'flex';
-        renderShop();
-    }
-
-    // [2] نظام المتجر والتبادل
-    function renderShop() {
-        document.getElementById('w-cash').innerText = user.cash;
-        document.getElementById('w-coins').innerText = user.coins;
-        const grid = document.getElementById('skin-grid'); grid.innerHTML = '';
-        SKINS.forEach(s => {
-            const isOwned = user.owned.includes(s.e);
-            const card = document.createElement('div');
-            card.className = `skin-item ${user.current===s.e?'selected':''}`;
-            card.innerHTML = `<span style="font-size:30px; display:block;">${s.e}</span><span style="font-size:9px; color:var(--gold)">${isOwned?'تملك':s.p+(s.t==='coin'?' 🪙':' 💵')}</span>`;
-            card.onclick = () => {
-                if(isOwned) user.current = s.e;
-                else if(s.t==='coin' && user.coins >= s.p) { user.coins -= s.p; user.owned.push(s.e); user.current = s.e; }
-                else if(s.t==='cash' && user.cash >= s.p) { user.cash -= s.p; user.owned.push(s.e); user.current = s.e; }
-                else return alert("الرصيد غير كافٍ!");
-                save(); renderShop();
-            };
-            grid.appendChild(card);
-        });
-    }
-
-    function exchange(m) {
-        if(m==='c2g' && user.coins >= 100) { user.coins -= 100; user.cash += 2; }
-        else if(m==='g2c' && user.cash >= 2) { user.cash -= 2; user.coins += 100; }
-        save(); renderShop();
-    }
-
-    // [3] محرك اللعبة (نفس منطقك الأصلي)
-    function startGame() {
-        document.getElementById('shop-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'flex';
+        startGame();
+    }
+
+    function startGame() {
+        const canvas = document.getElementById('g');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         pX = targetX = canvas.width/2; pY = targetY = canvas.height/2;
         gameActive = true; loop();
     }
 
+    // دالة انفجار العملات عند موت الوحش
+    function explodeMonster(mX, mY) {
+        for (let i = 0; i < 10; i++) {
+            items.push({
+                x: mX, y: mY, t: 'coin',
+                vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+                life: 60 
+            });
+        }
+        if(Math.random() < 0.15) { // احتمال ظهور كاش
+            items.push({ x: mX, y: mY, t: 'cash', vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, life: 60 });
+        }
+    }
+
     function loop() {
         if(!gameActive) return;
+        const canvas = document.getElementById('g'), ctx = canvas.getContext('2d');
         ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        if(!isSucking) {
-            updateProjectiles();
-            updateMonsters();
-            updateItems();
-            if(Math.random() < 0.01 + (user.level*0.005)) spawnMonster();
+        // حركة اللاعب
+        pX += (targetX - pX) * 0.12; pY += (targetY - pY) * 0.12;
+        ctx.font = "45px Arial"; ctx.textAlign = "center"; ctx.fillText(user.current, pX, pY);
+
+        // إنتاج الوحوش
+        if(Math.random() < 0.02) {
+            monsters.push({ x: Math.random()*canvas.width, y: -50, e: Math.random()>0.5?'🦂':'🐉', s: 2 + (user.level*0.1) });
         }
 
-        if (user.cash >= (2000 * user.level) && !portalActive) portalActive = true;
-        if(portalActive) {
-            drawPortal();
-            if(Math.hypot(pX - canvas.width/2, pY - 150) < 60) {
-                isSucking = true;
-                if(pScale > 0) pScale -= 0.02;
-                else { flash = 1; user.level++; user.cash=0; portalActive=false; isSucking=false; pScale=1; monsters=[]; save(); }
-            }
-        }
-
-        pX += (targetX - pX) * 0.15; pY += (targetY - pY) * 0.15;
-        drawPlayer();
-        if(flash > 0) { ctx.fillStyle=`rgba(255,255,255,${flash})`; ctx.fillRect(0,0,canvas.width,canvas.height); flash -= 0.04; }
-        updateHUD();
-        requestAnimationFrame(loop);
-    }
-
-    function drawPlayer() {
-        ctx.save(); ctx.translate(pX, pY); ctx.scale(pScale, pScale);
-        ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
-        ctx.font = "45px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
-        ctx.fillText(user.current, 0, 0); ctx.restore();
-    }
-
-    function spawnMonster() {
-        const side = Math.floor(Math.random()*4);
-        let x, y;
-        if(side===0) { x=Math.random()*canvas.width; y=-50; }
-        else if(side===1) { x=canvas.width+50; y=Math.random()*canvas.height; }
-        else if(side===2) { x=Math.random()*canvas.width; y=canvas.height+50; }
-        else { x=-50; y=Math.random()*canvas.height; }
-        monsters.push({x, y, e: ['🐉','🦖','🦂','🦑'][Math.floor(Math.random()*4)], s: 1.2 + user.level*0.2});
-    }
-
-    function updateMonsters() {
+        // تحديث الوحوش
         monsters.forEach((m, i) => {
             let a = Math.atan2(pY - m.y, pX - m.x);
             m.x += Math.cos(a)*m.s; m.y += Math.sin(a)*m.s;
-            ctx.font = "30px Arial"; ctx.fillText(m.e, m.x-15, m.y+15);
+            ctx.fillText(m.e, m.x, m.y);
+
             projectiles.forEach((p, pi) => {
-                if(Math.hypot(p.x - m.x, p.y - m.y) < 35) {
-                    items.push({x: m.x, y: m.y, t: 'cash'});
-                    monsters.splice(i, 1); projectiles.splice(pi, 1);
+                if(Math.hypot(p.x-m.x, p.y-m.y) < 30) {
+                    explodeMonster(m.x, m.y); monsters.splice(i, 1); projectiles.splice(pi, 1);
                 }
             });
+            if(Math.hypot(pX-m.x, pY-m.y) < 25) { user.lives--; monsters.splice(i, 1); if(user.lives<=0) location.reload(); }
         });
-    }
 
-    function updateProjectiles() {
-        let now = Date.now();
-        if(now - lastFire > 160) {
+        // تحديث العناصر (الذهب والكاش المتطاير)
+        items.forEach((it, i) => {
+            if(it.life > 0) {
+                it.x += it.vx; it.y += it.vy; it.vx *= 0.96; it.vy *= 0.96; it.life--;
+            } else {
+                let a = Math.atan2(pY - it.y, pX - it.x);
+                it.x += Math.cos(a)*10; it.y += Math.sin(a)*10;
+            }
+            ctx.font = "20px Arial"; ctx.fillText(it.t==='coin'?'🪙':'💵', it.x, it.y);
+            if(Math.hypot(pX-it.x, pY-it.y) < 25) {
+                it.t==='coin' ? user.coins++ : user.cash++;
+                items.splice(i, 1);
+            }
+        });
+
+        // إطلاق النار تلقائي
+        if(Date.now() % 15 === 0) {
             let a = Math.atan2(targetY - pY, targetX - pX);
-            projectiles.push({x: pX, y: pY, vx: Math.cos(a)*18, vy: Math.sin(a)*18});
-            lastFire = now;
+            projectiles.push({ x: pX, y: pY, vx: Math.cos(a)*15, vy: Math.sin(a)*15 });
         }
-        projectiles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy;
-            ctx.fillStyle = "#00f2ff";
-            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill();
+        projectiles.forEach((p, i) => { 
+            p.x += p.vx; p.y += p.vy; ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill();
             if(p.x<0 || p.x>canvas.width || p.y<0 || p.y>canvas.height) projectiles.splice(i,1);
         });
-    }
 
-    function updateItems() {
-        items.forEach((it, i) => {
-            let a = Math.atan2(pY - it.y, pX - it.x);
-            it.x += Math.cos(a)*12; it.y += Math.sin(a)*12;
-            ctx.font = "20px Arial"; ctx.fillText("💵", it.x-10, it.y+10);
-            if(Math.hypot(pX-it.x, pY-it.y)<30) { user.cash += 100; items.splice(i, 1); save(); }
-        });
-    }
-
-    function drawPortal() {
-        const cx = canvas.width/2, cy = 150, t = Date.now()*0.003;
-        ctx.save(); ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2;
-        for(let i=0; i<3; i++){
-            ctx.beginPath(); let o = i*2.1;
-            for(let a=0; a<6.3; a+=0.2){
-                let x = cx + Math.cos(a)*80*Math.cos(t+o) - Math.sin(a)*30*Math.sin(t+o);
-                let y = cy + Math.cos(a)*80*Math.sin(t+o) + Math.sin(a)*30*Math.cos(t+o);
-                a===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-            }
-            ctx.stroke();
-        } ctx.restore();
-    }
-
-    // [4] الحفظ والمزامنة
-    async function save() {
-        if (isGuestMode) localStorage.setItem('ninjaGuest', JSON.stringify(user));
-        else {
-            localStorage.setItem('ninjaUser', JSON.stringify(user));
-            await supabaseClient.from('players').upsert(user).eq('email', user.email);
-        }
-    }
-
-    function contactWA(m) { window.open(`https://wa.me/201287837118?text=${encodeURIComponent(m + " | الحساب: " + user.email)}`, '_blank'); }
-    function updateHUD() {
-        document.getElementById('h-cash').innerText = user.cash;
         document.getElementById('h-coins').innerText = user.coins;
+        document.getElementById('h-cash').innerText = user.cash;
         document.getElementById('h-lvl').innerText = user.level;
+        document.getElementById('h-lives').innerText = user.lives;
+
+        requestAnimationFrame(loop);
     }
 
     window.addEventListener('pointermove', e => { targetX = e.clientX; targetY = e.clientY; });
+    setInterval(async () => { if(gameActive) await supabaseClient.from('players').upsert(user).eq('email', user.email); }, 5000);
 </script>
 </body>
 </html>
