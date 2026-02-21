@@ -4,37 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#050508">
-    <title>THE LAST OPERATOR</title>
+    <title>NINJA NEON PRO - CLOUD EDITION</title>
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Ninja%20Neon%20Pro%22,%22short_name%22:%22Ninja%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#050508%22,%22theme_color%22:%22#00f2ff%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/1141/1141771.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
 
     <style>
-        /* [1] دليل الألوان والهوية البصرية */
         :root { --neon: #00f2ff; --gold: #f1c40f; --cash: #2ecc71; --vip: #e056fd; --bg: #050508; }
         body, html { margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', Tahoma; color: white; touch-action: none; }
         canvas { display: block; }
 
-        /* [2] شاشات الواجهة */
-        .overlay-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        /* شاشات الواجهة */
+        .overlay-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; text-align: center; }
         .input-box { background: #111; border: 1.5px solid var(--neon); padding: 12px; border-radius: 12px; color: white; width: 260px; margin: 8px; text-align: center; outline: none; }
         
-        /* [3] المتجر والسكنات */
+        /* المتجر والسكنات */
         .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 450px; margin-top: 15px; }
         .skin-item { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
         .skin-item.selected { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); background: rgba(0,242,255,0.05); }
         .wallet-bar { background: rgba(255,255,255,0.05); border: 1px solid var(--neon); border-radius: 15px; padding: 15px; display: flex; gap: 20px; font-weight: bold; margin-bottom: 10px; }
 
-        /* [4] الشركاء والروابط */
+        /* الشركاء */
         .partners { margin-top: 30px; display: flex; gap: 15px; align-items: center; justify-content: center; filter: grayscale(1) opacity(0.6); }
         .partners a:hover { filter: grayscale(0) opacity(1); transform: scale(1.1); transition: 0.3s; }
         .orange-cash { background: #FF7900; color: white; font-size: 9px; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-decoration: none; }
 
-        /* [5] أزرار التحكم */
+        /* الأزرار */
         .btn { border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s; text-decoration: none; text-align: center; }
-        .btn-main { background: var(--neon); color: black; width: 250px; font-size: 18px; margin-top: 15px; box-shadow: 0 5px 15px rgba(0,242,255,0.3); }
+        .btn-main { background: var(--neon); color: black; width: 250px; font-size: 18px; margin-top: 15px; }
         .btn-wa { background: #25D366; color: white; font-size: 12px; margin: 5px; }
 
-        /* [6] واجهة اللعب HUD */
         #hud { position: fixed; top: 10px; width: 100%; display: none; justify-content: center; gap: 8px; z-index: 100; pointer-events: none; }
         .stat { background: rgba(0,0,0,0.8); border: 1px solid var(--neon); padding: 5px 12px; border-radius: 10px; font-size: 12px; }
     </style>
@@ -43,9 +43,10 @@
 
     <div id="auth-screen" class="overlay-screen">
         <h1 style="color: var(--neon); text-shadow: 0 0 15px var(--neon);">NINJA NEON PRO</h1>
+        <p style="font-size: 10px; opacity: 0.6;">CLOUD SECURE VERSION</p>
         <input type="email" id="email" class="input-box" placeholder="البريد الإلكتروني">
         <input type="tel" id="phone" class="input-box" placeholder="رقم الموبايل">
-        <button class="btn btn-main" onclick="handleAuth()">دخول النظام ⚔️</button>
+        <button id="login-btn" class="btn btn-main" onclick="handleAuth()">دخول النظام 🛡️</button>
         
         <div class="partners">
             <a href="https://gemini.google.com" target="_blank"><img src="https://www.gstatic.com/lamda/images/favicon_v1_150160d13988654cbfd0.svg" width="25"></a>
@@ -83,14 +84,11 @@
     <canvas id="g"></canvas>
 
 <script>
-    /** * [دليل مفاتيح الكود]
-     * SKINS: مصفوفة السكنات (20 سكن) مقسمة لـ فئات (free, coin, cash, vip).
-     * userData: الكائن المسؤول عن حفظ البريد، العملات، والسكنات الممتلكة.
-     * portalActive: حالة فتح بوابة الانتقال للمستوى التالي.
-     * isSucking: حالة شفط اللاعب داخل الثقب الدودي.
-     */
+    // [0] إعدادات Supabase
+    const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw";
+    const supabase = supabase.createClient(SB_URL, SB_KEY);
 
-    const canvas = document.getElementById('g'), ctx = canvas.getContext('2d');
     const SKINS = [
         {e:'🥷', p:0, t:'free'}, {e:'👮', p:0, t:'free'},
         {e:'🐶', p:100, t:'coin'}, {e:'🐱', p:200, t:'coin'}, {e:'🐼', p:300, t:'coin'}, {e:'🐻‍❄️', p:400, t:'coin'}, {e:'🐯', p:500, t:'coin'},
@@ -99,22 +97,38 @@
         {e:'🤹‍♂️', p:200, t:'vip'}, {e:'🤹‍♀️', p:300, t:'vip'}, {e:'🥊', p:400, t:'vip'}, {e:'🏆', p:1000, t:'vip'}
     ];
 
-    let user = JSON.parse(localStorage.getItem('ninjaUser')) || {
-        email:'', phone:'', cash:0, coins:0, owned:['🥷','👮'], current:'🥷', level:1
-    };
-
+    let user = { email:'', phone:'', cash:0, coins:0, owned:['🥷','👮'], current:'🥷', level:1 };
     let gameActive = false, portalActive = false, isSucking = false, pScale = 1;
     let monsters = [], items = [], projectiles = [], pX, pY, targetX, targetY, lastFire = 0, flash = 0;
 
-    // [1] نظام الدخول
-    function handleAuth() {
-        const e = document.getElementById('email').value, p = document.getElementById('phone').value;
-        if(e.includes('@') && p.length > 7) {
-            user.email = e; user.phone = p; save();
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('shop-screen').style.display = 'flex';
-            renderShop();
-        } else alert("يرجى إدخال بيانات صحيحة!");
+    // [1] نظام الدخول السحابي
+    async function handleAuth() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('phone').value;
+        if(!e.includes('@') || p.length < 8) return alert("بيانات غير صحيحة");
+
+        document.getElementById('login-btn').innerText = "جاري المزامنة...";
+        
+        // محاولة جلب البيانات من Supabase
+        let { data, error } = await supabase.from('players').select('*').eq('email', e).single();
+
+        if (data) {
+            user = data; // تحميل بيانات اللاعب القديمة
+        } else {
+            // لاعب جديد: إنشاء سجل
+            user.email = e; user.phone = p;
+            await supabase.from('players').insert([user]);
+        }
+
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('shop-screen').style.display = 'flex';
+        renderShop();
+    }
+
+    async function save() {
+        localStorage.setItem('ninjaUser', JSON.stringify(user));
+        // مزامنة سحابية هادئة في الخلفية
+        await supabase.from('players').upsert(user).eq('email', user.email);
     }
 
     // [2] نظام المتجر
@@ -145,7 +159,7 @@
         save(); renderShop();
     }
 
-    // [3] محرك اللعبة الرئيسي
+    // [3] محرك اللعبة
     function startGame() {
         document.getElementById('shop-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'flex';
@@ -158,7 +172,6 @@
         if(!gameActive) return;
         ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // تحديث العناصر
         if(!isSucking) {
             updateProjectiles();
             updateMonsters();
@@ -166,8 +179,8 @@
             if(Math.random() < 0.01 + (user.level*0.005)) spawnMonster();
         }
 
-        // منطق البوابة
         if (user.cash >= (2000 * user.level) && !portalActive) portalActive = true;
+        
         if(portalActive) {
             drawPortal();
             if(Math.hypot(pX - canvas.width/2, pY - 150) < 60) {
@@ -186,7 +199,7 @@
 
     function drawPlayer() {
         ctx.save(); ctx.translate(pX, pY); ctx.scale(pScale, pScale);
-        ctx.shadowBlur = 15; ctx.shadowColor = varColor('--neon');
+        ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
         ctx.font = "45px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
         ctx.fillText(user.current, 0, 0); ctx.restore();
     }
@@ -224,7 +237,7 @@
         }
         projectiles.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy;
-            ctx.fillStyle = varColor('--neon');
+            ctx.fillStyle = "#00f2ff";
             ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill();
             if(p.x<0 || p.x>canvas.width || p.y<0 || p.y>canvas.height) projectiles.splice(i,1);
         });
@@ -235,13 +248,13 @@
             let a = Math.atan2(pY - it.y, pX - it.x);
             it.x += Math.cos(a)*12; it.y += Math.sin(a)*12;
             ctx.font = "20px Arial"; ctx.fillText("💵", it.x-10, it.y+10);
-            if(Math.hypot(pX-it.x, pY-it.y)<30) { user.cash += 100; items.splice(i, 1); }
+            if(Math.hypot(pX-it.x, pY-it.y)<30) { user.cash += 100; items.splice(i, 1); save(); }
         });
     }
 
     function drawPortal() {
         const cx = canvas.width/2, cy = 150, t = Date.now()*0.003;
-        ctx.save(); ctx.strokeStyle = varColor('--neon'); ctx.lineWidth = 2;
+        ctx.save(); ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2;
         for(let i=0; i<3; i++){
             ctx.beginPath(); let o = i*2.1;
             for(let a=0; a<6.3; a+=0.2){
@@ -253,9 +266,6 @@
         } ctx.restore();
     }
 
-    // [4] الدوال المساعدة
-    function save() { localStorage.setItem('ninjaUser', JSON.stringify(user)); }
-    function varColor(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
     function contactWA(m) { window.open(`https://wa.me/201287837118?text=${encodeURIComponent(m + " | الحساب: " + user.email)}`, '_blank'); }
     function updateHUD() {
         document.getElementById('h-cash').innerText = user.cash;
@@ -265,9 +275,9 @@
 
     window.addEventListener('pointermove', e => { targetX = e.clientX; targetY = e.clientY; });
 
-    // [5] Service Worker للإصدار الأوفلاين PWA
+    // [PWA Service Worker]
     if ('serviceWorker' in navigator) {
-        const sw = `const cacheName = 'ninja-v1'; self.addEventListener('install', e => e.waitUntil(caches.open(cacheName).then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+        const sw = `const cacheName = 'ninja-v2'; self.addEventListener('install', e => e.waitUntil(caches.open(cacheName).then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
         const blob = new Blob([sw], {type: 'text/javascript'});
         navigator.serviceWorker.register(URL.createObjectURL(blob));
     }
