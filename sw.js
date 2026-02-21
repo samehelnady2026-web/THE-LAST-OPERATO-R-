@@ -3,10 +3,11 @@ const assets = [
   '/',
   '/index.html',
   '/icon.png',
-  '/manifest.json'
+  '/manifest.json',
+  '/shoot.mp3',   // أضفنا الصوت للذاكرة
+  '/explode.mp3'  // أضفنا الصوت للذاكرة
 ];
 
-// تثبيت الملفات في ذاكرة الموبايل
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(cacheName).then(cache => {
@@ -15,7 +16,6 @@ self.addEventListener('install', e => {
   );
 });
 
-// تشغيل اللعبة من الذاكرة لو مفيش إنترنت
 self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(res => {
