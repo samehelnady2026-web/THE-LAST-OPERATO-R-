@@ -5,19 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>THE LAST OPERATOR | ULTIMATE</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
 
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('المحرك يعمل بنجاح!'))
-        .catch(err => console.log('هناك مشكلة في المحرك'));
-    });
-  }
-</script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js').then(reg => console.log('المحرك يعمل!'));
+        });
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00f2ff; --gold: #f1c40f; --cash: #2ecc71; --bg: #050508; }
@@ -25,9 +22,10 @@
         canvas { display: block; }
         .screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; overflow-y: auto; }
         .input-box { background: #111; border: 1.5px solid var(--neon); padding: 12px; border-radius: 12px; color: white; width: 260px; margin: 8px; text-align: center; outline: none; }
-        .btn { padding: 12px 25px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; background: var(--neon); color: black; width: 260px; margin: 8px; transition: 0.3s; }
-        .btn-guest { background: transparent; border: 2px solid var(--neon); color: var(--neon); }
-        .btn-wa { background: #25D366; color: white; width: 125px; margin: 5px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn { padding: 12px 25px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; background: var(--neon); color: black; width: 260px; margin: 8px; transition: 0.3s; box-shadow: 0 0 10px var(--neon); }
+        .btn-guest { background: transparent; border: 2px solid var(--neon); color: var(--neon); box-shadow: none; }
+        .btn-install { background: var(--gold); color: black; box-shadow: 0 0 15px var(--gold); font-size: 14px; display: none; margin-top: 15px; }
+        .btn-wa { background: #25D366; color: white; width: 125px; margin: 5px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; box-shadow: none; }
         .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 400px; margin-top: 15px; }
         .skin-item { background: #111; border: 2px solid #333; border-radius: 10px; padding: 10px; cursor: pointer; position: relative; }
         .skin-item.selected { border-color: var(--neon); background: rgba(0,242,255,0.1); }
@@ -57,11 +55,14 @@
             <span>💵 <span id="s-cash">0</span></span>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <button class="btn" style="width:130px; font-size:10px; background:#333; color:white;" onclick="exchange('c2g')">100 🪙 ➔ 2 💵</button>
-            <button class="btn" style="width:130px; font-size:10px; background:var(--cash); color:white;" onclick="exchange('g2c')">2 💵 ➔ 100 🪙</button>
+            <button class="btn" style="width:130px; font-size:10px; background:#333; color:white; box-shadow:none;" onclick="exchange('c2g')">100 🪙 ➔ 2 💵</button>
+            <button class="btn" style="width:130px; font-size:10px; background:var(--cash); color:white; box-shadow:none;" onclick="exchange('g2c')">2 💵 ➔ 100 🪙</button>
         </div>
         <div id="skin-grid" class="shop-grid"></div>
         <button class="btn" style="margin-top:20px; height: 55px; font-size: 18px;" onclick="startGame()">بدء المعركة 🚀</button>
+        
+        <button id="installBtn" class="btn btn-install" onclick="installApp()">تثبيت اللعبة على الموبايل 📲</button>
+
         <div style="margin-top:10px;">
             <button class="btn btn-wa" onclick="contactWA('شحن رصيد')">💰 شحن/سحب</button>
             <button class="btn btn-wa" style="background:#e056fd" onclick="contactWA('تفعيل VIP')">💎 تفعيل VIP</button>
@@ -81,6 +82,10 @@
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
+    // تعريف ملفات الصوت (تأكد من رفع shoot.mp3 و explode.mp3 بجانب index.html)
+    const shootSound = new Audio('shoot.mp3');
+    const explodeSound = new Audio('explode.mp3');
+
     const SKINS = [
         {e:'🥷', p:0, t:'free'}, {e:'👮', p:0, t:'free'}, {e:'🤖', p:100, t:'coin'}, {e:'👽', p:200, t:'coin'},
         {e:'🐱', p:500, t:'coin'}, {e:'🐯', p:1000, t:'coin'}, {e:'🐼', p:1500, t:'coin'}, {e:'🦁', p:3000, t:'coin'},
@@ -90,13 +95,28 @@
 
     let user = { email:'', phone:'', cash:0, coins:0, level:1, owned:['🥷','👮'], current:'🥷', lives:5 };
     let gameActive = false, isOffline = false, pX, pY, targetX, targetY, monsters = [], projectiles = [], items = [];
+    let deferredPrompt;
+
+    // مراقبة جاهزية التحميل
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBtn').style.display = 'block';
+    });
+
+    function installApp() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice) => {
+            if (choice.outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+        });
+    }
 
     async function handleAuth() {
         const e = document.getElementById('email').value, p = document.getElementById('phone').value;
         const btn = document.getElementById('auth-btn');
         if(!e || !p) return alert("أكمل البيانات!");
         btn.disabled = true; btn.innerText = "جاري التحقق...";
-        
         const { data: sData, error: sErr } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
         if (sErr) {
             const { error: upErr } = await supabaseClient.auth.signUp({ email: e, password: p });
@@ -169,6 +189,7 @@
     }
 
     function explode(mX, mY) {
+        explodeSound.play().catch(()=>{}); // صوت الانفجار
         for (let i = 0; i < 10; i++) items.push({ x: mX, y: mY, t: 'coin', vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12, life: 60 });
         if(Math.random() < 0.1) items.push({ x: mX, y: mY, t: 'cash', vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 60 });
     }
@@ -201,6 +222,7 @@
         });
 
         if(Date.now() % 15 === 0) {
+            shootSound.play().catch(()=>{}); // صوت الطلقة
             let a = Math.atan2(targetY - pY, targetX - pX);
             projectiles.push({ x: pX, y: pY, vx: Math.cos(a)*16, vy: Math.sin(a)*16 });
         }
