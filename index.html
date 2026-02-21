@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE LAST OPERATOR | FINAL PRO</title>
+    <title>THE LAST OPERATOR | FINAL CLOUD</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00f2ff; --bg: #050508; }
@@ -11,7 +11,8 @@
         canvas { display: block; }
         .screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .input-box { background: #111; border: 1.5px solid var(--neon); padding: 12px; border-radius: 12px; color: white; width: 260px; margin: 8px; text-align: center; outline: none; }
-        .btn { padding: 12px 25px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; background: var(--neon); color: black; width: 250px; margin: 10px; }
+        .btn { padding: 12px 25px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; background: var(--neon); color: black; width: 250px; margin: 10px; transition: 0.3s; }
+        .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
         #hud { position: fixed; top: 10px; width: 100%; display: none; justify-content: center; gap: 8px; z-index: 100; pointer-events: none; }
         .stat { background: rgba(0,0,0,0.85); border: 1px solid var(--neon); padding: 6px 14px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 5px; }
     </style>
@@ -21,8 +22,9 @@
     <div id="auth-screen" class="screen">
         <h1 style="color: var(--neon); text-shadow: 0 0 15px var(--neon);">THE LAST OPERATOR</h1>
         <input type="email" id="email" class="input-box" placeholder="البريد الإلكتروني">
-        <input type="tel" id="phone" class="input-box" placeholder="رقم الموبايل">
-        <button class="btn" onclick="handleAuth()">تشغيل البروتوكول ⚡</button>
+        <input type="tel" id="phone" class="input-box" placeholder="رقم الهاتف (كلمة السر)">
+        <button id="auth-btn" class="btn" onclick="handleAuth()">تشغيل البروتوكول ⚡</button>
+        <p id="msg" style="font-size: 12px; color: #aaa; margin-top: 10px;"></p>
     </div>
 
     <div id="hud">
@@ -43,16 +45,39 @@
     let gameActive = false, pX, pY, targetX, targetY, monsters = [], projectiles = [], items = [];
 
     async function handleAuth() {
-        const emailInput = document.getElementById('email').value;
-        const phoneInput = document.getElementById('phone').value;
-        if(!emailInput) return alert("أدخل الإيميل!");
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('phone').value;
+        const btn = document.getElementById('auth-btn');
+        const msg = document.getElementById('msg');
 
-        let { data } = await supabaseClient.from('players').select('*').eq('email', emailInput).single();
+        if(!e || !p) return alert("أكمل البيانات!");
+        btn.disabled = true; btn.innerText = "جاري الاتصال...";
 
-        if (data) { user = { ...user, ...data }; } 
-        else { 
-            user.email = emailInput; user.phone = phoneInput;
-            await supabaseClient.from('players').insert([user]); 
+        // 1. محاولة تسجيل الدخول
+        const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
+
+        if (signInError) {
+            // 2. إذا فشل الدخول (حساب جديد)، نقوم بالتسجيل
+            const { error: signUpError } = await supabaseClient.auth.signUp({ email: e, password: p });
+            
+            if (signUpError) {
+                alert("خطأ: " + signUpError.message);
+                btn.disabled = false; btn.innerText = "تشغيل البروتوكول ⚡";
+                return;
+            }
+            msg.innerText = "📧 تم إرسال رابط تفعيل! افحص بريدك (والـ Spam) لتظهر بياناتك هنا.";
+            btn.disabled = false; btn.innerText = "بانتظار التفعيل...";
+            return;
+        }
+
+        // 3. جلب البيانات من الجدول بعد نجاح الدخول
+        let { data: playerData } = await supabaseClient.from('players').select('*').eq('email', e).single();
+
+        if (!playerData) {
+            await supabaseClient.from('players').insert([{ email: e, phone: p, cash: 0, coins: 0, level: 1, owned: ['🥷'], current: '🥷' }]);
+            user.email = e; user.phone = p;
+        } else {
+            user = { ...user, ...playerData, lives: 5 };
         }
 
         document.getElementById('auth-screen').style.display = 'none';
@@ -67,18 +92,14 @@
         gameActive = true; loop();
     }
 
-    // دالة انفجار العملات عند موت الوحش
     function explodeMonster(mX, mY) {
         for (let i = 0; i < 10; i++) {
             items.push({
                 x: mX, y: mY, t: 'coin',
-                vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
-                life: 60 
+                vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12, life: 60
             });
         }
-        if(Math.random() < 0.15) { // احتمال ظهور كاش
-            items.push({ x: mX, y: mY, t: 'cash', vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, life: 60 });
-        }
+        if(Math.random() < 0.1) items.push({ x: mX, y: mY, t: 'cash', vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 60 });
     }
 
     function loop() {
@@ -86,21 +107,15 @@
         const canvas = document.getElementById('g'), ctx = canvas.getContext('2d');
         ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // حركة اللاعب
         pX += (targetX - pX) * 0.12; pY += (targetY - pY) * 0.12;
         ctx.font = "45px Arial"; ctx.textAlign = "center"; ctx.fillText(user.current, pX, pY);
 
-        // إنتاج الوحوش
-        if(Math.random() < 0.02) {
-            monsters.push({ x: Math.random()*canvas.width, y: -50, e: Math.random()>0.5?'🦂':'🐉', s: 2 + (user.level*0.1) });
-        }
+        if(Math.random() < 0.02) monsters.push({ x: Math.random()*canvas.width, y: -50, e: Math.random()>0.5?'🦂':'🐉', s: 2 + (user.level*0.1) });
 
-        // تحديث الوحوش
         monsters.forEach((m, i) => {
             let a = Math.atan2(pY - m.y, pX - m.x);
             m.x += Math.cos(a)*m.s; m.y += Math.sin(a)*m.s;
             ctx.fillText(m.e, m.x, m.y);
-
             projectiles.forEach((p, pi) => {
                 if(Math.hypot(p.x-m.x, p.y-m.y) < 30) {
                     explodeMonster(m.x, m.y); monsters.splice(i, 1); projectiles.splice(pi, 1);
@@ -109,29 +124,24 @@
             if(Math.hypot(pX-m.x, pY-m.y) < 25) { user.lives--; monsters.splice(i, 1); if(user.lives<=0) location.reload(); }
         });
 
-        // تحديث العناصر (الذهب والكاش المتطاير)
         items.forEach((it, i) => {
             if(it.life > 0) {
-                it.x += it.vx; it.y += it.vy; it.vx *= 0.96; it.vy *= 0.96; it.life--;
+                it.x += it.vx; it.y += it.vy; it.vx *= 0.95; it.vy *= 0.95; it.life--;
             } else {
                 let a = Math.atan2(pY - it.y, pX - it.x);
-                it.x += Math.cos(a)*10; it.y += Math.sin(a)*10;
+                it.x += Math.cos(a)*12; it.y += Math.sin(a)*12;
             }
             ctx.font = "20px Arial"; ctx.fillText(it.t==='coin'?'🪙':'💵', it.x, it.y);
-            if(Math.hypot(pX-it.x, pY-it.y) < 25) {
-                it.t==='coin' ? user.coins++ : user.cash++;
-                items.splice(i, 1);
-            }
+            if(Math.hypot(pX-it.x, pY-it.y) < 25) { it.t==='coin' ? user.coins++ : user.cash++; items.splice(i, 1); }
         });
 
-        // إطلاق النار تلقائي
         if(Date.now() % 15 === 0) {
             let a = Math.atan2(targetY - pY, targetX - pX);
-            projectiles.push({ x: pX, y: pY, vx: Math.cos(a)*15, vy: Math.sin(a)*15 });
+            projectiles.push({ x: pX, y: pY, vx: Math.cos(a)*16, vy: Math.sin(a)*16 });
         }
-        projectiles.forEach((p, i) => { 
+        projectiles.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy; ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill();
-            if(p.x<0 || p.x>canvas.width || p.y<0 || p.y>canvas.height) projectiles.splice(i,1);
+            if(p.x<0 || p.x>canvas.width || p.y<0 || p.y>canvas.height) projectiles.splice(i, 1);
         });
 
         document.getElementById('h-coins').innerText = user.coins;
