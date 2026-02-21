@@ -3,43 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NINJA NEON PRO - GUEST & CLOUD</title>
+    <title>NINJA NEON PRO - ULTIMATE</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root { --neon: #00f2ff; --gold: #f1c40f; --cash: #2ecc71; --bg: #050508; }
         body, html { margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', Tahoma; color: white; touch-action: none; }
         canvas { display: block; }
-        .overlay-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+
+        /* الشاشات */
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .input-box { background: #111; border: 1.5px solid var(--neon); padding: 12px; border-radius: 12px; color: white; width: 260px; margin: 8px; text-align: center; outline: none; }
-        .btn { border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 280px; margin: 5px; }
+        
+        /* المتجر */
+        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 450px; margin-top: 15px; }
+        .skin-item { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .skin-item.selected { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); background: rgba(0,242,255,0.1); }
+        .wallet { background: rgba(255,255,255,0.05); border: 1px solid var(--neon); padding: 15px; border-radius: 15px; display: flex; gap: 20px; margin-bottom: 10px; }
+
+        /* الأزرار */
+        .btn { border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 280px; margin: 5px; text-align: center; text-decoration: none; }
         .btn-main { background: var(--neon); color: black; }
         .btn-guest { background: #333; color: white; border: 1px solid #555; }
-        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 450px; }
-        .skin-item { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; }
-        .skin-item.selected { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
+        
+        /* HUD */
         #hud { position: fixed; top: 10px; width: 100%; display: none; justify-content: center; gap: 8px; z-index: 100; pointer-events: none; }
         .stat { background: rgba(0,0,0,0.8); border: 1px solid var(--neon); padding: 5px 12px; border-radius: 10px; font-size: 11px; }
+
+        .partners { margin-top: 20px; display: flex; gap: 15px; filter: grayscale(1); opacity: 0.5; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="overlay-screen">
+    <div id="auth-screen" class="overlay">
         <h1 style="color: var(--neon); text-shadow: 0 0 15px var(--neon);">NINJA NEON PRO</h1>
         <input type="email" id="email" class="input-box" placeholder="البريد الإلكتروني">
         <input type="tel" id="phone" class="input-box" placeholder="رقم الموبايل">
         <button id="login-btn" class="btn btn-main" onclick="handleAuth(false)">دخول السحاب (Online) 🛡️</button>
-        <button class="btn btn-guest" onclick="handleAuth(true)">دخول كضيف (Offline/Fast) ⚡</button>
+        <button class="btn btn-guest" onclick="handleAuth(true)">دخول كضيف (Offline) ⚡</button>
         
-        <p style="font-size: 10px; color: #555; margin-top: 20px;">Powered by Gemini, GitHub, Supabase & Orange Cash</p>
+        <div class="partners">
+            <img src="https://www.gstatic.com/lamda/images/favicon_v1_150160d13988654cbfd0.svg" width="20">
+            <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="20" style="filter:invert(1)">
+            <img src="https://seeklogo.com/images/S/supabase-logo-DCC4167731-seeklogo.com.png" width="20">
+        </div>
     </div>
 
-    <div id="shop-screen" class="overlay-screen" style="display:none;">
+    <div id="shop-screen" class="overlay" style="display:none;">
         <h2 style="color: var(--neon);">المتجر والتبادل <span id="mode-tag" style="font-size:10px; color:gray;"></span></h2>
-        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 15px;">
-            💵 <span id="w-cash">0</span> | 🪙 <span id="w-coins">0</span>
+        <div class="wallet">
+            <span>💵 <span id="w-cash">0</span></span>
+            <span>🪙 <span id="w-coins">0</span></span>
+        </div>
+        <div style="display:flex; gap:5px; margin-bottom:10px;">
+            <button class="btn" style="width:140px; font-size:10px; background:#444; color:white;" onclick="exchange('c2g')">100 🪙 ➔ 2 💵</button>
+            <button class="btn" style="width:140px; font-size:10px; background:var(--cash); color:white;" onclick="exchange('g2c')">2 💵 ➔ 100 🪙</button>
         </div>
         <div id="skin-grid" class="shop-grid"></div>
-        <button class="btn btn-main" onclick="startGame()">انطلاق 🚀</button>
+        <button class="btn btn-main" style="margin-top:20px;" onclick="startGame()">بدء المعركة 🚀</button>
     </div>
 
     <div id="hud">
@@ -51,38 +73,43 @@
     <canvas id="g"></canvas>
 
 <script>
+    // [1] الإعدادات والمفاتيح
     const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
+    const SKINS = [
+        {e:'🥷', p:0, t:'free'}, {e:'👮', p:0, t:'free'},
+        {e:'🐶', p:100, t:'coin'}, {e:'🐱', p:200, t:'coin'}, {e:'🐼', p:300, t:'coin'}, {e:'🐻‍❄️', p:400, t:'coin'}, {e:'🐯', p:500, t:'coin'},
+        {e:'🦓', p:10, t:'cash'}, {e:'🦙', p:20, t:'cash'}, {e:'🐑', p:30, t:'cash'}, {e:'🦃', p:40, t:'cash'}, {e:'🐓', p:50, t:'cash'}, 
+        {e:'🦩', p:60, t:'cash'}, {e:'🦜', p:70, t:'cash'}, {e:'🦚', p:80, t:'cash'}, {e:'🦤', p:90, t:'cash'},
+        {e:'🥊', p:400, t:'vip'}, {e:'🏆', p:1000, t:'vip'}
+    ];
+
     let user = { email:'guest', phone:'', cash:0, coins:0, owned:['🥷','👮'], current:'🥷', level:1 };
     let isGuestMode = false;
 
-    // [1] منطق الدخول المزدوج
+    // [2] نظام الدخول
     async function handleAuth(guest) {
         isGuestMode = guest;
         const e = document.getElementById('email').value;
         const p = document.getElementById('phone').value;
 
         if (!isGuestMode) {
-            if(!e.includes('@')) return alert("يرجى إدخال إيميل صحيح للتسجيل السحابي");
-            document.getElementById('login-btn').innerText = "جاري الاتصال...";
+            if(!e.includes('@')) return alert("يرجى إدخال إيميل صحيح");
+            document.getElementById('login-btn').innerText = "جاري المزامنة...";
             try {
                 let { data, error } = await supabaseClient.from('players').select('*').eq('email', e).single();
-                if (data) user = data; 
+                if (data) user = data;
                 else {
                     user.email = e; user.phone = p;
                     await supabaseClient.from('players').insert([user]);
                 }
-            } catch (err) {
-                alert("فشل الاتصال! تم تحويلك لوضع الضيف تلقائياً.");
-                isGuestMode = true;
-            }
+            } catch (err) { alert("خطأ في الشبكة، تم تحويلك لضيف"); isGuestMode = true; }
         } else {
-            // وضع الضيف: تحميل من الذاكرة المحلية فقط
-            const localData = localStorage.getItem('ninjaGuest');
-            if(localData) user = JSON.parse(localData);
-            document.getElementById('mode-tag').innerText = "(وضع الضيف)";
+            const local = localStorage.getItem('ninjaGuest');
+            if(local) user = JSON.parse(local);
+            document.getElementById('mode-tag').innerText = "(ضيف)";
             document.getElementById('h-guest').innerText = "👤";
         }
 
@@ -91,51 +118,75 @@
         renderShop();
     }
 
-    async function save() {
-        if (isGuestMode) {
-            localStorage.setItem('ninjaGuest', JSON.stringify(user));
-        } else {
-            localStorage.setItem('ninjaUser', JSON.stringify(user));
-            await supabaseClient.from('players').upsert(user).eq('email', user.email);
-        }
-    }
-
-    // باقي محرك اللعبة (مختصر للعرض)
+    // [3] المتجر
     function renderShop() {
         document.getElementById('w-cash').innerText = user.cash;
         document.getElementById('w-coins').innerText = user.coins;
         const grid = document.getElementById('skin-grid'); grid.innerHTML = '';
-        const SKINS = [{e:'🥷'},{e:'👮'},{e:'🐶'},{e:'🐱'},{e:'🐼'},{e:'🐯'},{e:'🦓'},{e:'🦙'}];
         SKINS.forEach(s => {
+            const isOwned = user.owned.includes(s.e);
             const card = document.createElement('div');
             card.className = `skin-item ${user.current===s.e?'selected':''}`;
-            card.innerHTML = `<span style="font-size:30px;">${s.e}</span>`;
-            card.onclick = () => { user.current = s.e; save(); renderShop(); };
+            card.innerHTML = `<span style="font-size:25px; display:block;">${s.e}</span><span style="font-size:8px; color:var(--gold)">${isOwned?'ملكك':s.p}</span>`;
+            card.onclick = () => {
+                if(isOwned) { user.current = s.e; }
+                else if(s.t==='coin' && user.coins >= s.p) { user.coins -= s.p; user.owned.push(s.e); user.current = s.e; }
+                else if(s.t==='cash' && user.cash >= s.p) { user.cash -= s.p; user.owned.push(s.e); user.current = s.e; }
+                else return alert("الرصيد لا يكفي");
+                save(); renderShop();
+            };
             grid.appendChild(card);
         });
     }
 
-    let gameActive = false, pX, pY;
+    function exchange(m) {
+        if(m==='c2g' && user.coins >= 100) { user.coins -= 100; user.cash += 2; }
+        else if(m==='g2c' && user.cash >= 2) { user.cash -= 2; user.coins += 100; }
+        save(); renderShop();
+    }
+
+    async function save() {
+        if (isGuestMode) localStorage.setItem('ninjaGuest', JSON.stringify(user));
+        else await supabaseClient.from('players').upsert(user).eq('email', user.email);
+    }
+
+    // [4] محرك اللعبة
     const canvas = document.getElementById('g'), ctx = canvas.getContext('2d');
+    let gameActive = false, pX, pY, targetX, targetY, monsters = [], projectiles = [], items = [];
+
     function startGame() {
         document.getElementById('shop-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'flex';
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        pX = canvas.width/2; pY = canvas.height/2;
+        pX = targetX = canvas.width/2; pY = targetY = canvas.height/2;
         gameActive = true; loop();
     }
 
     function loop() {
         if(!gameActive) return;
         ctx.fillStyle = "#050508"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.font = "50px Arial"; ctx.textAlign = "center";
+
+        // تحريك اللاعب
+        pX += (targetX - pX) * 0.1; pY += (targetY - pY) * 0.1;
+        ctx.font = "40px Arial"; ctx.textAlign = "center";
         ctx.fillText(user.current, pX, pY);
+
+        // وحوش مبسطة
+        if(Math.random() < 0.02) monsters.push({x: Math.random()*canvas.width, y: -50, s: 2});
+        monsters.forEach((m, i) => {
+            m.y += m.s;
+            ctx.fillText('👾', m.x, m.y);
+            if(Math.hypot(pX-m.x, pY-m.y) < 30) { /* اصطدام */ }
+            if(m.y > canvas.height) monsters.splice(i,1);
+        });
+
         document.getElementById('h-cash').innerText = user.cash;
         document.getElementById('h-coins').innerText = user.coins;
         document.getElementById('h-lvl').innerText = user.level;
         requestAnimationFrame(loop);
     }
-    window.addEventListener('pointermove', e => { pX = e.clientX; pY = e.clientY; });
+
+    window.addEventListener('pointermove', e => { targetX = e.clientX; targetY = e.clientY; });
 </script>
 </body>
 </html>
