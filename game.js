@@ -1,6 +1,5 @@
-// --- إعدادات Supabase الخاصة بمشروعك (مستخرجة من الصور) ---
+// --- إعدادات Supabase الخاصة بك ---
 const SUPABASE_URL = 'https://ctnuuvdakmqpbuzhrsos.supabase.co';
-// انسخ المفتاح الذي يبدأ بـ sb_publishable من صفحة API Keys وضعه مكان النص التالي:
 const SUPABASE_KEY = 'sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ';
 
 let supabase = null;
@@ -12,7 +11,7 @@ try {
     console.error("خطأ في الاتصال بـ Supabase:", e); 
 }
 
-// تسجيل الـ Service Worker لتمثيل اللعبة كتطبيق (PWA)
+// تسجيل الـ Service Worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(e => {});
 }
@@ -63,7 +62,7 @@ const Market = {
 
 const GameEngine = {
     canvas: document.getElementById('g'), ctx: null, active: false,
-    monsters: [], drops: [], pX: 0, pY: 0, tX: 0, tY: 0, timeLeft: 100,
+    monsters: [], bullets: [], pX: 0, pY: 0, tX: 0, tY: 0, timeLeft: 100,
 
     async start(online) {
         const nameInput = document.getElementById('u-name').value;
@@ -80,10 +79,7 @@ const GameEngine = {
                 if (error) console.log("خطأ في قاعدة البيانات:", error);
             }
             alert("تم التفعيل والارتباط بالسيرفر بنجاح! ✅");
-        } else {
-            alert(`مرحباً بك يا ${nameInput || 'Guest'} في وضع الأوفلاين 🕹️`);
         }
-
         User.name = nameInput || "Guest";
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('s-market').classList.remove('hidden');
@@ -97,14 +93,21 @@ const GameEngine = {
         this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight;
         this.pX = this.canvas.width / 2; this.pY = this.canvas.height / 2;
         this.active = true;
-        if (User.level === 1) this.startCountdown();
+        
+        // العداد يظهر في المستوى الأول فقط
+        if (User.level === 1) {
+            this.startCountdown();
+            document.getElementById('timer-val').parentElement.style.display = 'block';
+        } else {
+            document.getElementById('timer-val').parentElement.style.display = 'none';
+        }
         this.loop();
     },
 
     startCountdown() {
-        this.timeLeft = 100; // 5 ثوانٍ
+        this.timeLeft = 100;
         const iv = setInterval(() => {
-            if (!this.active) return;
+            if (!this.active || User.level > 1) { clearInterval(iv); return; }
             this.timeLeft--;
             const timerVal = document.getElementById('timer-val');
             if (timerVal) timerVal.innerText = `00:${Math.ceil(this.timeLeft / 20).toString().padStart(2, '0')}`;
@@ -121,8 +124,22 @@ const GameEngine = {
         if (lvlNum) lvlNum.innerText = User.level;
         this.active = false;
         alert("أحسنت! انتقال للمستوى " + User.level);
-        this.monsters = []; 
+        this.monsters = [];
+        this.bullets = [];
         this.active = true;
+        // إخفاء العداد عند الانتقال لليفل 2
+        document.getElementById('timer-val').parentElement.style.display = 'none';
+    },
+
+    shoot() {
+        // إطلاق رصاصة باتجاه الهدف
+        const angle = Math.atan2(this.tY - this.pY, this.tX - this.pX);
+        this.bullets.push({
+            x: this.pX, y: this.pY,
+            vx: Math.cos(angle) * 10,
+            vy: Math.sin(angle) * 10
+        });
+        this.playSound(600, 0.05, 'square');
     },
 
     playSound(f, d, t = 'sine') {
@@ -136,16 +153,41 @@ const GameEngine = {
 
     loop() {
         if (!this.active) return;
-        this.ctx.fillStyle = "rgba(60, 60, 60, 0.4)"; // خلفية فاتحة كما طلبت
+        this.ctx.fillStyle = "rgba(60, 60, 60, 0.4)"; 
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // حركة اللاعب (سلسة)
+        // حركة اللاعب
         this.pX += (this.tX - this.pX) * 0.12; 
         this.pY += (this.tY - this.pY) * 0.12;
         
+        // عرض الاسم في ليفل 1، ورقم المستوى في ليفل 2 وما بعده
+        this.ctx.fillStyle = "white";
+        this.ctx.font = "20px Tajawal, Arial";
+        let label = (User.level === 1) ? User.name : "Lv. " + User.level;
+        this.ctx.fillText(label, this.pX, this.pY - 40);
+
         this.ctx.font = "40px Arial"; 
         this.ctx.textAlign = "center";
         this.ctx.fillText(User.currentSkin, this.pX, this.pY + 15);
+
+        // --- نظام الرصاص (يبدأ من المستوى 2) ---
+        if (User.level >= 2) {
+            if (Math.random() < 0.1) this.shoot(); // إطلاق تلقائي
+            
+            this.bullets.forEach((b, bi) => {
+                b.x += b.vx; b.y += b.vy;
+                this.ctx.fillText("⭐", b.x, b.y);
+                
+                // تصادم الرصاص مع الوحوش
+                this.monsters.forEach((m, mi) => {
+                    if (Math.hypot(b.x - m.x, b.y - m.y) < 30) {
+                        this.monsters.splice(mi, 1);
+                        this.bullets.splice(bi, 1);
+                        User.gold += 20; Market.updateUI();
+                    }
+                });
+            });
+        }
 
         // إنشاء الوحوش
         if (Math.random() < 0.06) {
@@ -156,37 +198,19 @@ const GameEngine = {
             });
         }
 
-        // منطق الانفجار السريع والقوي ليفل 1
-        if (User.level === 1 && this.monsters.length > 3) {
-            let first = this.monsters[0];
-            let cluster = this.monsters.filter(m => Math.hypot(m.x - first.x, m.y - first.y) < 100);
-            if (cluster.length > 3) {
-                this.monsters = this.monsters.filter(m => !cluster.includes(m));
-                User.gold += 1500; Market.updateUI();
-                // تأثير بصري وصوتي للانفجار
-                this.ctx.fillStyle = "white";
-                this.ctx.fillRect(0,0, this.canvas.width, this.canvas.height);
-                this.playSound(100, 0.4, 'square');
-            }
-        }
-
-        // حركة الوحوش 360 درجة
+        // حركة الوحوش
         this.monsters.forEach((m, i) => {
             let ang = Math.atan2(this.pY - m.y, this.pX - m.x);
             m.x += Math.cos(ang) * m.s; 
             m.y += Math.sin(ang) * m.s;
             this.ctx.fillText("👾", m.x, m.y);
             
-            // تصادم الوحش مع اللاعب
             if (Math.hypot(this.pX - m.x, this.pY - m.y) < 35) {
                 User.lives--; 
                 this.monsters.splice(i, 1); 
                 Market.updateUI();
                 this.playSound(200, 0.1, 'triangle');
-                if (User.lives <= 0) {
-                    alert("انتهت المحاولات! 💀");
-                    location.reload();
-                }
+                if (User.lives <= 0) { alert("Game Over! 💀"); location.reload(); }
             }
         });
 
@@ -194,29 +218,9 @@ const GameEngine = {
     }
 };
 
-// التحكم باللمس والماوس
+// التحكم
 window.addEventListener('mousemove', e => { GameEngine.tX = e.clientX; GameEngine.tY = e.clientY; });
 window.addEventListener('touchmove', e => { 
     e.preventDefault();
     GameEngine.tX = e.touches[0].clientX; GameEngine.tY = e.touches[0].clientY; 
 }, { passive: false });
-
-// زر التحميل PWA (يظهر فقط عند توفر ميزة التثبيت)
-let deferredPrompt; 
-window.addEventListener('beforeinstallprompt', e => { 
-    e.preventDefault(); 
-    deferredPrompt = e; 
-    const installBtn = document.getElementById('install-btn');
-    if (installBtn) installBtn.style.display = 'block'; 
-});
-
-const installBtn = document.getElementById('install-btn');
-if (installBtn) {
-    installBtn.onclick = async () => { 
-        if (deferredPrompt) { 
-            deferredPrompt.prompt(); 
-            deferredPrompt = null; 
-            installBtn.style.display = 'none';
-        } 
-    };
-    }
