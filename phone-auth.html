@@ -2,48 +2,30 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تفعيل رقم الهاتف - THE LAST OPERATOR</title>
+    <title>ربط الهاتف - THE LAST OPERATOR</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #050505; color: white; font-family: Arial; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 25px; border: 1px solid #ff4081; text-align: center; backdrop-filter: blur(10px); width: 320px; }
-        input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 12px; border: none; text-align: center; font-size: 1.1rem; }
-        button { background: #ff4081; color: white; border: none; padding: 12px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; }
+        body { background: #050505; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #00d2ff; }
+        input { padding: 10px; border-radius: 10px; border: none; width: 100%; margin: 15px 0; }
+        button { background: #00d2ff; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="msg">جاري فحص الرابط...</div>
-    <div id="setup" class="card" style="display:none">
-        <h2>📱 خطوة أخيرة!</h2>
-        <p>أدخل رقم هاتفك لربطه بحسابك والدخول به مستقبلاً</p>
-        <input type="tel" id="phone" placeholder="+201234567890">
-        <button onclick="savePhone()">ربط الهاتف الآن</button>
+    <div id="setup" class="card">
+        <h2>📱 تم التفعيل!</h2>
+        <p>اربط رقم هاتفك الآن للدخول به مستقبلاً</p>
+        <input type="tel" id="ph" placeholder="+201234567890">
+        <button onclick="savePh()">حفظ البيانات</button>
     </div>
-
     <script>
-        const SB_URL = "https://your-project.supabase.co";
-        const SB_KEY = "your-anon-key";
-        const supabase = supabase.createClient(SB_URL, SB_KEY);
-
-        window.onload = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                document.getElementById('msg').style.display = 'none';
-                document.getElementById('setup').style.display = 'block';
-            } else {
-                document.getElementById('msg').innerText = "رابط غير صالح.";
-            }
-        };
-
-        async function savePhone() {
-            const p = document.getElementById('phone').value;
+        const supabase = supabase.createClient("https://ctnuuvdakmqpbuzhrsos.supabase.co", "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ");
+        async function savePh() {
             const { data: { user } } = await supabase.auth.getUser();
-            const { error } = await supabase.from('players').update({ phone: p }).eq('email', user.email);
-            if (!error) {
-                alert("تم الربط بنجاح! يمكنك الآن العودة للعبة والدخول برقمك.");
-                window.location.href = "index.html";
-            }
+            const ph = document.getElementById('ph').value;
+            const { error } = await supabase.from('players').update({ phone: ph }).eq('email', user.email);
+            if (!error) { alert("تم الربط!"); window.location.href = "index.html"; }
         }
     </script>
 </body>
-  </html>
+</html>
