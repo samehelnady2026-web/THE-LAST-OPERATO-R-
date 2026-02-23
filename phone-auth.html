@@ -2,86 +2,54 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تفعيل رقم الهاتف - THE LAST OPERATOR</title>
+    <title>تأمين الحساب - THE LAST OPERATOR</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #050505; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; margin: 0; }
-        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #00d2ff; backdrop-filter: blur(10px); width: 320px; }
-        input { padding: 12px; border-radius: 10px; border: none; width: 100%; margin: 15px 0; text-align: center; font-size: 1.1rem; }
-        button { background: #00d2ff; color: #000; border: none; padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; }
-        .error-msg { color: #ff4081; font-size: 0.8rem; margin-top: 10px; display: none; }
+        body { background: #050505; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #ff4081; width: 320px; }
+        input { padding: 12px; border-radius: 10px; border: none; width: 100%; margin: 10px 0; text-align: center; }
+        button { background: #ff4081; color: white; border: none; padding: 12px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
-
-    <div id="loader">جاري التحقق من الجلسة...</div>
-
-    <div id="setup" class="card" style="display:none">
-        <h2>📱 خطوة واحدة متبقية</h2>
-        <p>أدخل رقم هاتفك لربط حسابك والدخول للعبة</p>
-        <input type="tel" id="ph" placeholder="+201234567890">
-        <button id="save-btn" onclick="savePh()">ربط الهاتف ودخول اللعبة</button>
-        <div id="err" class="error-msg"></div>
+    <div id="setup" class="card">
+        <h2>🔒 تأمين الحساب</h2>
+        <p>أدخل هاتفك وكود PIN (أرقام فقط) لربطهما بحسابك</p>
+        <input type="tel" id="ph" placeholder="رقم الهاتف">
+        <input type="number" id="pin" placeholder="كود PIN (مثلاً 1234)">
+        <button onclick="saveSecure()">تفعيل ودخول اللعبة</button>
     </div>
 
     <script>
-        // التأكد من البيانات الصحيحة
-        const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
-        const SB_KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
-        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        const supabaseClient = supabase.createClient("https://ctnuuvdakmqpbuzhrsos.supabase.co", "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ");
 
-        window.onload = async () => {
-            // التحقق هل المستخدم سجل دخوله فعلياً عبر رابط الإيميل
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
-            
-            if (session && session.user) {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('setup').style.display = 'block';
-            } else {
-                document.getElementById('loader').innerText = "خطأ: يجب الضغط على الرابط المرسل للإيميل أولاً.";
-                console.error("Session Error:", error);
-            }
-        };
-
-        async function savePh() {
-            const btn = document.getElementById('save-btn');
-            const errDiv = document.getElementById('err');
-            const phoneVal = document.getElementById('ph').value;
-
-            if(!phoneVal) { alert("أدخل الرقم أولاً"); return; }
-
-            btn.innerText = "جاري الحفظ...";
-            btn.disabled = true;
-
+        async function saveSecure() {
+            const ph = document.getElementById('ph').value;
+            const pin = document.getElementById('pin').value;
             const { data: { user } } = await supabaseClient.auth.getUser();
 
-            // محاولة تحديث البيانات - جربنا 'players' (جمع) 
-            // إذا كان اسم جدولك في سوبابيس 'player' (مفرد) غيرها في السطر القادم
+            if(!ph || !pin) return alert("أكمل البيانات");
+
+            // نستخدم upsert لضمان وجود السجل وتحديثه بالرقم والـ PIN
             const { error } = await supabaseClient
-                .from('players') 
+                .from('players')
                 .upsert({ 
                     email: user.email, 
-                    phone: phoneVal,
-                    coins: 1000,
-                    cash: 100,
-                    level: 1
+                    phone: ph, 
+                    pin_code: parseInt(pin), // تحويل الـ PIN لرقم ليطابق int4 في صورتك
+                    coins: 1000, 
+                    cash: 100, 
+                    level: 1,
+                    current: '🥷'
                 }, { onConflict: 'email' });
 
-            if (error) {
-                console.error("Database Error:", error);
-                errDiv.innerText = "فشل الحفظ: " + error.message;
-                errDiv.style.display = 'block';
-                btn.innerText = "حاول مرة أخرى";
-                btn.disabled = false;
-                
-                // تنبيه إضافي للمساعدة في التشخيص
-                alert("حدث خطأ في قاعدة البيانات: " + error.message);
-            } else {
-                alert("تم التفعيل والربط بنجاح! استعد للعب.");
-                // التوجيه للملف الرئيسي (تأكد أن الاسم index.html)
+            if (!error) {
+                alert("تم التفعيل! يمكنك الآن الدخول برقمك والـ PIN.");
                 window.location.href = "index.html";
+            } else {
+                alert("خطأ أثناء الحفظ: " + error.message);
             }
         }
     </script>
 </body>
-            </html>
+</html>
