@@ -13,35 +13,35 @@
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a2e 0%, #050505 100%); z-index: 200; }
         .hidden { display: none !important; }
         .glass-card { background: var(--glass); backdrop-filter: blur(15px); padding: 25px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.3); text-align: center; width: 90%; max-width: 400px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; }
-        button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; font-size: 1rem; }
+        button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; }
         .btn-blue { background: var(--blue); color: #000; }
         .btn-pink { background: var(--pink); color: #fff; }
         #hud { position: fixed; top: 10px; width: 100%; display: flex; justify-content: center; gap: 5px; z-index: 100; pointer-events: none; }
         .stat-box { background: #fff; color: #333; padding: 5px 8px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; min-width: 60px; text-align: center; border: 2px solid #9c27b0; }
-        canvas { display: block; }
-        #pwa-btn { position: fixed; bottom: 20px; right: 20px; background: var(--yellow); color: #000; padding: 10px 20px; border-radius: 50px; font-weight: bold; z-index: 1000; display: none; }
+        canvas { display: block; width: 100%; height: 100%; }
+        #pwa-btn { position: fixed; bottom: 20px; right: 20px; background: var(--yellow); color: #000; padding: 12px 20px; border-radius: 50px; font-weight: bold; z-index: 1000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
 <button id="pwa-btn">📥 تثبيت اللعبة</button>
-<div id="flash-effect" style="position:fixed; inset:0; background:white; opacity:0; pointer-events:none; z-index:300;"></div>
+<div id="flash-effect" style="position:fixed; inset:0; background:white; opacity:0; pointer-events:none; z-index:300; transition: opacity 0.3s;"></div>
 
 <div id="auth-screen" class="screen">
     <div class="glass-card">
-        <h1 style="color:var(--yellow); margin-bottom:15px;">THE LAST OPERATOR</h1>
+        <h1 style="color:var(--yellow); margin-bottom:15px; text-shadow: 2px 2px #000;">THE LAST OPERATOR</h1>
         <input type="email" id="u-email" placeholder="البريد الإلكتروني">
         <input type="password" id="u-pass" placeholder="كلمة المرور">
         
-        <div style="display: flex; gap: 5px;">
+        <div style="display: flex; gap: 10px;">
             <button class="btn-pink" onclick="Auth.signIn()">دخول 🔑</button>
             <button class="btn-blue" onclick="Auth.signUp()">تسجيل 📧</button>
         </div>
         
-        <button style="background:#555; color:white;" onclick="Auth.playAsGuest()">اللعب كضيف 🎮</button>
-        <hr style="margin:10px; opacity:0.3">
-        <button style="background:#2ecc71; color:white;" onclick="Auth.signInByPhone()">دخول بالهاتف 📱</button>
+        <button style="background:#555; color:white;" onclick="Auth.playAsGuest()">اللعب كضيف (بدون حفظ) 🎮</button>
+        <hr style="margin:15px; opacity:0.3">
+        <button style="background:#2ecc71; color:white;" onclick="Auth.signInByPhone()">دخول سريع بالهاتف 📱</button>
     </div>
 </div>
 
@@ -57,97 +57,97 @@
 <canvas id="g"></canvas>
 
 <script>
-// --- إعدادات Supabase الخاصة بك ---
+// --- إعدادات الاتصال بالسحاب ---
 const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
 const SB_KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
-const supabase = supabase.createClient(SB_URL, SB_KEY);
+const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-// --- PWA Install Logic ---
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e;
-    document.getElementById('pwa-btn').style.display = 'block';
-});
-document.getElementById('pwa-btn').addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') document.getElementById('pwa-btn').style.display = 'none';
-        deferredPrompt = null;
-    }
-});
-
-// --- اللعبة ---
-window.user = { email: 'Guest', coins: 1000, cash: 100, level: 1, lives: 5, current: '🥷', isGuest: true };
+// --- إدارة الهوية (Auth) ---
+window.user = { email: '', coins: 1000, cash: 100, level: 1, lives: 5, current: '🥷', isGuest: true };
 
 const Auth = {
     playAsGuest() {
-        window.user.email = "Guest_" + Math.floor(Math.random()*1000);
+        window.user = { email: 'Guest@Local', coins: 1000, cash: 100, level: 1, lives: 5, current: '🥷', isGuest: true };
         this.finishAuth();
     },
+
     async signUp() {
         const email = document.getElementById('u-email').value;
         const password = document.getElementById('u-pass').value;
-        const { error } = await supabase.auth.signUp({ 
+        if(!email || !password) return alert("يرجى ملء البيانات");
+        const { error } = await supabaseClient.auth.signUp({ 
             email, password, 
             options: { emailRedirectTo: window.location.href + "phone-auth.html" } 
         });
-        if (error) alert(error.message);
-        else alert("افحص إيميلك لتفعيل الحساب وربط الهاتف!");
+        if (error) alert(error.message); else alert("تم إرسال رابط التفعيل لإيميلك!");
     },
+
     async signIn() {
         const email = document.getElementById('u-email').value;
         const password = document.getElementById('u-pass').value;
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) alert(error.message); else this.loadCloudData(data.user.email);
     },
+
     async signInByPhone() {
-        const phone = prompt("أدخل رقم هاتفك:");
-        const { data } = await supabase.from('players').select('email').eq('phone', phone).single();
+        const phone = prompt("أدخل رقم هاتفك المسجل:");
+        if(!phone) return;
+        const { data, error } = await supabaseClient.from('players').select('email').eq('phone', phone).single();
         if (data) {
-            const pass = prompt("أدخل كلمة المرور:");
-            const { error } = await supabase.auth.signInWithPassword({ email: data.email, password: pass });
-            if (!error) this.loadCloudData(data.email); else alert("خطأ");
-        } else alert("غير مسجل");
+            const pass = prompt("أدخل كلمة المرور الخاصة بالإيميل:");
+            const { error: logErr } = await supabaseClient.auth.signInWithPassword({ email: data.email, password: pass });
+            if (!logErr) this.loadCloudData(data.email); else alert("خطأ في الدخول");
+        } else alert("الهاتف غير مربوط");
     },
+
     async loadCloudData(email) {
         window.user.isGuest = false;
-        let { data } = await supabase.from('players').select('*').eq('email', email).single();
+        let { data } = await supabaseClient.from('players').select('*').eq('email', email).single();
         if (!data) {
-            const { data: newUser } = await supabase.from('players').insert([{ email, coins:1000, cash:100, level:1 }]).select().single();
+            const { data: newUser } = await supabaseClient.from('players').insert([{ email, coins:1000, cash:100, level:1 }]).select().single();
             data = newUser;
         }
-        window.user = { ...window.user, ...data };
+        window.user = { ...window.user, ...data, isGuest: false };
         this.finishAuth();
     },
+
     finishAuth() {
-        document.getElementById('h-name').innerText = window.user.email.split('@')[0];
+        const name = window.user.isGuest ? "Guest" : window.user.email.split('@')[0];
+        document.getElementById('h-name').innerText = name;
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
-        App.init();
+        if(!App.active) App.init();
     }
 };
 
+// --- محرك اللعبة ---
 const App = {
     canvas: document.getElementById('g'), ctx: null, active: false,
     pX: 0, pY: 0, tX: 0, tY: 0, monsters: [], bullets: [], gems: [], explosions: [],
     gameTime: 60, lastShot: 0, portal: { active: false, x:0, y:0 },
 
     init() {
-        this.ctx = this.canvas.getContext('2d'); this.resize();
-        this.pX = this.tX = this.canvas.width/2; this.pY = this.tY = this.canvas.height/2;
-        this.active = true; this.loop();
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        this.pX = this.tX = this.canvas.width/2;
+        this.pY = this.tY = this.canvas.height/2;
+        this.active = true;
+        this.loop();
     },
+
     resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
+
     async save() {
         if (window.user.isGuest) return;
-        await supabase.from('players').update({ 
+        await supabaseClient.from('players').update({ 
             coins: window.user.coins, cash: window.user.cash, level: window.user.level 
         }).eq('email', window.user.email);
     },
+
     resetLevel() {
-        window.user.level++; this.gameTime = 60; this.monsters = []; this.bullets = []; this.gems = [];
-        this.portal.active = false; this.portal.x = 0;
+        window.user.level++;
+        this.gameTime = 60; this.monsters = []; this.bullets = []; this.gems = [];
+        this.portal.active = false;
         document.getElementById('h-lvl').innerText = window.user.level;
         if(window.user.level >= 2) {
             document.getElementById('timer-box').classList.add('hidden');
@@ -155,12 +155,15 @@ const App = {
         }
         this.save();
     },
-    updateLogic() {
+
+    update() {
         if (this.gameTime > 0) this.gameTime -= 0.133; else this.portal.active = true;
         document.getElementById('h-timer').innerText = `00:${Math.max(0, Math.ceil(this.gameTime)).toString().padStart(2,'0')}`;
-        this.pX += (this.tX - this.pX) * 0.15; this.pY += (this.tY - this.pY) * 0.15;
+        
+        this.pX += (this.tX - this.pX) * 0.15;
+        this.pY += (this.tY - this.pY) * 0.15;
 
-        // سلاح جانبي من مستوى 2
+        // رصاص مستوى 2
         if(window.user.level >= 2 && !this.portal.active && Date.now() - this.lastShot > 350) {
             this.bullets.push({x: this.pX, y: this.pY, vx: 12}, {x: this.pX, y: this.pY, vx: -12});
             this.lastShot = Date.now();
@@ -176,6 +179,7 @@ const App = {
             else {mx=this.canvas.width+50; my=Math.random()*this.canvas.height}
             this.monsters.push({x: mx, y: my, spd: 1.5 + (window.user.level*0.3)});
         }
+
         this.monsters.forEach((m, i) => {
             if(!this.portal.active) {
                 let ang = Math.atan2(this.pY - m.y, this.pX - m.x);
@@ -194,17 +198,20 @@ const App = {
             }
         });
 
-        // جواهر نادرة وانفجارها
+        // هدايا وجواهر
         if(!this.portal.active && Math.random() < 0.001) this.gems.push({x: Math.random()*this.canvas.width, y: -50});
         this.gems.forEach((g, i) => {
             g.y += 2;
             if(Math.hypot(this.pX-g.x, this.pY-g.y) < 35) {
-                this.explosions.push({x: g.x, y: g.y, c: "#ffeb3b", r: 15, a: 1});
+                this.explosions.push({x: g.x, y: g.y, c: "#ffeb3b", r: 20, a: 1});
                 window.user.cash += 2; window.user.coins += 50;
-                this.gems.splice(i, 1); document.getElementById('h-cash').innerText = window.user.cash;
+                this.gems.splice(i, 1); 
+                document.getElementById('h-cash').innerText = window.user.cash;
+                document.getElementById('h-coins').innerText = window.user.coins;
             }
         });
 
+        // البوابة
         if(this.portal.active) {
             if(!this.portal.x) { this.portal.x = this.canvas.width/2; this.portal.y = this.canvas.height/2; }
             let dist = Math.hypot(this.pX-this.portal.x, this.pY-this.portal.y);
@@ -214,6 +221,7 @@ const App = {
             }
         }
     },
+
     draw() {
         const ctx = this.ctx; ctx.fillStyle = "#050505"; ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
         this.explosions.forEach((ex, i) => {
@@ -227,16 +235,22 @@ const App = {
         this.monsters.forEach(m => { ctx.font = "30px Arial"; ctx.fillText("🐞", m.x-15, m.y); });
         this.gems.forEach(g => { ctx.font = "35px Arial"; ctx.fillText("💎", g.x-17, g.y); });
     },
-    loop() { if(this.active) { this.updateLogic(); this.draw(); requestAnimationFrame(()=>this.loop()); } }
+
+    loop() { if(this.active) { this.update(); this.draw(); requestAnimationFrame(()=>this.loop()); } }
 };
+
+// --- التحكم والخدمات ---
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('pwa-btn').style.display = 'block'; });
+document.getElementById('pwa-btn').addEventListener('click', async () => {
+    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; document.getElementById('pwa-btn').style.display = 'none'; }
+});
 
 window.addEventListener('mousemove', (e) => { App.tX = e.clientX; App.tY = e.clientY; });
 window.addEventListener('touchmove', (e) => { e.preventDefault(); App.tX = e.touches[0].clientX; App.tY = e.touches[0].clientY; }, {passive: false});
 window.addEventListener('resize', () => App.resize());
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
-}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>
