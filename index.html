@@ -3,40 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE LAST OPERATOR - FINAL</title>
+    <title>THE LAST OPERATOR</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --blue: #00d2ff; --pink: #ff4081; --yellow: #ffeb3b; --glass: rgba(255, 255, 255, 0.2); }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
         body { background: #050505; color: #fff; width: 100vw; height: 100vh; overflow: hidden; touch-action: none; }
+        
+        /* شاشات الواجهة */
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a2e 0%, #050505 100%); z-index: 200; }
         .hidden { display: none !important; }
-        .glass-card { background: var(--glass); backdrop-filter: blur(15px); padding: 25px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.3); text-align: center; width: 90%; max-width: 400px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; }
-        button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(15px); padding: 25px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.3); text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* المدخلات والأزرار */
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; font-size: 1rem; background: rgba(255,255,255,0.9); }
+        button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; }
         .btn-blue { background: var(--blue); color: #000; }
         .btn-pink { background: var(--pink); color: #fff; }
+        
+        /* واجهة اللعب HUD */
         #hud { position: fixed; top: 10px; width: 100%; display: flex; justify-content: center; gap: 5px; z-index: 100; pointer-events: none; }
         .stat-box { background: #fff; color: #333; padding: 5px 8px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; min-width: 60px; text-align: center; border: 2px solid #9c27b0; }
-        canvas { display: block; }
+        
+        canvas { display: block; width: 100%; height: 100%; }
+        #pwa-btn { position: fixed; bottom: 20px; right: 20px; background: var(--yellow); color: #000; padding: 12px 20px; border-radius: 50px; font-weight: bold; z-index: 1000; display: none; }
     </style>
 </head>
 <body>
 
-<div id="flash-effect" style="position:fixed; inset:0; background:white; opacity:0; pointer-events:none; z-index:300;"></div>
+<button id="pwa-btn">📥 تثبيت اللعبة</button>
+<div id="flash-effect" style="position:fixed; inset:0; background:white; opacity:0; pointer-events:none; z-index:300; transition: opacity 0.3s;"></div>
 
 <div id="auth-screen" class="screen">
     <div class="glass-card">
-        <h1 style="color:var(--yellow); margin-bottom:15px;">THE LAST OPERATOR</h1>
+        <h1 style="color:var(--yellow); margin-bottom:15px; text-shadow: 2px 2px #000;">THE LAST OPERATOR</h1>
         <input type="email" id="u-email" placeholder="البريد الإلكتروني">
         <input type="password" id="u-pass" placeholder="كلمة المرور">
-        <div style="display: flex; gap: 5px;">
+        
+        <div style="display: flex; gap: 10px;">
             <button class="btn-pink" onclick="Auth.signIn()">دخول 🔑</button>
             <button class="btn-blue" onclick="Auth.signUp()">تسجيل 📧</button>
         </div>
-        <button style="background:#555; color:white;" onclick="Auth.playAsGuest()">اللعب كضيف 🎮</button>
-        <hr style="margin:10px; opacity:0.3">
+        
+        <button style="background:#555; color:white;" onclick="Auth.playAsGuest()">اللعب كضيف (بدون حفظ) 🎮</button>
+        <hr style="margin:15px; opacity:0.3">
         <button style="background:#2ecc71; color:white;" onclick="Auth.signInByPhone()">دخول بالهاتف + PIN 📱</button>
     </div>
 </div>
@@ -53,10 +64,12 @@
 <canvas id="g"></canvas>
 
 <script>
+// --- إعدادات Supabase ---
 const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
 const SB_KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
+// --- نظام الهوية (Auth) ---
 window.user = { email: '', coins: 1000, cash: 100, level: 1, lives: 5, current: '🥷', isGuest: true };
 
 const Auth = {
@@ -64,85 +77,185 @@ const Auth = {
         window.user.isGuest = true;
         this.finishAuth();
     },
+
     async signUp() {
         const email = document.getElementById('u-email').value;
         const password = document.getElementById('u-pass').value;
+        if(!email || !password) return alert("يرجى ملء البيانات");
         const { error } = await supabaseClient.auth.signUp({ 
             email, password, 
             options: { emailRedirectTo: window.location.href.split('index.html')[0] + "phone-auth.html" } 
         });
-        if (error) alert(error.message); else alert("افحص إيميلك الآن!");
+        if (error) alert(error.message); else alert("تم إرسال رابط التفعيل لإيميلك! افحص بريدك.");
     },
+
     async signIn() {
         const email = document.getElementById('u-email').value;
         const password = document.getElementById('u-pass').value;
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) alert(error.message); else this.loadCloudData(data.user.email);
     },
+
     async signInByPhone() {
-        const phone = prompt("أدخل رقم الهاتف:");
-        const pin = prompt("أدخل كود الـ PIN:");
+        const phone = prompt("أدخل رقم هاتفك:");
+        const pin = prompt("أدخل كود الـ PIN السري:");
         if(!phone || !pin) return;
-        const { data, error } = await supabaseClient.from('players').select('*').eq('phone', phone).eq('pin_code', pin).single();
+
+        const { data, error } = await supabaseClient
+            .from('players')
+            .select('*')
+            .eq('phone', phone)
+            .eq('pin_code', parseInt(pin))
+            .single();
+
         if (data) {
             window.user = { ...window.user, ...data, isGuest: false };
             this.finishAuth();
-        } else alert("الرقم أو الـ PIN غير صحيح!");
+        } else {
+            alert("بيانات الدخول بالهاتف غير صحيحة!");
+        }
     },
+
     async loadCloudData(email) {
         let { data } = await supabaseClient.from('players').select('*').eq('email', email).single();
         if (!data) {
-            const { data: newUser } = await supabaseClient.from('players').insert([{ email, coins:1000, cash:100, level:1, current:'🥷' }]).select().single();
+            // إنشاء سجل جديد إذا لم يوجد
+            const { data: newUser } = await supabaseClient.from('players').insert([{ 
+                email, coins: 1000, cash: 100, level: 1, current: '🥷' 
+            }]).select().single();
             data = newUser;
         }
         window.user = { ...window.user, ...data, isGuest: false };
         this.finishAuth();
     },
+
     finishAuth() {
-        const name = window.user.isGuest ? "Guest" : window.user.email.split('@')[0];
-        document.getElementById('h-name').innerText = name;
+        const nameDisplay = window.user.isGuest ? "Guest" : window.user.email.split('@')[0];
+        document.getElementById('h-name').innerText = nameDisplay;
         document.getElementById('h-coins').innerText = window.user.coins;
         document.getElementById('h-cash').innerText = window.user.cash;
         document.getElementById('h-lvl').innerText = window.user.level;
+        
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
         if(!App.active) App.init();
     }
 };
 
+// --- محرك اللعبة (الخاص بك) ---
 const App = {
     canvas: document.getElementById('g'), ctx: null, active: false,
-    pX: 0, pY: 0, tX: 0, tY: 0, monsters: [], bullets: [], gems: [],
-    gameTime: 60, portal: { active: false, x:0, y:0 },
+    pX: 0, pY: 0, tX: 0, tY: 0, monsters: [], bullets: [], gems: [], explosions: [],
+    gameTime: 60, lastShot: 0, portal: { active: false, x:0, y:0 },
 
     init() {
-        this.ctx = this.canvas.getContext('2d'); this.resize();
-        this.pX = this.tX = this.canvas.width/2; this.pY = this.tY = this.canvas.height/2;
-        this.active = true; this.loop();
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        this.pX = this.tX = this.canvas.width/2;
+        this.pY = this.tY = this.canvas.height/2;
+        this.active = true;
+        this.loop();
     },
+
     resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
+
     async save() {
         if (window.user.isGuest) return;
-        // تحديث البيانات بناءً على أسماء الأعمدة في صورتك
         await supabaseClient.from('players').update({ 
             coins: window.user.coins, 
             cash: window.user.cash, 
             level: window.user.level 
         }).eq('email', window.user.email);
     },
-    loop() {
-        if(!this.active) return;
-        this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
-        this.pX += (this.tX - this.pX) * 0.15; this.pY += (this.tY - this.pY) * 0.15;
-        this.ctx.font = "40px Arial";
-        this.ctx.fillText(window.user.current, this.pX-20, this.pY+15);
-        requestAnimationFrame(()=>this.loop());
-    }
+
+    resetLevel() {
+        window.user.level++;
+        this.gameTime = 60; this.monsters = []; this.bullets = []; this.gems = [];
+        this.portal.active = false;
+        document.getElementById('h-lvl').innerText = window.user.level;
+        if(window.user.level >= 2) {
+            document.getElementById('timer-box').classList.add('hidden');
+            document.getElementById('name-box').classList.remove('hidden');
+        }
+        this.save();
+    },
+
+    update() {
+        if (this.gameTime > 0) this.gameTime -= 0.133; else this.portal.active = true;
+        document.getElementById('h-timer').innerText = `00:${Math.max(0, Math.ceil(this.gameTime)).toString().padStart(2,'0')}`;
+        
+        this.pX += (this.tX - this.pX) * 0.15;
+        this.pY += (this.tY - this.pY) * 0.15;
+
+        // السلاح
+        if(window.user.level >= 2 && !this.portal.active && Date.now() - this.lastShot > 350) {
+            this.bullets.push({x: this.pX, y: this.pY, vx: 12}, {x: this.pX, y: this.pY, vx: -12});
+            this.lastShot = Date.now();
+        }
+        this.bullets.forEach((b, i) => { b.x += b.vx; if(b.x<0 || b.x>this.canvas.width) this.bullets.splice(i,1); });
+
+        // الأعداء
+        if(!this.portal.active && Math.random() < 0.04) {
+            this.monsters.push({x: Math.random()*this.canvas.width, y: -50, spd: 1.5 + (window.user.level*0.3)});
+        }
+        this.monsters.forEach((m, i) => {
+            if(!this.portal.active) {
+                let ang = Math.atan2(this.pY - m.y, this.pX - m.x);
+                m.x += Math.cos(ang)*m.spd; m.y += Math.sin(ang)*m.spd;
+            }
+            this.bullets.forEach((b, bi) => {
+                if(Math.hypot(b.x-m.x, b.y-m.y) < 30) {
+                    this.explosions.push({x: m.x, y: m.y, c: "#ff4081", r: 10, a: 1});
+                    this.monsters.splice(i, 1); this.bullets.splice(bi, 1);
+                    window.user.coins += 10; document.getElementById('h-coins').innerText = window.user.coins;
+                }
+            });
+            if(Math.hypot(this.pX-m.x, this.pY-m.y) < 25) {
+                window.user.lives--; document.getElementById('h-lives').innerText = window.user.lives;
+                this.monsters.splice(i,1); if(window.user.lives<=0) location.reload();
+            }
+        });
+
+        // البوابة
+        if(this.portal.active) {
+            if(!this.portal.x) { this.portal.x = this.canvas.width/2; this.portal.y = this.canvas.height/2; }
+            if(Math.hypot(this.pX-this.portal.x, this.pY-this.portal.y) < 40) {
+                document.getElementById('flash-effect').style.opacity = '1';
+                setTimeout(() => { this.resetLevel(); document.getElementById('flash-effect').style.opacity = '0'; }, 400);
+            }
+        }
+    },
+
+    draw() {
+        const ctx = this.ctx; ctx.fillStyle = "#050505"; ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+        this.explosions.forEach((ex, i) => {
+            ctx.globalAlpha = ex.a; ctx.fillStyle = ex.c; ctx.beginPath(); ctx.arc(ex.x, ex.y, ex.r, 0, Math.PI*2); ctx.fill();
+            ex.r += 2; ex.a -= 0.05; if(ex.a <= 0) this.explosions.splice(i, 1);
+        });
+        ctx.globalAlpha = 1;
+        if(this.portal.active) { ctx.font = "70px Arial"; ctx.fillText("🌀", this.portal.x-35, this.portal.y+20); }
+        ctx.font = "40px Arial"; ctx.fillText(window.user.current, this.pX-20, this.pY+15);
+        this.bullets.forEach(b => { ctx.font = "20px Arial"; ctx.fillText("⚡", b.x-10, b.y); });
+        this.monsters.forEach(m => { ctx.font = "30px Arial"; ctx.fillText("🐞", m.x-15, m.y); });
+    },
+
+    loop() { if(this.active) { this.update(); this.draw(); requestAnimationFrame(()=>this.loop()); } }
 };
+
+// --- PWA وإدارة الأحداث ---
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('pwa-btn').style.display = 'block'; });
+document.getElementById('pwa-btn').addEventListener('click', async () => {
+    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; document.getElementById('pwa-btn').style.display = 'none'; }
+});
 
 window.addEventListener('mousemove', (e) => { App.tX = e.clientX; App.tY = e.clientY; });
 window.addEventListener('touchmove', (e) => { e.preventDefault(); App.tX = e.touches[0].clientX; App.tY = e.touches[0].clientY; }, {passive: false});
 window.addEventListener('resize', () => App.resize());
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Error:", err));
+}
 </script>
 </body>
-</html>
+    </html>
