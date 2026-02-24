@@ -2,71 +2,81 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>THE LAST OPERATOR - ULTIMATE ADMIN</title>
+    <title>دخول الأدمن - THE LAST OPERATOR</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --danger: #ff4757; --success: #2ed573; --bg: #0f172a; --card: #1e293b; --blue: #3742fa; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 15px; margin: 0; }
-        .admin-box { max-width: 1100px; margin: auto; background: var(--card); border-radius: 15px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { text-align: center; color: #70a1ff; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+        :root { --accent: #00d2ff; --bg: #0f172a; }
+        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         
-        .table-wrapper { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { background: #334155; padding: 12px; font-size: 0.85rem; }
-        td { padding: 10px; border-bottom: 1px solid #334155; text-align: center; }
+        /* شاشة القفل */
+        #lock-screen { text-align: center; background: #1e293b; padding: 40px; border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        input[type="password"] { padding: 12px; border-radius: 8px; border: none; width: 200px; text-align: center; font-size: 1.2rem; margin-bottom: 15px; }
         
-        input { background: #0f172a; border: 1px solid #444; color: white; padding: 5px; border-radius: 5px; width: 60px; text-align: center; }
-        .email-cell { width: 180px; text-align: right; font-size: 0.8rem; color: #aaa; }
+        /* محتوى الأدمن (مخفي في البداية) */
+        #admin-content { display: none; width: 95%; max-width: 1100px; height: 90vh; overflow-y: auto; background: #1e293b; padding: 20px; border-radius: 15px; }
         
-        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.8rem; }
-        .btn-update { background: var(--success); color: white; margin-left: 5px; }
-        .btn-ban { background: var(--danger); color: white; }
-        .btn-unban { background: #ffa502; color: white; }
-        .refresh-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        
-        .status-tag { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; }
-        .banned { background: var(--danger); color: white; }
-        .active { background: var(--success); color: white; }
+        .hidden { display: none !important; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: center; }
+        button { cursor: pointer; padding: 8px 15px; border-radius: 6px; border: none; font-weight: bold; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-save { background: #2ecc71; color: white; }
     </style>
 </head>
 <body>
 
-<div class="admin-box">
-    <h1>لوحة إدارة العمليات 🚀</h1>
-    
-    <div class="refresh-row">
-        <button class="btn" style="background:var(--blue); color:white" onclick="loadData()">تحديث القائمة 🔄</button>
-        <div id="msg" style="font-size: 0.9rem;">جاهز..</div>
-    </div>
+<div id="lock-screen">
+    <h2 style="color: var(--accent)">لوحة التحكم المحمية 🛡️</h2>
+    <p>أدخل كلمة مرور الأدمن للمتابعة</p>
+    <input type="password" id="admin-pass" placeholder="****">
+    <br>
+    <button class="btn-primary" onclick="checkPass()">دخول 🔓</button>
+</div>
 
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>اللاعب (البريد)</th>
-                    <th>المستوى</th>
-                    <th>🪙</th>
-                    <th>💵</th>
-                    <th>PIN</th>
-                    <th>الحالة</th>
-                    <th>إجراءات التحكم</th>
-                </tr>
-            </thead>
-            <tbody id="rows">
-                </tbody>
-        </table>
+<div id="admin-content">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>إدارة اللاعبين 🛠️</h1>
+        <button class="btn-primary" onclick="loadData()">تحديث 🔄</button>
     </div>
+    <div id="msg" style="color: #888; margin: 10px 0;"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>البريد</th>
+                <th>المستوى</th>
+                <th>🪙</th>
+                <th>💵</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+            </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+    </table>
 </div>
 
 <script>
+    // --- إعداداتك ---
+    const PASS_KEY = "500500"; // ⬅️ غير كلمة السر من هنا
     const URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
     const KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
     const supabaseAdmin = supabase.createClient(URL, KEY);
 
+    // دالة التحقق من كلمة السر
+    function checkPass() {
+        const input = document.getElementById('admin-pass').value;
+        if (input === PASS_KEY) {
+            document.getElementById('lock-screen').classList.add('hidden');
+            document.getElementById('admin-content').style.display = 'block';
+            loadData(); // جلب البيانات فور الدخول الصحيح
+        } else {
+            alert("كلمة المرور خاطئة! ❌");
+        }
+    }
+
+    // جلب البيانات (كما في الكود السابق)
     async function loadData() {
         const msg = document.getElementById('msg');
-        msg.innerText = "جاري التحميل...";
-        
+        msg.innerText = "جاري تحميل البيانات...";
         const { data, error } = await supabaseAdmin.from('players').select('*');
 
         if (error) {
@@ -76,61 +86,34 @@
 
         const tbody = document.getElementById('rows');
         tbody.innerHTML = '';
-
         data.forEach(p => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="email-cell">${p.email}</td>
-                <td><input type="number" id="lv-${p.email}" value="${p.level}"></td>
-                <td><input type="number" id="co-${p.email}" value="${p.coins}"></td>
-                <td><input type="number" id="ca-${p.email}" value="${p.cash}"></td>
-                <td><input type="text" style="width:50px" id="pin-${p.email}" value="${p.pin_code || ''}"></td>
-                <td>
-                    <span class="status-tag ${p.is_banned ? 'banned' : 'active'}">
-                        ${p.is_banned ? 'محظور' : 'نشط'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-update" onclick="updatePlayer('${p.email}')">حفظ ✅</button>
-                    <button class="btn ${p.is_banned ? 'btn-unban' : 'btn-ban'}" onclick="toggleBan('${p.email}', ${p.is_banned})">
-                        ${p.is_banned ? 'فك الحظر' : 'حظر 🚫'}
-                    </button>
-                </td>
+                <td style="font-size:0.8rem">${p.email}</td>
+                <td><input type="number" style="width:50px" id="lv-${p.email}" value="${p.level}"></td>
+                <td><input type="number" style="width:60px" id="co-${p.email}" value="${p.coins}"></td>
+                <td><input type="number" style="width:60px" id="ca-${p.email}" value="${p.cash}"></td>
+                <td style="color:${p.is_banned ? 'red' : 'green'}">${p.is_banned ? 'محظور' : 'نشط'}</td>
+                <td><button class="btn-save" onclick="updatePlayer('${p.email}')">حفظ</button></td>
             `;
             tbody.appendChild(tr);
         });
-        msg.innerText = "تم جلب " + data.length + " لاعبين.";
+        msg.innerText = "تم تحديث البيانات.";
     }
 
     async function updatePlayer(email) {
         const lv = document.getElementById(`lv-${email}`).value;
         const co = document.getElementById(`co-${email}`).value;
         const ca = document.getElementById(`ca-${email}`).value;
-        const pin = document.getElementById(`pin-${email}`).value;
 
         const { error } = await supabaseAdmin
             .from('players')
-            .update({ level: lv, coins: co, cash: ca, pin_code: pin })
-            .eq('email', email);
-
-        if (error) alert("خطأ: " + error.message);
-        else loadData();
-    }
-
-    async function toggleBan(email, currentStatus) {
-        const confirmMsg = currentStatus ? "هل تريد فك الحظر؟" : "هل أنت متأكد من حظر هذا اللاعب؟";
-        if (!confirm(confirmMsg)) return;
-
-        const { error } = await supabaseAdmin
-            .from('players')
-            .update({ is_banned: !currentStatus })
+            .update({ level: lv, coins: co, cash: ca })
             .eq('email', email);
 
         if (error) alert(error.message);
         else loadData();
     }
-
-    window.onload = loadData;
 </script>
 </body>
 </html>
