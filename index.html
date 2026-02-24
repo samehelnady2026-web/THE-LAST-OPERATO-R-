@@ -58,7 +58,7 @@
             <button class="btn-entry" style="background: var(--pink); color: #fff;" onclick="Market.buyUpgrade()">🔥 تطوير السلاح (100💵)</button>
             <div class="item-grid" id="skin-grid"></div>
             <button class="btn-entry" style="background: #25D366; color: white;"
-            onclick="window.open('https://wa.me/+201287837118')">💬 تواصل واتساب</button>
+            onclick="window.open('https://wa.me/01287837118')">💬 تواصل واتساب</button>
         </div>
         <button class="btn-entry" style="background: var(--pink); color: #fff; margin-top:10px;" onclick="Market.close()">إغلاق ❌</button>
     </div>
@@ -80,6 +80,26 @@ const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
 const SB_KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
+// نظام الصوت الداخلي
+const Sound = {
+    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+    play(freq, type, dur) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+        osc.start();
+        osc.stop(this.ctx.currentTime + dur);
+    },
+    shoot() { this.play(400, 'square', 0.1); },
+    hit() { this.play(100, 'sawtooth', 0.2); },
+    levelUp() { this.play(800, 'sine', 0.5); }
+};
+
 window.user = { coins: 0, cash: 0, level: 1, lives: 5, fireRate: 350, currentSkin: '🥷', unlockedSkins: ['🥷'] };
 const skinData = [{icon:'🥷',p:0,t:'free'},{icon:'🤖',p:5000,t:'coins'},{icon:'🧙‍♂️',p:50,t:'cash'},{icon:'🦖',p:100,t:'cash'},{icon:'👽',p:200,t:'cash'}];
 
@@ -97,6 +117,7 @@ const AuthManager = {
     },
     startGuest() { this.launch(); },
     launch() {
+        if (Sound.ctx.state === 'suspended') Sound.ctx.resume();
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
         App.init();
@@ -156,9 +177,15 @@ const App = {
         if(!this.portalActive&&Math.random()<0.04) this.spawnMonster();
         this.monsters.forEach((m,i)=>{
             let ang=Math.atan2(this.pY-m.y,this.pX-m.x); m.x+=Math.cos(ang)*m.spd; m.y+=Math.sin(ang)*m.spd;
-            if(Math.hypot(this.pX-m.x,this.pY-m.y)<25){window.user.lives--;this.updateHUD();this.monsters.splice(i,1);if(window.user.lives<=0)location.reload();}
+            if(Math.hypot(this.pX-m.x,this.pY-m.y)<25){
+                window.user.lives--; Sound.hit(); this.updateHUD(); this.monsters.splice(i,1); 
+                if(window.user.lives<=0)location.reload();
+            }
         });
-        if(window.user.level>=2&&!this.portalActive&&Date.now()-this.lastShot>window.user.fireRate){this.bullets.push({x:this.pX,y:this.pY,vx:12,vy:0},{x:this.pX,y:this.pY,vx:-12,vy:0});this.lastShot=Date.now();}
+        if(window.user.level>=2&&!this.portalActive&&Date.now()-this.lastShot>window.user.fireRate){
+            this.bullets.push({x:this.pX,y:this.pY,vx:12,vy:0},{x:this.pX,y:this.pY,vx:-12,vy:0});
+            this.lastShot=Date.now(); Sound.shoot();
+        }
         this.bullets.forEach((b,bi)=>{
             b.x+=b.vx; this.monsters.forEach((m,mi)=>{
                 if(Math.hypot(b.x-m.x,b.y-m.y)<30){if(Math.random()<0.05)this.gems.push({x:m.x,y:m.y});this.monsters.splice(mi,1);this.bullets.splice(bi,1);window.user.coins+=50;this.updateHUD();}
@@ -166,7 +193,8 @@ const App = {
         });
         this.gems.forEach((g,i)=>{if(Math.hypot(this.pX-g.x,this.pY-g.y)<40){window.user.cash+=2;this.gems.splice(i,1);this.updateHUD();}});
         if(this.portalActive&&Math.hypot(this.pX-innerWidth/2,this.pY-innerHeight/2)<70){
-            window.user.level++; this.portalActive=false; this.pX=this.tX=innerWidth/2; this.pY=this.tY=innerHeight/2; this.updateHUD();
+            window.user.level++; this.portalActive=false; this.pX=this.tX=innerWidth/2; this.pY=this.tY=innerHeight/2; 
+            Sound.levelUp(); this.updateHUD();
             document.getElementById('flash-overlay').style.opacity='1'; setTimeout(()=>document.getElementById('flash-overlay').style.opacity='0',300);
         }
     },
@@ -185,4 +213,4 @@ window.addEventListener('touchmove',(e)=>{e.preventDefault();App.tX=e.touches[0]
 window.addEventListener('resize',()=>App.resize());
 </script>
 </body>
-                                                                                 </html>
+            </html>
