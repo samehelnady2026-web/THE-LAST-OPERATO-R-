@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>THE LAST OPERATOR - ULTIMATE ADMIN</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --danger: #ff4757; --success: #2ed573; --bg: #0f172a; --card: #1e293b; --blue: #3742fa; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 15px; margin: 0; }
+        .admin-box { max-width: 1100px; margin: auto; background: var(--card); border-radius: 15px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { text-align: center; color: #70a1ff; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+        
+        .table-wrapper { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #334155; padding: 12px; font-size: 0.85rem; }
+        td { padding: 10px; border-bottom: 1px solid #334155; text-align: center; }
+        
+        input { background: #0f172a; border: 1px solid #444; color: white; padding: 5px; border-radius: 5px; width: 60px; text-align: center; }
+        .email-cell { width: 180px; text-align: right; font-size: 0.8rem; color: #aaa; }
+        
+        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.8rem; }
+        .btn-update { background: var(--success); color: white; margin-left: 5px; }
+        .btn-ban { background: var(--danger); color: white; }
+        .btn-unban { background: #ffa502; color: white; }
+        .refresh-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        .status-tag { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; }
+        .banned { background: var(--danger); color: white; }
+        .active { background: var(--success); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="admin-box">
+    <h1>لوحة إدارة العمليات 🚀</h1>
+    
+    <div class="refresh-row">
+        <button class="btn" style="background:var(--blue); color:white" onclick="loadData()">تحديث القائمة 🔄</button>
+        <div id="msg" style="font-size: 0.9rem;">جاهز..</div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>اللاعب (البريد)</th>
+                    <th>المستوى</th>
+                    <th>🪙</th>
+                    <th>💵</th>
+                    <th>PIN</th>
+                    <th>الحالة</th>
+                    <th>إجراءات التحكم</th>
+                </tr>
+            </thead>
+            <tbody id="rows">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
+    const KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
+    const supabaseAdmin = supabase.createClient(URL, KEY);
+
+    async function loadData() {
+        const msg = document.getElementById('msg');
+        msg.innerText = "جاري التحميل...";
+        
+        const { data, error } = await supabaseAdmin.from('players').select('*');
+
+        if (error) {
+            msg.innerText = "خطأ: " + error.message;
+            return;
+        }
+
+        const tbody = document.getElementById('rows');
+        tbody.innerHTML = '';
+
+        data.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="email-cell">${p.email}</td>
+                <td><input type="number" id="lv-${p.email}" value="${p.level}"></td>
+                <td><input type="number" id="co-${p.email}" value="${p.coins}"></td>
+                <td><input type="number" id="ca-${p.email}" value="${p.cash}"></td>
+                <td><input type="text" style="width:50px" id="pin-${p.email}" value="${p.pin_code || ''}"></td>
+                <td>
+                    <span class="status-tag ${p.is_banned ? 'banned' : 'active'}">
+                        ${p.is_banned ? 'محظور' : 'نشط'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-update" onclick="updatePlayer('${p.email}')">حفظ ✅</button>
+                    <button class="btn ${p.is_banned ? 'btn-unban' : 'btn-ban'}" onclick="toggleBan('${p.email}', ${p.is_banned})">
+                        ${p.is_banned ? 'فك الحظر' : 'حظر 🚫'}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        msg.innerText = "تم جلب " + data.length + " لاعبين.";
+    }
+
+    async function updatePlayer(email) {
+        const lv = document.getElementById(`lv-${email}`).value;
+        const co = document.getElementById(`co-${email}`).value;
+        const ca = document.getElementById(`ca-${email}`).value;
+        const pin = document.getElementById(`pin-${email}`).value;
+
+        const { error } = await supabaseAdmin
+            .from('players')
+            .update({ level: lv, coins: co, cash: ca, pin_code: pin })
+            .eq('email', email);
+
+        if (error) alert("خطأ: " + error.message);
+        else loadData();
+    }
+
+    async function toggleBan(email, currentStatus) {
+        const confirmMsg = currentStatus ? "هل تريد فك الحظر؟" : "هل أنت متأكد من حظر هذا اللاعب؟";
+        if (!confirm(confirmMsg)) return;
+
+        const { error } = await supabaseAdmin
+            .from('players')
+            .update({ is_banned: !currentStatus })
+            .eq('email', email);
+
+        if (error) alert(error.message);
+        else loadData();
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>
