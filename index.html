@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE LAST OPERATOR - FIXED</title>
+    <title>THE LAST OPERATOR - FINAL PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --blue: #00d2ff; --pink: #ff4081; --yellow: #ffeb3b; --whatsapp: #25D366; }
@@ -12,11 +12,11 @@
         #flash-overlay { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 2000; transition: opacity 0.2s; }
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; padding: 15px; }
         .hidden { display: none !important; }
-        .auth-container { background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); padding: 30px; border-radius: 40px; border: 3px solid #fff; width: 100%; max-width: 420px; text-align: center; }
+        .auth-container { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); padding: 30px; border-radius: 40px; border: 3px solid #fff; width: 100%; max-width: 420px; text-align: center; }
         .auth-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 50px; border: none; text-align: center; font-size: 1.1rem; font-weight: bold; color: #333; }
         .btn-entry { width: 100%; padding: 12px; margin: 8px 0; border-radius: 50px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-        .btn-yellow { background: var(--yellow); color: #333; }
-        .btn-pink { background: var(--pink); color: #fff; }
+        .btn-supabase { background: #3ecf8e; color: white; }
+        .btn-guest { background: var(--pink); color: white; }
         #hud { position: fixed; top: 10px; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 100; pointer-events: none; }
         .stat-box { background: #fff; color: #333; padding: 5px 12px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; border: 2px solid #9c27b0; pointer-events: auto; }
         .market-card { background: #fff; color: #333; padding: 20px; border-radius: 30px; width: 90%; max-width: 400px; max-height: 85vh; display: flex; flex-direction: column; }
@@ -35,11 +35,15 @@
 <div id="auth-screen" class="screen">
     <h1 style="font-size: 2.5rem; text-shadow: 2px 2px #ff4081; margin-bottom: 20px;">🌟 البطل الأخير 🌟</h1>
     <div class="auth-container">
-        <input type="text" id="u-name" class="auth-input" placeholder="اكتب اسمك هنا">
-        <input type="tel" id="u-phone" class="auth-input" placeholder="رقم الهاتف">
         <input type="email" id="u-email" class="auth-input" placeholder="البريد الإلكتروني">
-        <button class="btn-entry btn-yellow" onclick="Auth.finish()">🚀 دخول الأبطال</button>
-        <button class="btn-entry btn-pink" onclick="Auth.finish(true)">لعب سريع (أوفلاين)</button>
+        <input type="password" id="u-pass" class="auth-input" placeholder="كلمة المرور">
+        
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-entry btn-supabase" onclick="AuthManager.handleSupabase('login')">دخول</button>
+            <button class="btn-entry btn-supabase" style="background:#2b2b2b" onclick="AuthManager.handleSupabase('signup')">تسجيل</button>
+        </div>
+        <hr style="margin: 15px 0; opacity: 0.3;">
+        <button class="btn-entry btn-guest" onclick="AuthManager.startGuest()">لعب كضيف (أوفلاين)</button>
     </div>
 </div>
 
@@ -50,13 +54,13 @@
             <div class="wallet-bar">
                 <span>🪙 <b id="m-gold">0</b></span> | <span>💵 <b id="m-pegy">0</b></span>
             </div>
-            <button class="btn-entry btn-yellow" onclick="Market.convertCurrency()">🔄 استبدال 1000🪙 ➔ 50💵</button>
-            <button class="btn-entry btn-pink" onclick="Market.buyUpgrade()">🔥 تطوير السلاح (100💵)</button>
-            <h4 style="margin: 20px 0 10px; text-align: center; color: #555;">اختر بطلَك الجديد</h4>
+            <button class="btn-entry" style="background: var(--yellow); color: #333;" onclick="Market.convertCurrency()">🔄 استبدال 1000🪙 ➔ 50💵</button>
+            <button class="btn-entry" style="background: var(--pink); color: #fff;" onclick="Market.buyUpgrade()">🔥 تطوير السلاح (100💵)</button>
             <div class="item-grid" id="skin-grid"></div>
-            <button class="btn-entry" style="background: #25D366; color: white;" onclick="window.open('https://wa.me/201234567890')">💬 تواصل واتساب</button>
+            <button class="btn-entry" style="background: #25D366; color: white;"
+            onclick="window.open('https://wa.me/01287837118')">💬 تواصل واتساب</button>
         </div>
-        <button class="btn-entry btn-pink" style="margin-top:10px;" onclick="Market.close()">إغلاق المتجر ❌</button>
+        <button class="btn-entry" style="background: var(--pink); color: #fff; margin-top:10px;" onclick="Market.close()">إغلاق ❌</button>
     </div>
 </div>
 
@@ -72,33 +76,27 @@
 <canvas id="g"></canvas>
 
 <script>
-// --- إصلاح تضارب Supabase ---
 const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
 const SB_KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
-// تغيير اسم المتغير ليتجنب التعارض مع اسم المكتبة العالمي
-const sbClient = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+const sb = supabase.createClient(SB_URL, SB_KEY);
 
-window.user = { username: '', phone: '', coins: 0, cash: 0, level: 1, lives: 5, fireRate: 350, currentSkin: '🥷', unlockedSkins: ['🥷'] };
+window.user = { coins: 0, cash: 0, level: 1, lives: 5, fireRate: 350, currentSkin: '🥷', unlockedSkins: ['🥷'] };
 const skinData = [{icon:'🥷',p:0,t:'free'},{icon:'🤖',p:5000,t:'coins'},{icon:'🧙‍♂️',p:50,t:'cash'},{icon:'🦖',p:100,t:'cash'},{icon:'👽',p:200,t:'cash'}];
 
-const Auth = {
-    async finish(isOffline = false) {
-        const name = document.getElementById('u-name').value;
-        const phone = document.getElementById('u-phone').value;
+const AuthManager = {
+    async handleSupabase(type) {
         const email = document.getElementById('u-email').value;
-
-        if(!isOffline && name && phone && sbClient) {
-            try {
-                // إرسال البيانات للجدول 'players'
-                await sbClient.from('players').upsert({ 
-                    username: name, phone: phone, email: email,
-                    coins: window.user.coins, cash: window.user.cash, level: window.user.level
-                });
-                window.user.username = name;
-                window.user.phone = phone;
-            } catch(e) { console.error("Database connection failed"); }
-        }
-
+        const pass = document.getElementById('u-pass').value;
+        if(!email || !pass) return alert("أدخل البيانات");
+        try {
+            let res = (type === 'signup') ? await sb.auth.signUp({email, password:pass}) : await sb.auth.signInWithPassword({email, password:pass});
+            if(res.error) throw res.error;
+            if(type === 'login') this.launch();
+            else alert("تم التسجيل! فعل حسابك من الإيميل.");
+        } catch(e) { alert(e.message); }
+    },
+    startGuest() { this.launch(); },
+    launch() {
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
         App.init();
@@ -125,19 +123,24 @@ const Market = {
         });
     },
     buySkin(s) {
-        if(s.t==='coins'&&window.user.coins>=s.p){window.user.coins-=s.p;window.user.unlockedSkins.push(s.icon);window.user.currentSkin=s.icon;}
-        else if(s.t==='cash'&&window.user.cash>=s.p){window.user.cash-=s.p;window.user.unlockedSkins.push(s.icon);window.user.currentSkin=s.icon;}
-        else alert("رصيد غير كافٍ!");
+        let p = (s.t==='coins')?window.user.coins:window.user.cash;
+        if(p>=s.p){ if(s.t==='coins') window.user.coins-=s.p; else window.user.cash-=s.p; window.user.unlockedSkins.push(s.icon); window.user.currentSkin=s.icon; }
+        else alert("رصيد غير كافٍ");
     },
     convertCurrency() { if(window.user.coins>=1000){window.user.coins-=1000;window.user.cash+=50;this.open();App.updateHUD();} },
     buyUpgrade() { if(window.user.cash>=100){window.user.cash-=100;window.user.fireRate=Math.max(100,window.user.fireRate-50);this.open();App.updateHUD();} }
 };
 
 const App = {
-    canvas: document.getElementById('g'), ctx: null, active: false, pX: 0, pY: 0, tX: 0, tY: 0, monsters: [], bullets: [], gems: [], gameTime: 20, lastShot: 0, portalActive: false, isTransitioning: false,
-    init() { this.ctx = this.canvas.getContext('2d'); this.resize(); window.addEventListener('resize', () => this.resize()); this.pX = this.tX = innerWidth/2; this.pY = this.tY = innerHeight/2; this.active = true; this.loop(); },
+    canvas: document.getElementById('g'), ctx: null, active: false, pX: 0, pY: 0, tX: 0, tY: 0, monsters: [], bullets: [], gems: [], gameTime: 20, lastShot: 0, portalActive: false,
+    init() { this.ctx = this.canvas.getContext('2d'); this.resize(); this.pX = this.tX = innerWidth/2; this.pY = this.tY = innerHeight/2; this.active = true; this.loop(); },
     resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
-    updateHUD() { document.getElementById('h-coins').innerText = window.user.coins; document.getElementById('h-cash').innerText = window.user.cash; document.getElementById('h-lvl').innerText = window.user.level; document.getElementById('h-lives').innerText = window.user.lives; },
+    updateHUD() { 
+        document.getElementById('h-coins').innerText = window.user.coins; 
+        document.getElementById('h-cash').innerText = window.user.cash; 
+        document.getElementById('h-lvl').innerText = window.user.level; 
+        document.getElementById('h-lives').innerText = window.user.lives; 
+    },
     spawnMonster() {
         let x, y, side = Math.floor(Math.random()*4);
         if(side===0){x=Math.random()*innerWidth;y=-30;} else if(side===1){x=innerWidth+30;y=Math.random()*innerHeight;}
@@ -145,8 +148,8 @@ const App = {
         this.monsters.push({x, y, spd: 0.6+(window.user.level*0.12)});
     },
     update() {
-        if(this.isTransitioning || !document.getElementById('s-market').classList.contains('hidden')) return;
-        if(window.user.level===1){ if(this.gameTime>0){this.gameTime-=1/60;document.getElementById('h-timer').innerText=Math.ceil(this.gameTime);}else this.portalActive=true; }
+        if(!this.active || !document.getElementById('s-market').classList.contains('hidden')) return;
+        if(window.user.level===1){ if(this.gameTime>0){this.gameTime-=6/60;document.getElementById('h-timer').innerText=Math.ceil(this.gameTime);}else this.portalActive=true; }
         else { document.getElementById('timer-box').classList.add('hidden'); this.portalActive=(window.user.coins>=(window.user.level*1000)); }
         if(this.portalActive) this.monsters=[];
         this.pX+=(this.tX-this.pX)*0.15; this.pY+=(this.tY-this.pY)*0.15;
@@ -163,22 +166,23 @@ const App = {
         });
         this.gems.forEach((g,i)=>{if(Math.hypot(this.pX-g.x,this.pY-g.y)<40){window.user.cash+=2;this.gems.splice(i,1);this.updateHUD();}});
         if(this.portalActive&&Math.hypot(this.pX-innerWidth/2,this.pY-innerHeight/2)<70){
-            this.isTransitioning=true; document.getElementById('flash-overlay').style.opacity='1';
-            setTimeout(()=>{window.user.level++;this.portalActive=false;this.pX=this.tX=innerWidth/2;this.pY=this.tY=innerHeight/2;this.updateHUD();document.getElementById('flash-overlay').style.opacity='0';setTimeout(()=>this.isTransitioning=false,300);},500);
+            window.user.level++; this.portalActive=false; this.pX=this.tX=innerWidth/2; this.pY=this.tY=innerHeight/2; this.updateHUD();
+            document.getElementById('flash-overlay').style.opacity='1'; setTimeout(()=>document.getElementById('flash-overlay').style.opacity='0',300);
         }
     },
     draw() {
-        const ctx=this.ctx; ctx.clearRect(0,0,innerWidth,innerHeight);
-        if(this.portalActive){ctx.font="100px Arial";ctx.textAlign="center";ctx.fillText("🌀",innerWidth/2,innerHeight/2+30);}
-        ctx.font="45px Arial";ctx.textAlign="center";ctx.fillText(window.user.currentSkin,this.pX,this.pY+15);
-        this.monsters.forEach(m=>{ctx.font="30px Arial";ctx.fillText("🐞",m.x,m.y+10);});
-        this.bullets.forEach(b=>{ctx.font="20px Arial";ctx.fillText("⚡",b.x,b.y+7);});
-        this.gems.forEach(g=>{ctx.font="30px Arial";ctx.fillText("💎",g.x,g.y+10);});
+        this.ctx.clearRect(0,0,innerWidth,innerHeight);
+        if(this.portalActive){this.ctx.font="100px Arial";this.ctx.textAlign="center";this.ctx.fillText("🌀",innerWidth/2,innerHeight/2+30);}
+        this.ctx.font="45px Arial";this.ctx.textAlign="center";this.ctx.fillText(window.user.currentSkin,this.pX,this.pY+15);
+        this.monsters.forEach(m=>{this.ctx.fillText("🐞",m.x,m.y+10);});
+        this.bullets.forEach(b=>{this.ctx.font="20px Arial";this.ctx.fillText("⚡",b.x,b.y+7);});
+        this.gems.forEach(g=>{this.ctx.font="30px Arial";this.ctx.fillText("💎",g.x,g.y+10);});
     },
     loop() { if(this.active){this.update();this.draw();requestAnimationFrame(()=>this.loop());} }
 };
 window.addEventListener('mousemove',(e)=>{App.tX=e.clientX;App.tY=e.clientY;});
 window.addEventListener('touchmove',(e)=>{e.preventDefault();App.tX=e.touches[0].clientX;App.tY=e.touches[0].clientY;},{passive:false});
+window.addEventListener('resize',()=>App.resize());
 </script>
 </body>
-    </html>
+                                                                                 </html>
