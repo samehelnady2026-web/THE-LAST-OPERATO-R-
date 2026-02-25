@@ -1,36 +1,55 @@
-async function saveSecure() {
-    const ph = document.getElementById('ph').value;
-    const pin = document.getElementById('pin').value;
-    const errDiv = document.getElementById('err');
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تأمين الحساب - THE LAST OPERATOR</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #050505; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #ff4081; width: 320px; }
+        input { padding: 12px; border-radius: 10px; border: none; width: 100%; margin: 10px 0; text-align: center; }
+        button { background: #ff4081; color: white; border: none; padding: 12px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="setup" class="card">
+        <h2>🔒 تأمين الحساب</h2>
+        <p>أدخل هاتفك وكود PIN (أرقام فقط) لربطهما بحسابك</p>
+        <input type="tel" id="ph" placeholder="رقم الهاتف">
+        <input type="number" id="pin" placeholder="كود PIN (مثلاً 1234)">
+        <button onclick="saveSecure()">تفعيل ودخول اللعبة</button>
+    </div>
 
-    // جلب بيانات المستخدم المسجل حالياً من Supabase Auth
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    <script>
+        const supabaseClient = supabase.createClient("https://ctnuuvdakmqpbuzhrsos.supabase.co", "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ");
 
-    if (authError || !user) {
-        alert("خطأ: لم يتم العثور على جلسة تسجيل دخول. يرجى التأكد من الضغط على رابط الإيميل.");
-        return;
-    }
+        async function saveSecure() {
+            const ph = document.getElementById('ph').value;
+            const pin = document.getElementById('pin').value;
+            const { data: { user } } = await supabaseClient.auth.getUser();
 
-    if(!ph || !pin) return alert("يرجى إدخال رقم الهاتف والـ PIN");
+            if(!ph || !pin) return alert("أكمل البيانات");
 
-    // تحديث البيانات في جدول players
-    const { error } = await supabaseClient
-        .from('players')
-        .upsert({ 
-            email: user.email, 
-            phone: ph, 
-            pin_code: parseInt(pin), // تحويل الـ PIN لرقم ليطابق int4 في صورتك
-            coins: 1000, 
-            cash: 100, 
-            level: 1,
-            current: '🥷'
-        }, { onConflict: 'email' }); // استخدام email كمرجع للتحديث
+            // نستخدم upsert لضمان وجود السجل وتحديثه بالرقم والـ PIN
+            const { error } = await supabaseClient
+                .from('players')
+                .upsert({ 
+                    email: user.email, 
+                    phone: ph, 
+                    pin_code: parseInt(pin), // تحويل الـ PIN لرقم ليطابق int4 في صورتك
+                    coins: 1000, 
+                    cash: 100, 
+                    level: 1,
+                    current: '🥷'
+                }, { onConflict: 'email' });
 
-    if (!error) {
-        alert("تم الربط بنجاح! يمكنك الآن الدخول برقمك والـ PIN.");
-        window.location.href = "index.html";
-    } else {
-        console.error("Database Error:", error);
-        alert("حدث خطأ أثناء الحفظ: " + error.message);
-    }
-}
+            if (!error) {
+                alert("تم التفعيل! يمكنك الآن الدخول برقمك والـ PIN.");
+                window.location.href = "index.html";
+            } else {
+                alert("خطأ أثناء الحفظ: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
