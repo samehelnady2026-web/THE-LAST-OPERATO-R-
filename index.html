@@ -25,12 +25,26 @@
         .item-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         .skin-item { border: 2px solid #ddd; padding: 10px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
         .skin-item.active { border-color: var(--pink); background: #ffe4ee; }
+        
+        /* واجهة الإعلان الجديدة */
+        #ad-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #ad-bar { width: 0%; height: 10px; background: var(--blue); border-radius: 10px; transition: 15s linear; }
+
         canvas { display: block; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
 <div id="flash-overlay"></div>
+
+<div id="ad-overlay" class="hidden">
+    <div style="font-size: 50px; margin-bottom:10px">📺</div>
+    <h2 style="color:#fff">جاري تحصيل المكافأة...</h2>
+    <p style="color:var(--yellow)">انتظر <span id="ad-timer">15</span> ثانية للحصول على 100🪙</p>
+    <div style="width: 200px; height: 10px; background: #333; margin-top: 20px; border-radius: 10px; overflow: hidden;">
+        <div id="ad-bar"></div>
+    </div>
+</div>
 
 <div id="auth-screen" class="screen">
     <h1 style="font-size: 2.5rem; text-shadow: 2px 2px #ff4081; margin-bottom: 20px;">🌟 البطل الأخير 🌟</h1>
@@ -53,10 +67,12 @@
             <div class="wallet-bar">
                 <span>🪙 <b id="m-gold">0</b></span> | <span>💵 <b id="m-pegy">0</b></span>
             </div>
+            <button class="btn-entry" style="background: #25D366; color: white;" onclick="AdSystem.showAd()">📺 شاهد اعلان للحصول على 100🪙</button>
+            
             <button class="btn-entry" style="background: var(--yellow); color: #333;" onclick="Market.convertCurrency()">🔄 استبدال 1000🪙 ➔ 50💵</button>
             <button class="btn-entry" style="background: var(--pink); color: #fff;" onclick="Market.buyUpgrade()">🔥 تطوير السلاح (100💵)</button>
             <div class="item-grid" id="skin-grid"></div>
-            <button class="btn-entry" style="background: #25D366; color: white;" onclick="window.open('https://iwtsp.com/201287837118')">💬 تواصل واتساب</button>
+            <button class="btn-entry" style="background: #333; color: white;" onclick="window.open('https://iwtsp.com/201287837118')">💬 تواصل واتساب</button>
         </div>
         <button class="btn-entry" style="background: var(--pink); color: #fff; margin-top:10px;" onclick="Market.close()">إغلاق ❌</button>
     </div>
@@ -74,6 +90,62 @@
 <canvas id="g"></canvas>
 
 <script>
+// إعدادات الإعلان الحقيقي (الاسمارت لينك)
+// نظام الإعلانات المطور لمنع التكرار
+const AdSystem = {
+    isWatching: false,
+    directLink: "https://www.effectivegatecpm.com/x5wcmdzve?key=9be6c0c82c7c191f829ccf18e8a52a3b",
+
+    showAd() {
+        // منع فتح أكثر من إعلان في نفس الوقت
+        if(this.isWatching) return;
+        this.isWatching = true;
+        
+        // فتح الإعلان في علامة تبويب جديدة (Tab) وليس نافذة منبثقة لمنع التكرار عند العودة
+        const adWindow = window.open(this.directLink, '_blank');
+
+        // إظهار واجهة العداد
+        document.getElementById('ad-overlay').classList.remove('hidden');
+        let timeLeft = 15;
+        const bar = document.getElementById('ad-bar');
+        
+        // إعادة ضبط العداد
+        bar.style.transition = "none";
+        bar.style.width = "0%";
+        
+        // تشغيل الأنميشن
+        setTimeout(() => {
+            bar.style.transition = "15s linear";
+            bar.style.width = "100%";
+        }, 50);
+
+        const interval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('ad-timer').innerText = timeLeft;
+            
+            if(timeLeft <= 0) {
+                clearInterval(interval);
+                this.rewardUser();
+            }
+        }, 1000);
+    },
+
+    rewardUser() {
+        // إضافة المكافأة
+        window.user.coins += 100;
+        
+        // إخفاء واجهة الإعلان والعودة للعبة فوراً
+        this.isWatching = false;
+        document.getElementById('ad-overlay').classList.add('hidden');
+        
+        // تحديث البيانات في الشاشة
+        App.updateHUD();
+        
+        // رسالة تأكيد (اختياري)
+        alert("مبروك! حصلت على 100 كوينز 🎁");
+    }
+};
+
 const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
 const SB_KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
 const sb = supabase.createClient(SB_URL, SB_KEY);
@@ -117,7 +189,6 @@ const App = {
         document.getElementById('h-lives').innerText = window.user.lives; 
     },
     spawnMonster() {
-        // يسمح بظهور الوحوش فقط إذا لم تكن البوابة نشطة
         if(this.portalActive) return;
         let x, y, side = Math.floor(Math.random()*4);
         if(side===0){x=Math.random()*innerWidth;y=-30;} else if(side===1){x=innerWidth+30;y=Math.random()*innerHeight;}
@@ -127,15 +198,14 @@ const App = {
     triggerPortal() {
         if(!this.portalActive) {
             this.portalActive = true;
-            this.monsters = []; // حذف الوحوش فور ظهور البوابة لزيادة التركيز
+            this.monsters = [];
             this.porX = 50 + Math.random() * (innerWidth - 100);
             this.porY = 100 + Math.random() * (innerHeight - 200);
         }
     },
     update() {
-        if(!this.active || !document.getElementById('s-market').classList.contains('hidden')) return;
+        if(!this.active || AdSystem.isWatching || !document.getElementById('s-market').classList.contains('hidden')) return;
 
-        // منطق البوابة
         if(window.user.level === 1) {
             document.getElementById('timer-box').classList.remove('hidden');
             if(this.gameTime > 0) {
@@ -144,13 +214,10 @@ const App = {
             } else { this.triggerPortal(); }
         } else {
             document.getElementById('timer-box').classList.add('hidden');
-            // تظهر البوابة كلما وصل رصيد العملات في هذا المستوى لـ 1000 أو أكثر
             if(window.user.coins >= 1000) { this.triggerPortal(); }
         }
 
         this.pX += (this.tX-this.pX)*0.15; this.pY += (this.tY-this.pY)*0.15;
-        
-        // ظهور الوحوش
         if(!this.portalActive && Math.random() < 0.05) this.spawnMonster();
 
         this.monsters.forEach((m,i)=>{
@@ -161,7 +228,6 @@ const App = {
             }
         });
 
-        // السلاح
         if(window.user.level>=2 && !this.portalActive && Date.now()-this.lastShot > window.user.fireRate){
             AudioEngine.shoot();
             this.bullets.push({x:this.pX,y:this.pY,vx:14,vy:0},{x:this.pX,y:this.pY,vx:-14,vy:0});
@@ -182,15 +248,11 @@ const App = {
 
         this.gems.forEach((g,i)=>{if(Math.hypot(this.pX-g.x,this.pY-g.y)<40){window.user.cash+=2;this.gems.splice(i,1);this.updateHUD();}});
 
-        // الانتقال الفعلي
         if(this.portalActive && Math.hypot(this.pX-this.porX, this.pY-this.porY) < 70){
             AudioEngine.portal();
             window.user.level++;
-            
-            // --- السطر السحري لحل مشكلتك ---
-            this.portalActive = false; // نغلق البوابة فوراً للسماح للوحوش بالظهور
-            window.user.coins = 0;    // نصفر العملات ليبدأ تجميع 1000 جديدة للمستوى القادم
-            
+            this.portalActive = false; 
+            window.user.coins = 0; 
             this.monsters = []; this.bullets = []; this.gems = [];
             this.gameTime = 20; 
             this.updateHUD();
@@ -268,4 +330,4 @@ window.addEventListener('touchmove',(e)=>{e.preventDefault();App.tX=e.touches[0]
 window.addEventListener('resize',()=>App.resize());
 </script>
 </body>
-                                                                                                              </html>
+</html>
