@@ -1,25 +1,35 @@
-const cacheName = 'operator-v1';
+const CACHE_NAME = 'operator-v2';
 const assets = [
-  '/',
-  '/index.html',
-  '/icon.png',
-  '/manifest.json',
-  '/shoot.mp3',   // أضفنا الصوت للذاكرة
-  '/explode.mp3'  // أضفنا الصوت للذاكرة
+  './',
+  './index.html',
+  './manifest.json',
+  './icon.png'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(cacheName).then(cache => {
-      cache.addAll(assets);
+// تثبيت الكاش وتخزين الملفات الأساسية
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      console.log('Caching assets...');
+      return cache.addAll(assets);
     })
   );
 });
 
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(res => {
-      return res || fetch(e.request);
+// تفعيل السيرفس وركر وحذف الكاش القديم
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
+    })
+  );
+});
+
+// الاستجابة للطلبات من الكاش أولاً ثم الإنترنت
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
     })
   );
 });
