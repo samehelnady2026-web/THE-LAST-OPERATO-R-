@@ -2,414 +2,447 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE LAST OPERATOR - FINAL PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NINJA SAGA - FX EDITION</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --blue: #00d2ff; --pink: #ff4081; --yellow: #ffeb3b; --whatsapp: #25D366; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: linear-gradient(180deg, #6a5af9 0%, #d66efd 100%); color: #fff; width: 100vw; height: 100vh; overflow: hidden; touch-action: none; }
-        #flash-overlay { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 2000; transition: opacity 0.2s; }
-        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; padding: 15px; }
+        :root { --glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(0, 0, 0, 0.1); --neon-blue: #0984e3; --neon-red: #d63031; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        body { background: #f0f2f5; height: 100vh; overflow: hidden; touch-action: none; color: #2d3436; transition: background 0.5s ease; }
+        .screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; background: rgba(240, 242, 245, 0.98); backdrop-filter: blur(10px); overflow-y: auto; }
         .hidden { display: none !important; }
-        .auth-container { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); padding: 30px; border-radius: 40px; border: 3px solid #fff; width: 100%; max-width: 420px; text-align: center; }
-        .auth-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 50px; border: none; text-align: center; font-size: 1.1rem; font-weight: bold; color: #333; }
-        .btn-entry { width: 100%; padding: 12px; margin: 8px 0; border-radius: 50px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-        .btn-supabase { background: #3ecf8e; color: white; }
-        .btn-guest { background: var(--pink); color: white; }
-        #hud { position: fixed; top: 10px; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 100; pointer-events: none; }
-        .stat-box { background: #fff; color: #333; padding: 5px 12px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; border: 2px solid #9c27b0; pointer-events: auto; }
-        .market-card { background: #fff; color: #333; padding: 20px; border-radius: 30px; width: 90%; max-width: 400px; max-height: 85vh; display: flex; flex-direction: column; }
-        .market-content { overflow-y: auto; flex-grow: 1; padding: 10px 5px; }
-        .wallet-bar { background: #eee; padding: 10px; border-radius: 50px; margin-bottom: 15px; display: flex; justify-content: space-around; font-weight: bold; }
-        .item-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-        .skin-item { border: 2px solid #ddd; padding: 10px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-        .skin-item.active { border-color: var(--pink); background: #ffe4ee; }
+        .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 400px; padding: 20px 0; }
+        .level-card { border: 1px solid var(--glass-border); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; min-height: 80px; cursor: pointer; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        #hud { position: absolute; top: 15px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 1100; pointer-events: none; }
+        .stat-badge { background: var(--glass); padding: 8px 12px; border-radius: 20px; font-weight: bold; backdrop-filter: blur(10px); border: 1px solid var(--glass-border); pointer-events: auto; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #2d3436; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .joystick-base { position: absolute; bottom: 30px; width: 85px; height: 85px; background: rgba(0,0,0,0.05); border-radius: 50%; border: 2px solid rgba(0,0,0,0.1); z-index: 1000; }
+        #moveJoy { left: 25px; } #shootJoy { right: 25px; border-color: var(--neon-red); }
+        .stick { position: absolute; width: 35px; height: 35px; background: #2d3436; border-radius: 50%; left: 25px; top: 25px; pointer-events: none; }
+        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .popup-content { background: white; width: 92%; max-width: 420px; padding: 20px; border-radius: 25px; color: #2d3436; max-height: 85vh; overflow-y: auto; }
+        .shop-sec { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .shop-item { background: #f8f9fa; padding: 10px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .shop-btn { padding: 6px 12px; border-radius: 8px; border: none; background: var(--neon-blue); color: white; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.2s; }
+        .shop-btn:active { transform: scale(0.95); }
+        #special-actions { position: absolute; bottom: 130px; width: 100%; display: flex; justify-content: center; gap: 15px; pointer-events: none; }
+        .action-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--glass); border: 2px solid var(--neon-red); pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         
-        /* واجهة الإعلان الجديدة */
-        #ad-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        #ad-bar { width: 0%; height: 10px; background: var(--blue); border-radius: 10px; transition: 15s linear; }
-
-        canvas { display: block; width: 100%; height: 100%; }
-
+        /* تنسيقات شاشة الدخول المطورة */
+        .auth-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 10px; }
+        .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; }
+        .guest-btn { background: #636e72 !important; margin-top: 5px; }
+        .download-btn { background: #27ae60 !important; margin-top: 20px; width: 100%; padding: 12px; color: white; border-radius: 12px; font-weight: bold; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
     </style>
 </head>
-    <button id="nextLevelBtn" style="display:none;">NEXT LEVEL</button>
-
-<div id="countdownBox" style="display:none; font-size:20px; margin-top:10px;">
-    الانتقال خلال <span id="countdown">5</span> ثواني...
-</div>
-    <div>
-    Level: <span id="levelDisplay">1</span>
-</div>
-
-<div>
-    Coins: <span id="coinDisplay">0</span>
-</div>
 <body>
 
-<div id="flash-overlay"></div>
-
-<div id="ad-overlay" class="hidden">
-    <div style="font-size: 50px; margin-bottom:10px">📺</div>
-    <h2 style="color:#fff">جاري تحصيل المكافأة...</h2>
-    <p style="color:var(--yellow)">انتظر <span id="ad-timer">15</span> ثانية للحصول على 100🪙</p>
-    <div style="width: 200px; height: 10px; background: #333; margin-top: 20px; border-radius: 10px; overflow: hidden;">
-        <div id="ad-bar"></div>
+<div id="authScreen" class="screen">
+    <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; letter-spacing: 2px;">NINJA SAGA</h1>
+    
+    <div class="auth-form">
+        <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
+        <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input">
+        <button class="shop-btn" style="padding:15px; font-size:14px;" onclick="handleAuth('login')">تسجيل دخول</button>
+        <button class="shop-btn" style="padding:15px; font-size:14px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
+        
+        <div style="text-align: center; margin: 10px 0; color: #636e72; font-size: 12px;">أو</div>
+        
+        <button class="shop-btn guest-btn" style="padding:15px; font-size:14px;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
+        
+        <a href="#" id="installBtn" class="download-btn" style="display: none;" onclick="installApp(event)">
+            📲 تحميل اللعبة على هاتفك
+        </a>
     </div>
 </div>
 
-<div id="auth-screen" class="screen">
-    <h1 style="font-size: 2.5rem; text-shadow: 2px 2px #ff4081; margin-bottom: 20px;">🌟 البطل الأخير 🌟</h1>
-    <div class="auth-container">
-        <input type="email" id="u-email" class="auth-input" placeholder="البريد الإلكتروني">
-        <input type="password" id="u-pass" class="auth-input" placeholder="كلمة المرور">
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-entry btn-supabase" onclick="AuthManager.handleSupabase('login')">دخول</button>
-            <button class="btn-entry btn-supabase" style="background:#2b2b2b" onclick="AuthManager.handleSupabase('signup')">تسجيل</button>
+<div id="levelMap" class="screen hidden">
+    <h1 style="color: var(--neon-blue); margin: 20px 0; font-weight: 900;">NINJA SAGA</h1>
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <div class="stat-badge">🪙 <span id="m-coins">0</span></div>
+        <div class="stat-badge">💵 <span id="m-cash">0</span></div>
+        <div class="stat-badge" onclick="logout()" style="background:#fab1a0;">🚪 خروج</div>
+    </div>
+    <div class="level-grid" id="grid"></div>
+</div>
+
+<div id="game-container" style="position: fixed; inset: 0; display: none;">
+    <div id="hud">
+        <div style="display:flex; gap:5px;">
+            <div class="stat-badge" onclick="exitToMap()">🏠 خروج</div>
+            <div class="stat-badge">❤️ <span id="h-lives">5</span></div>
+            <div class="stat-badge">🎯 <span id="h-score">0</span></div>
+            <div class="stat-badge">🪙 <span id="h-coins">0</span></div>
+            <div class="stat-badge">💵 <span id="h-cash">0</span></div>
         </div>
-        <hr style="margin: 15px 0; opacity: 0.3;">
-        <button class="btn-entry btn-guest" onclick="AuthManager.startGuest()">لعب كضيف (أوفلاين)</button>
-    </div>
-</div>
-
-<div id="s-market" class="screen hidden">
-    <div class="market-card">
-        <h2 style="color: #9c27b0; text-align: center; margin-bottom: 10px;">🎁 متجر الألعاب</h2>
-        <div class="market-content">
-            <div class="wallet-bar">
-                <span>🪙 <b id="m-gold">0</b></span> | <span>💵 <b id="m-pegy">0</b></span>
-            </div>
-            <button class="btn-entry" style="background: #25D366; color: white;" onclick="AdSystem.showAd()">📺 شاهد اعلان للحصول على 100🪙</button>
-            
-            <button class="btn-entry" style="background: var(--yellow); color: #333;" onclick="Market.convertCurrency()">🔄 استبدال 1000🪙 ➔ 50💵</button>
-            <button class="btn-entry" style="background: var(--pink); color: #fff;" onclick="Market.buyUpgrade()">🔥 تطوير السلاح (100💵)</button>
-            <div class="item-grid" id="skin-grid"></div>
-            <button class="btn-entry" style="background: #333; color: white;" onclick="window.open('https://iwtsp.com/201287837118')">💬 تواصل واتساب</button>
+        <div style="display:flex; gap:5px;">
+            <div class="stat-badge" onclick="SoundSystem.toggle()" id="sound-btn">🔊</div>
+            <div class="stat-badge" onclick="toggleShop(true)">🛒 السوق</div>
         </div>
-        <button class="btn-entry" style="background: var(--pink); color: #fff; margin-top:10px;" onclick="Market.close()">إغلاق ❌</button>
+    </div>
+    <canvas id="game"></canvas>
+    <div id="special-actions">
+        <div id="nuke-btn" class="action-btn hidden" onclick="useNuke()">☢️</div>
+    </div>
+    <div id="moveJoy" class="joystick-base"><div id="moveStick" class="stick"></div></div>
+    <div id="shootJoy" class="joystick-base"><div id="shootStick" class="stick"></div></div>
+</div>
+
+<div id="shopPopup" class="popup">
+    <div class="popup-content">
+        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر الملكي</h2>
+        <div class="shop-sec">
+            <h4 style="color:var(--neon-blue); margin-bottom:8px;">👕 الشخصيات</h4>
+            <div id="skins-list"></div>
+        </div>
+        <div class="shop-sec">
+            <h4 style="color:var(--neon-red); margin-bottom:8px;">⚔️ الأسلحة والقدرات</h4>
+            <div id="weapons-list"></div>
+        </div>
+        <div class="shop-sec">
+            <h4 style="color:orange; margin-bottom:8px;">🏦 البنك</h4>
+            <div class="shop-item"><span>100 🪙 ➔ 2 💵</span><button class="shop-btn" onclick="exchange()">تحويل</button></div>
+        </div>
+        <button onclick="toggleShop(false)" style="width:100%; padding:12px; border-radius:12px; background:#2d3436; color:white; border:none; font-weight:bold;">العودة للقتال</button>
     </div>
 </div>
 
-<div id="hud" class="hidden">
-    <div class="stat-box" onclick="Market.open()" style="background:var(--blue); cursor:pointer;">المتجر 🛒</div>
-    <div class="stat-box">❤️ <span id="h-lives">5</span></div>
-    <div id="timer-box" class="stat-box" style="background:#000; color:#0f0">⏳ <span id="h-timer">20</span></div>
-    <div class="stat-box">⭐ <span id="h-lvl">1</span></div>
-    <div class="stat-box">🪙 <span id="h-coins">0</span></div>
-    <div class="stat-box" style="border-color:#2ecc71">💵 <span id="h-cash">0</span></div>
-</div>
+<script>
+// إعدادات Supabase
+const SB_URL = 'https://ctnuuvdakmqpbuzhrsos.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw';
+const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-<canvas id="g"></canvas>
+let currentUser = null;
+let isGuest = false;
 
-       <script>
-let coins = 0;
-let level = 1;
-let isProcessing = false;
+// بيانات اللعبة الافتراضية
+let gameData = {
+    coins: 0, cash: 0, maxLevel: 1, ownedSkins: ['n1'], activeSkin: 'n1',
+    hasLaser: false, nukes: 0, fireRateLevel: 0
+};
 
-const smartLinkNext = "https://www.effectivegatecpm.com/v20nctgb3p?key=e24c6202f1f42000c4276464131f9cf8";
+// --- وظائف الدخول والضيف ---
 
-const nextBtn = document.getElementById("nextLevelBtn");
-const countdownBox = document.getElementById("countdownBox");
-const countdownText = document.getElementById("countdown");
-
-// استدعاء عند إنهاء أي Level
-function levelCompleted() {
-    nextBtn.style.display = "inline-block";
+function startAsGuest() {
+    isGuest = true;
+    currentUser = null;
+    // تحميل بيانات من الـ LocalStorage إذا وجدت، وإلا ابدأ من الصفر
+    const localData = localStorage.getItem('n_guest_data');
+    if(localData) gameData = JSON.parse(localData);
+    
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('levelMap').classList.remove('hidden');
+    buildMap(); GameCore.updateUI();
 }
 
-// زر Next Level
-nextBtn.addEventListener("click", function () {
+async function handleAuth(type) {
+    const email = document.getElementById('authEmail').value;
+    const pass = document.getElementById('authPass').value;
+    if(!email || !pass) return alert("يرجى إدخال البريد وكلمة المرور");
 
-    if (isProcessing) return;
-    isProcessing = true;
+    if(type === 'signup') {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
+        if(error) return alert(error.message);
+        await supabaseClient.from('players').insert([{ id: data.user.id, email: email }]);
+        alert("تم إنشاء الحساب بنجاح!");
+    } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+        if(error) return alert(error.message);
+        currentUser = data.user;
+        isGuest = false;
+        loadOnlineData();
+    }
+}
 
-    nextBtn.disabled = true;
-    countdownBox.style.display = "block";
+async function loadOnlineData() {
+    const { data } = await supabaseClient.from('players').select('*').eq('id', currentUser.id).single();
+    if(data) {
+        gameData = {
+            coins: data.coins, cash: data.cash, maxLevel: data.max_level,
+            ownedSkins: data.owned_skins || ['n1'], activeSkin: data.active_skin || 'n1',
+            hasLaser: data.has_laser, nukes: data.nukes, fireRateLevel: data.fire_rate_level
+        };
+    }
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('levelMap').classList.remove('hidden');
+    buildMap(); GameCore.updateUI();
+}
 
-    // فتح الإعلان في تبويب جديد
-    window.open(smartLinkNext, "_blank");
+async function saveData() {
+    if(isGuest) {
+        localStorage.setItem('n_guest_data', JSON.stringify(gameData));
+        return;
+    }
+    if(!currentUser) return;
+    await supabaseClient.from('players').update({
+        coins: gameData.coins, cash: gameData.cash, max_level: gameData.maxLevel,
+        owned_skins: gameData.ownedSkins, active_skin: gameData.activeSkin,
+        has_laser: gameData.hasLaser, nukes: gameData.nukes, fire_rate_level: gameData.fireRateLevel
+    }).eq('id', currentUser.id);
+}
 
-    let timeLeft = 5;
-    countdownText.textContent = timeLeft;
-
-    let timer = setInterval(() => {
-        timeLeft--;
-        countdownText.textContent = timeLeft;
-
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-
-            // إضافة 50 كوين
-            coins += 50;
-            updateCoins();
-
-            // الانتقال لليفل التالي
-            level++;
-            startNextLevel();
-
-            countdownBox.style.display = "none";
-            nextBtn.style.display = "none";
-            nextBtn.disabled = false;
-            isProcessing = false;
-        }
-    }, 1000);
+// --- وظيفة تحميل اللعبة (PWA Install) ---
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBtn').style.display = 'flex';
 });
 
-function updateCoins() {
-    const coinDisplay = document.getElementById("coinDisplay");
-    if (coinDisplay) {
-        coinDisplay.textContent = coins;
-    }
+function installApp(e) {
+    e.preventDefault();
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choice) => {
+        if (choice.outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+        deferredPrompt = null;
+    });
 }
 
-function startNextLevel() {
-    const levelDisplay = document.getElementById("levelDisplay");
-    if (levelDisplay) {
-        levelDisplay.textContent = level;
-    }
+// --- نفس منطق الصوت واللعبة والمتجر الأصلي ---
 
-    // هنا تحط كود إعادة تشغيل المرحلة
-    console.log("Starting Level " + level);
-}
-// إعدادات الإعلان الحقيقي (الاسمارت لينك)
-// نظام الإعلانات المطور لمنع التكرار
-const AdSystem = {
-    isWatching: false,
-    directLink: "https://www.effectivegatecpm.com/x5wcmdzve?key=9be6c0c82c7c191f829ccf18e8a52a3b",
-
-    showAd() {
-        // منع فتح أكثر من إعلان في نفس الوقت
-        if(this.isWatching) return;
-        this.isWatching = true;
-        
-        // فتح الإعلان في علامة تبويب جديدة (Tab) وليس نافذة منبثقة لمنع التكرار عند العودة
-        const adWindow = window.open(this.directLink, '_blank');
-
-        // إظهار واجهة العداد
-        document.getElementById('ad-overlay').classList.remove('hidden');
-        let timeLeft = 15;
-        const bar = document.getElementById('ad-bar');
-        
-        // إعادة ضبط العداد
-        bar.style.transition = "none";
-        bar.style.width = "0%";
-        
-        // تشغيل الأنميشن
-        setTimeout(() => {
-            bar.style.transition = "15s linear";
-            bar.style.width = "100%";
-        }, 50);
-
-        const interval = setInterval(() => {
-            timeLeft--;
-            document.getElementById('ad-timer').innerText = timeLeft;
-            
-            if(timeLeft <= 0) {
-                clearInterval(interval);
-                this.rewardUser();
-            }
-        }, 1000);
-    },
-
-    rewardUser() {
-        // إضافة المكافأة
-        window.user.coins += 100;
-        
-        // إخفاء واجهة الإعلان والعودة للعبة فوراً
-        this.isWatching = false;
-        document.getElementById('ad-overlay').classList.add('hidden');
-        
-        // تحديث البيانات في الشاشة
-        App.updateHUD();
-        
-        // رسالة تأكيد (اختياري)
-        alert("مبروك! حصلت على 100 كوينز 🎁");
-    }
-};
-
-const SB_URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
-const SB_KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
-const sb = supabase.createClient(SB_URL, SB_KEY);
-
-const AudioEngine = {
-    ctx: null,
+const SoundSystem = {
+    enabled: true, ctx: null,
     init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-    play(freq, type, duration) {
-        this.init();
-        if(this.ctx.state === 'suspended') this.ctx.resume();
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + duration);
+    play(type) {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator(); const g = this.ctx.createGain();
+        osc.connect(g); g.connect(this.ctx.destination);
+        if(type==='shoot'){ osc.frequency.setValueAtTime(gameData.hasLaser?1200:800, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+0.1); osc.start(); osc.stop(this.ctx.currentTime+0.1); }
+        else if(type==='hit'){ osc.type='square'; osc.frequency.setValueAtTime(120, this.ctx.currentTime); g.gain.linearRampToValueAtTime(0, this.ctx.currentTime+0.1); osc.start(); osc.stop(this.ctx.currentTime+0.1); }
     },
-    shoot() { this.play(900, 'square', 0.05); },
-    btn() { this.play(500, 'sine', 0.05); },
-    portal() { this.play(150, 'sawtooth', 0.4); }
+    toggle() { this.enabled = !this.enabled; document.getElementById('sound-btn').innerText = this.enabled ? '🔊' : '🔇'; }
 };
 
-window.user = { coins: 0, cash: 0, level: 1, lives: 5, fireRate: 350, currentSkin: '🥷', unlockedSkins: ['🥷'] };
-const skinData = [{icon:'🥷',p:0,t:'free'},{icon:'🤖',p:5000,t:'coins'},{icon:'🧙‍♂️',p:50,t:'cash'},{icon:'🦖',p:100,t:'cash'},{icon:'👽',p:200,t:'cash'}];
+const levelConfigs = [
+    {f:"🍓", p:"#ff4757", bg:"linear-gradient(135deg, #fff5f5, #fed7d7)"}, 
+    {f:"🍌", p:"#ffa502", bg:"linear-gradient(135deg, #fffaf0, #feebc8)"}, 
+    {f:"🍍", p:"#00d2ff", bg:"linear-gradient(135deg, #ebf8ff, #bee3f8)"}, 
+    {f:"🍇", p:"#9d50bb", bg:"linear-gradient(135deg, #faf5ff, #e9d8fd)"}, 
+    {f:"🍉", p:"#2ed573", bg:"linear-gradient(135deg, #f0fff4, #c6f6d5)"}
+];
 
-const App = {
-    canvas: document.getElementById('g'), ctx: null, active: false, pX: 0, pY: 0, tX: 0, tY: 0, 
-    monsters: [], bullets: [], gems: [], gameTime: 20, lastShot: 0, 
-    portalActive: false, porX: 0, porY: 0,
+const skins = [
+    { id:'n1', head:'🥷', name:'نينجا', p:0, t:'coin' },
+    { id:'n2', head:'🧕🏿', name:'سيدة', p:0, t:'coin' },
+    { id:'n3', head:'🎅', name:'سانتا', p:10, t:'cash' },
+    { id:'n4', head:'🧙‍♂️', name:'ساحر', p:15, t:'cash' },
+    { id:'n5', head:'👨‍🎓', name:'خريج', p:20, t:'cash' },
+    { id:'n6', head:'👮', name:'شرطي', p:1000, t:'coin' },
+    { id:'n7', head:'🧔', name:'ملتحي', p:50, t:'cash' },
+    { id:'n8', head:'👩‍🦲', name:'صلعاء', p:100, t:'cash' },
+    { id:'n9', head:'👵', name:'جدة', p:1500, p2:60, t:'hybrid' }
+];
 
-    init() { this.ctx = this.canvas.getContext('2d'); this.resize(); this.pX = this.tX = innerWidth/2; this.pY = this.tY = innerHeight/2; this.active = true; this.loop(); },
-    resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
-    updateHUD() { 
-        document.getElementById('h-coins').innerText = window.user.coins; 
-        document.getElementById('h-cash').innerText = window.user.cash; 
-        document.getElementById('h-lvl').innerText = window.user.level; 
-        document.getElementById('h-lives').innerText = window.user.lives; 
+const GameCore = {
+    active: false, paused: false, lvl: 1, score: 0, frame: 0,
+    player: { x: 0, y: 0, vx: 0, vy: 0, lives: 5 },
+    fruits: [], bullets: [], particles: [], shootDir: { x: 0, y: 0 },
+    lastShoot: 0,
+
+    init(lvl) {
+        this.lvl = lvl; this.active = true; this.paused = false; this.score = 0;
+        this.player.lives = 5; this.fruits = []; this.bullets = []; this.particles = [];
+        document.getElementById('levelMap').classList.add('hidden');
+        document.getElementById('game-container').style.display = 'block';
+        document.body.style.background = levelConfigs[(lvl-1)%5].bg;
+        const cvs = document.getElementById('game');
+        cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+        this.player.x = cvs.width/2; this.player.y = cvs.height/2;
+        this.updateUI(); this.loop();
     },
-    spawnMonster() {
-        if(this.portalActive) return;
-        let x, y, side = Math.floor(Math.random()*4);
-        if(side===0){x=Math.random()*innerWidth;y=-30;} else if(side===1){x=innerWidth+30;y=Math.random()*innerHeight;}
-        else if(side===2){x=Math.random()*innerWidth;y=innerHeight+30;} else {x=-30;y=Math.random()*innerHeight;}
-        this.monsters.push({x, y, spd: 0.8+(window.user.level*0.2)});
-    },
-    triggerPortal() {
-        if(!this.portalActive) {
-            this.portalActive = true;
-            this.monsters = [];
-            this.porX = 50 + Math.random() * (innerWidth - 100);
-            this.porY = 100 + Math.random() * (innerHeight - 200);
+
+    spawnParticles(x, y, color, count = 10) {
+        for(let i=0; i<count; i++) {
+            this.particles.push({
+                x, y, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
+                life: 1.0, color, size: Math.random() * 4 + 2
+            });
         }
     },
+
+    updateUI() {
+        const u = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+        u('h-score', this.score); u('h-lives', this.player.lives); u('h-coins', gameData.coins);
+        u('h-cash', gameData.cash); u('m-coins', gameData.coins); u('m-cash', gameData.cash);
+        document.getElementById('nuke-btn').classList.toggle('hidden', gameData.nukes <= 0);
+    },
+
     update() {
-        if(!this.active || AdSystem.isWatching || !document.getElementById('s-market').classList.contains('hidden')) return;
+        if(!this.active || this.paused) return;
+        this.frame++;
+        this.player.x += this.player.vx; this.player.y += this.player.vy;
+        this.player.x = Math.max(30, Math.min(window.innerWidth-30, this.player.x));
+        this.player.y = Math.max(100, Math.min(window.innerHeight-30, this.player.y));
 
-        if(window.user.level === 1) {
-            document.getElementById('timer-box').classList.remove('hidden');
-            if(this.gameTime > 0) {
-                this.gameTime -= 5/60; 
-                document.getElementById('h-timer').innerText = Math.ceil(this.gameTime);
-            } else { this.triggerPortal(); }
-        } else {
-            document.getElementById('timer-box').classList.add('hidden');
-            if(window.user.coins >= 1000) { this.triggerPortal(); }
+        let rate = 300 - (gameData.fireRateLevel * 50);
+        if ((Math.abs(this.shootDir.x) > 0.1 || Math.abs(this.shootDir.y) > 0.1) && Date.now() - this.lastShoot > rate) {
+            this.bullets.push({ x: this.player.x, y: this.player.y, vx: this.shootDir.x * 22, vy: this.shootDir.y * 22 });
+            this.lastShoot = Date.now(); SoundSystem.play('shoot');
         }
 
-        this.pX += (this.tX-this.pX)*0.15; this.pY += (this.tY-this.pY)*0.15;
-        if(!this.portalActive && Math.random() < 0.05) this.spawnMonster();
+        if(Math.random() < 0.04) this.spawnEnemy();
 
-        this.monsters.forEach((m,i)=>{
-            let ang=Math.atan2(this.pY-m.y,this.pX-m.x); m.x+=Math.cos(ang)*m.spd; m.y+=Math.sin(ang)*m.spd;
-            if(Math.hypot(this.pX-m.x,this.pY-m.y)<25){
-                window.user.lives--; this.updateHUD(); this.monsters.splice(i,1);
-                if(window.user.lives<=0) location.reload();
+        this.fruits.forEach((f, i) => {
+            f.x += f.vx; f.y += f.vy;
+            if(Math.hypot(this.player.x-f.x, this.player.y-f.y) < 35) {
+                this.spawnParticles(this.player.x, this.player.y, '#d63031', 15);
+                this.player.lives--; this.fruits.splice(i,1); this.updateUI();
+                if(this.player.lives <= 0) exitToMap();
             }
         });
 
-        if(window.user.level>=2 && !this.portalActive && Date.now()-this.lastShot > window.user.fireRate){
-            AudioEngine.shoot();
-            this.bullets.push({x:this.pX,y:this.pY,vx:14,vy:0},{x:this.pX,y:this.pY,vx:-14,vy:0});
-            this.lastShot=Date.now();
-        }
-
-        this.bullets.forEach((b,bi)=>{
-            b.x+=b.vx; 
-            this.monsters.forEach((m,mi)=>{
-                if(Math.hypot(b.x-m.x,b.y-m.y)<35){
-                    if(Math.random()<0.08) this.gems.push({x:m.x,y:m.y});
-                    this.monsters.splice(mi,1); window.user.coins += 50; 
-                    this.bullets.splice(bi,1); this.updateHUD();
+        this.bullets.forEach((b, bi) => {
+            b.x += b.vx; b.y += b.vy;
+            this.fruits.forEach((f, fi) => {
+                if(Math.hypot(b.x-f.x, b.y-f.y) < 30) {
+                    const color = f.type==='money' ? '#ffd700' : levelConfigs[(this.lvl-1)%5].p;
+                    this.spawnParticles(f.x, f.y, color, 12);
+                    gameData.coins += 50; if(f.type==='money') gameData.cash+=2;
+                    this.score += 20; this.fruits.splice(fi,1); this.bullets.splice(bi,1);
+                    SoundSystem.play('hit'); this.updateUI(); saveData();
+                    if(this.score >= 200) this.win();
                 }
             });
-            if(b.x < -50 || b.x > innerWidth+50) this.bullets.splice(bi, 1);
         });
 
-        this.gems.forEach((g,i)=>{if(Math.hypot(this.pX-g.x,this.pY-g.y)<40){window.user.cash+=2;this.gems.splice(i,1);this.updateHUD();}});
-
-        if(this.portalActive && Math.hypot(this.pX-this.porX, this.pY-this.porY) < 70){
-            AudioEngine.portal();
-            window.user.level++;
-            this.portalActive = false; 
-            window.user.coins = 0; 
-            this.monsters = []; this.bullets = []; this.gems = [];
-            this.gameTime = 20; 
-            this.updateHUD();
-            document.getElementById('flash-overlay').style.opacity='1'; 
-            setTimeout(()=>document.getElementById('flash-overlay').style.opacity='0',300);
-        }
+        this.particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+            if(p.life <= 0) this.particles.splice(i, 1);
+        });
     },
+
     draw() {
-        this.ctx.clearRect(0,0,innerWidth,innerHeight);
-        if(this.portalActive){
-            this.ctx.font="100px Arial"; this.ctx.textAlign="center";
-            this.ctx.fillText("🌀",this.porX,this.porY+30);
-        }
-        this.ctx.font="45px Arial"; this.ctx.textAlign="center";
-        this.ctx.fillText(window.user.currentSkin,this.pX,this.pY+15);
-        this.monsters.forEach(m=>{this.ctx.fillText("🐞",m.x,m.y+10);});
-        this.bullets.forEach(b=>{this.ctx.font="20px Arial";this.ctx.fillText("⚡",b.x,b.y+7);});
-        this.gems.forEach(g=>{this.ctx.font="30px Arial";this.ctx.fillText("💎",g.x,g.y+10);});
+        const ctx = document.getElementById('game').getContext('2d');
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+        });
+        ctx.globalAlpha = 1.0;
+        const skin = skins.find(s => s.id === gameData.activeSkin);
+        const walk = Math.sin(this.frame * 0.3) * 12;
+        ctx.save(); ctx.translate(this.player.x, this.player.y);
+        ctx.strokeStyle = "#2d3436"; ctx.lineWidth = 4; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(0, 5); ctx.lineTo(0, 18);
+        ctx.moveTo(0, 18); ctx.lineTo(-8, 30 + walk); ctx.moveTo(0, 18); ctx.lineTo(8, 30 - walk);
+        ctx.moveTo(0, 8); ctx.lineTo(-15, 18); ctx.moveTo(0, 8); ctx.lineTo(15, 18);
+        ctx.stroke(); ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.fillText(skin.head, 0, 5); ctx.restore();
+        this.fruits.forEach(f => { ctx.font = "35px Arial"; ctx.fillText(f.type==='money'?"💰":levelConfigs[(this.lvl-1)%5].f, f.x, f.y+10); });
+        ctx.fillStyle = gameData.hasLaser ? "#00d2ff" : "#2d3436";
+        this.bullets.forEach(b => { 
+            if(gameData.hasLaser) { ctx.fillRect(b.x-10, b.y-2, 20, 4); }
+            else { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); }
+        });
     },
-    loop() { if(this.active){this.update();this.draw();requestAnimationFrame(()=>this.loop());} }
-};
 
-const AuthManager = {
-    async handleSupabase(type) {
-        AudioEngine.btn();
-        const email = document.getElementById('u-email').value;
-        const pass = document.getElementById('u-pass').value;
-        if(!email || !pass) return alert("أدخل البيانات");
-        try {
-            let res = (type === 'signup') ? await sb.auth.signUp({email, password:pass}) : await sb.auth.signInWithPassword({email, password:pass});
-            if(res.error) throw res.error;
-            if(type === 'login') this.launch();
-            else alert("تم التسجيل! فعل حسابك من الإيميل.");
-        } catch(e) { alert(e.message); }
-    },
-    startGuest() { AudioEngine.btn(); this.launch(); },
-    launch() {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('hud').classList.remove('hidden');
-        App.init();
+    win() { this.active=false; gameData.maxLevel++; saveData(); confetti(); setTimeout(()=> { buildMap(); this.init(this.lvl+1); }, 1500); },
+    loop() { if(this.active) { this.update(); this.draw(); requestAnimationFrame(()=>this.loop()); } },
+    spawnEnemy() {
+        const side = Math.random(); let x, y, vx=0, vy=0, s=3;
+        if(side<0.25){ x=window.innerWidth; y=Math.random()*window.innerHeight; vx=-s; }
+        else if(side<0.5){ x=0; y=Math.random()*window.innerHeight; vx=s; }
+        else if(side<0.75){ x=Math.random()*window.innerWidth; y=0; vy=s; }
+        else { x=Math.random()*window.innerWidth; y=window.innerHeight; vy=-s; }
+        this.fruits.push({x, y, vx, vy, type: Math.random()<0.1?'money':'fruit'});
     }
 };
 
-const Market = {
-    open() { 
-        AudioEngine.btn();
-        document.getElementById('m-gold').innerText = window.user.coins; 
-        document.getElementById('m-pegy').innerText = window.user.cash; 
-        this.renderSkins(); 
-        document.getElementById('s-market').classList.remove('hidden'); 
+function logout() { location.reload(); }
+function exitToMap() { GameCore.active = false; document.getElementById('game-container').style.display='none'; document.getElementById('levelMap').classList.remove('hidden'); buildMap(); }
+
+function toggleShop(show) { 
+    GameCore.paused = show; document.getElementById('shopPopup').style.display = show?'flex':'none'; 
+    if(show) { renderSkins(); renderWeapons(); } else if(GameCore.active) GameCore.loop(); 
+}
+
+function renderSkins() {
+    const list = document.getElementById('skins-list'); list.innerHTML = '';
+    skins.forEach(s => {
+        const owned = gameData.ownedSkins.includes(s.id);
+        const active = gameData.activeSkin === s.id;
+        let priceTag = s.t==='hybrid'? `${s.p}🪙+${s.p2}💵` : `${s.p} ${s.t==='coin'?'🪙':'💵'}`;
+        list.innerHTML += `<div class="shop-item"><span>${s.head} ${s.name}</span><button class="shop-btn" onclick="buySkin('${s.id}')" style="background:${active?'#2ed573':(owned?'#0984e3':'#2d3436')}">${active?'مفعل':(owned?'تفعيل':priceTag)}</button></div>`;
+    });
+}
+
+function renderWeapons() {
+    const list = document.getElementById('weapons-list'); list.innerHTML = '';
+    list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser?'disabled':''}>${gameData.hasLaser?'تم الشراء':'150000 🪙'}</button></div>`;
+    list.innerHTML += `<div class="shop-item"><span>☢️ قنبلة نووية</span><button class="shop-btn" onclick="buyWeapon('nuke')">20000 🪙</button></div>`;
+    if(gameData.fireRateLevel < 4) {
+        let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
+        list.innerHTML += `<div class="shop-item"><span>🔥 كثافة الرصاص (${gameData.fireRateLevel+1}/4)</span><button class="shop-btn" onclick="buyWeapon('fr')">${cost} 🪙</button></div>`;
+    }
+}
+
+function buySkin(id) {
+    const s = skins.find(x => x.id === id);
+    if(gameData.ownedSkins.includes(id)) { gameData.activeSkin = id; }
+    else {
+        let canBuy = false;
+        if(s.t==='coin' && gameData.coins >= s.p) { gameData.coins-=s.p; canBuy=true; }
+        else if(s.t==='cash' && gameData.cash >= s.p) { gameData.cash-=s.p; canBuy=true; }
+        else if(s.t==='hybrid' && gameData.coins >= s.p && gameData.cash >= s.p2) { gameData.coins-=s.p; gameData.cash-=s.p2; canBuy=true; }
+        if(canBuy) { gameData.ownedSkins.push(id); gameData.activeSkin = id; }
+    }
+    saveData(); renderSkins(); GameCore.updateUI();
+}
+
+function buyWeapon(type) {
+    if(type==='laser' && gameData.coins >= 150000) { gameData.coins-=150000; gameData.hasLaser=true; }
+    else if(type==='nuke' && gameData.coins >= 20000) { gameData.coins-=20000; gameData.nukes++; }
+    else if(type==='fr') {
+        let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
+        if(gameData.coins >= cost) { gameData.coins-=cost; gameData.fireRateLevel++; }
+    }
+    saveData(); renderWeapons(); GameCore.updateUI();
+}
+
+function useNuke() { if(gameData.nukes > 0) { gameData.nukes--; gameData.maxLevel += 3; saveData(); confetti(); exitToMap(); } }
+function exchange() { if(gameData.coins >= 100) { gameData.coins -= 100; gameData.cash += 2; saveData(); GameCore.updateUI(); } }
+
+const Joysticks = {
+    mID: null, sID: null,
+    init() {
+        const h = (e) => {
+            for(let t of e.changedTouches) {
+                const isL = t.clientX < window.innerWidth/2;
+                if(e.type === 'touchstart') { 
+                    if(isL && !this.mID) { this.mID = t.identifier; this.set('move', t); SoundSystem.init(); } 
+                    else if(!isL && !this.sID) { this.sID = t.identifier; this.set('shoot', t); } 
+                } else if(e.type === 'touchmove') { 
+                    if(t.identifier === this.mID) this.move(t, 'move'); 
+                    if(t.identifier === this.sID) this.move(t, 'shoot'); 
+                } else { 
+                    if(t.identifier === this.mID) { this.mID = null; GameCore.player.vx=0; GameCore.player.vy=0; document.getElementById('moveStick').style.transform='none'; } 
+                    if(t.identifier === this.sID) { this.sID = null; GameCore.shootDir={x:0,y:0}; document.getElementById('shootStick').style.transform='none'; } 
+                }
+            }
+        };
+        window.addEventListener("touchstart", h, {passive:false}); window.addEventListener("touchmove", h, {passive:false}); window.addEventListener("touchend", h);
     },
-    close() { AudioEngine.btn(); document.getElementById('s-market').classList.add('hidden'); },
-    renderSkins() {
-        const grid = document.getElementById('skin-grid'); grid.innerHTML = '';
-        skinData.forEach(s => {
-            const isUnlocked = window.user.unlockedSkins.includes(s.icon);
-            const div = document.createElement('div');
-            div.className = `skin-item ${window.user.currentSkin === s.icon ? 'active' : ''}`;
-            div.innerHTML = `<span style="font-size:25px">${s.icon}</span><span style="font-size:10px; font-weight:bold">${isUnlocked?'فتح':(s.t==='coins'?s.p+'🪙':s.p+'💵')}</span>`;
-            div.onclick = () => { AudioEngine.btn(); if(isUnlocked) window.user.currentSkin=s.icon; else this.buySkin(s); this.renderSkins(); App.updateHUD(); };
-            grid.appendChild(div);
-        });
-    },
-    buySkin(s) {
-        let p = (s.t==='coins')?window.user.coins:window.user.cash;
-        if(p>=s.p){ if(s.t==='coins') window.user.coins-=s.p; else window.user.cash-=s.p; window.user.unlockedSkins.push(s.icon); window.user.currentSkin=s.icon; }
-        else alert("رصيد غير كافٍ");
-    },
-    convertCurrency() { AudioEngine.btn(); if(window.user.coins>=1000){window.user.coins-=1000;window.user.cash+=50;this.open();App.updateHUD();} },
-    buyUpgrade() { AudioEngine.btn(); if(window.user.cash>=100){window.user.cash-=100;window.user.fireRate=Math.max(100,window.user.fireRate-50);this.open();App.updateHUD();} }
+    set(type, t) { const r = document.getElementById(type+'Joy').getBoundingClientRect(); this[type+'C'] = {x:r.left+42, y:r.top+42}; },
+    move(t, type) {
+        const c = this[type+'C']; let dx = t.clientX-c.x, dy = t.clientY-c.y, d = Math.hypot(dx,dy);
+        if(d>35) { dx*=35/d; dy*=35/d; }
+        document.getElementById(type+'Stick').style.transform = `translate(${dx}px,${dy}px)`;
+        if(type==='move') { GameCore.player.vx=dx/35*6; GameCore.player.vy=dy/35*6; } else GameCore.shootDir = {x:dx/35, y:dy/35};
+    }
 };
 
-window.addEventListener('mousemove',(e)=>{App.tX=e.clientX;App.tY=e.clientY;});
-window.addEventListener('touchmove',(e)=>{e.preventDefault();App.tX=e.touches[0].clientX;App.tY=e.touches[0].clientY;},{passive:false});
-window.addEventListener('resize',()=>App.resize());
+function buildMap() {
+    const grid = document.getElementById('grid'); grid.innerHTML = '';
+    for(let i=1; i<=100; i++) {
+        const u = i <= gameData.maxLevel;
+        const card = document.createElement('div'); card.className = 'level-card';
+        if(u) card.onclick = () => GameCore.init(i);
+        card.innerHTML = `<b>${u?i:'🔒'}</b><div style="font-size:20px">${u?levelConfigs[(i-1)%5].f:''}</div>`;
+        grid.appendChild(card);
+    }
+}
+Joysticks.init();
 </script>
 </body>
-</html>
+    </html>
