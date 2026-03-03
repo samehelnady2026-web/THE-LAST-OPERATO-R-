@@ -27,8 +27,6 @@
         .shop-btn:active { transform: scale(0.95); }
         #special-actions { position: absolute; bottom: 130px; width: 100%; display: flex; justify-content: center; gap: 15px; pointer-events: none; }
         .action-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--glass); border: 2px solid var(--neon-red); pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        
-        /* تنسيقات شاشة الدخول المطورة */
         .auth-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 10px; }
         .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; }
         .guest-btn { background: #636e72 !important; margin-top: 5px; }
@@ -39,20 +37,14 @@
 
 <div id="authScreen" class="screen">
     <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; letter-spacing: 2px;">NINJA SAGA</h1>
-    
     <div class="auth-form">
         <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
         <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input">
         <button class="shop-btn" style="padding:15px; font-size:14px;" onclick="handleAuth('login')">تسجيل دخول</button>
         <button class="shop-btn" style="padding:15px; font-size:14px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
-        
         <div style="text-align: center; margin: 10px 0; color: #636e72; font-size: 12px;">أو</div>
-        
         <button class="shop-btn guest-btn" style="padding:15px; font-size:14px;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
-        
-        <a href="#" id="installBtn" class="download-btn" style="display: none;" onclick="installApp(event)">
-            📲 تحميل اللعبة على هاتفك
-        </a>
+        <a href="#" id="installBtn" class="download-btn" style="display: none;" onclick="installApp(event)">📲 تحميل اللعبة على هاتفك</a>
     </div>
 </div>
 
@@ -108,7 +100,6 @@
 </div>
 
 <script>
-// إعدادات Supabase
 const SB_URL = 'https://ctnuuvdakmqpbuzhrsos.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -116,21 +107,18 @@ const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null;
 let isGuest = false;
 
-// بيانات اللعبة الافتراضية
 let gameData = {
     coins: 0, cash: 0, maxLevel: 1, ownedSkins: ['n1'], activeSkin: 'n1',
     hasLaser: false, nukes: 0, fireRateLevel: 0
 };
 
-// --- وظائف الدخول والضيف ---
+// --- وظائف الدخول والضيف المحسنة ---
 
 function startAsGuest() {
     isGuest = true;
     currentUser = null;
-    // تحميل بيانات من الـ LocalStorage إذا وجدت، وإلا ابدأ من الصفر
     const localData = localStorage.getItem('n_guest_data');
     if(localData) gameData = JSON.parse(localData);
-    
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('levelMap').classList.remove('hidden');
     buildMap(); GameCore.updateUI();
@@ -144,19 +132,30 @@ async function handleAuth(type) {
     if(type === 'signup') {
         const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
         if(error) return alert(error.message);
-        await supabaseClient.from('players').insert([{ id: data.user.id, email: email }]);
-        alert("تم إنشاء الحساب بنجاح!");
+        await createPlayerRecord(data.user.id, email);
+        alert("تم إنشاء الحساب بنجاح! يمكنك الدخول الآن.");
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
         if(error) return alert(error.message);
         currentUser = data.user;
         isGuest = false;
-        loadOnlineData();
+        await loadOnlineData();
     }
 }
 
+async function createPlayerRecord(id, email) {
+    await supabaseClient.from('players').upsert([
+        { id: id, email: email, coins: 0, cash: 0, max_level: 1, owned_skins: ['n1'], active_skin: 'n1' }
+    ], { onConflict: 'id' });
+}
+
 async function loadOnlineData() {
-    const { data } = await supabaseClient.from('players').select('*').eq('id', currentUser.id).single();
+    let { data } = await supabaseClient.from('players').select('*').eq('id', currentUser.id).single();
+    if(!data) {
+        await createPlayerRecord(currentUser.id, currentUser.email);
+        const retry = await supabaseClient.from('players').select('*').eq('id', currentUser.id).single();
+        data = retry.data;
+    }
     if(data) {
         gameData = {
             coins: data.coins, cash: data.cash, maxLevel: data.max_level,
@@ -182,25 +181,19 @@ async function saveData() {
     }).eq('id', currentUser.id);
 }
 
-// --- وظيفة تحميل اللعبة (PWA Install) ---
+// --- PWA INSTALL ---
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
+    e.preventDefault(); deferredPrompt = e;
     document.getElementById('installBtn').style.display = 'flex';
 });
-
 function installApp(e) {
-    e.preventDefault();
-    if (!deferredPrompt) return;
+    e.preventDefault(); if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choice) => {
-        if (choice.outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
-        deferredPrompt = null;
-    });
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; document.getElementById('installBtn').style.display = 'none'; });
 }
 
-// --- نفس منطق الصوت واللعبة والمتجر الأصلي ---
+// --- محرك اللعبة (الأصلي بدون تغيير) ---
 
 const SoundSystem = {
     enabled: true, ctx: null,
@@ -240,7 +233,6 @@ const GameCore = {
     player: { x: 0, y: 0, vx: 0, vy: 0, lives: 5 },
     fruits: [], bullets: [], particles: [], shootDir: { x: 0, y: 0 },
     lastShoot: 0,
-
     init(lvl) {
         this.lvl = lvl; this.active = true; this.paused = false; this.score = 0;
         this.player.lives = 5; this.fruits = []; this.bullets = []; this.particles = [];
@@ -252,7 +244,6 @@ const GameCore = {
         this.player.x = cvs.width/2; this.player.y = cvs.height/2;
         this.updateUI(); this.loop();
     },
-
     spawnParticles(x, y, color, count = 10) {
         for(let i=0; i<count; i++) {
             this.particles.push({
@@ -261,29 +252,24 @@ const GameCore = {
             });
         }
     },
-
     updateUI() {
         const u = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
         u('h-score', this.score); u('h-lives', this.player.lives); u('h-coins', gameData.coins);
         u('h-cash', gameData.cash); u('m-coins', gameData.coins); u('m-cash', gameData.cash);
         document.getElementById('nuke-btn').classList.toggle('hidden', gameData.nukes <= 0);
     },
-
     update() {
         if(!this.active || this.paused) return;
         this.frame++;
         this.player.x += this.player.vx; this.player.y += this.player.vy;
         this.player.x = Math.max(30, Math.min(window.innerWidth-30, this.player.x));
         this.player.y = Math.max(100, Math.min(window.innerHeight-30, this.player.y));
-
         let rate = 300 - (gameData.fireRateLevel * 50);
         if ((Math.abs(this.shootDir.x) > 0.1 || Math.abs(this.shootDir.y) > 0.1) && Date.now() - this.lastShoot > rate) {
             this.bullets.push({ x: this.player.x, y: this.player.y, vx: this.shootDir.x * 22, vy: this.shootDir.y * 22 });
             this.lastShoot = Date.now(); SoundSystem.play('shoot');
         }
-
         if(Math.random() < 0.04) this.spawnEnemy();
-
         this.fruits.forEach((f, i) => {
             f.x += f.vx; f.y += f.vy;
             if(Math.hypot(this.player.x-f.x, this.player.y-f.y) < 35) {
@@ -292,7 +278,6 @@ const GameCore = {
                 if(this.player.lives <= 0) exitToMap();
             }
         });
-
         this.bullets.forEach((b, bi) => {
             b.x += b.vx; b.y += b.vy;
             this.fruits.forEach((f, fi) => {
@@ -306,37 +291,27 @@ const GameCore = {
                 }
             });
         });
-
         this.particles.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy; p.life -= 0.03;
             if(p.life <= 0) this.particles.splice(i, 1);
         });
     },
-
     draw() {
         const ctx = document.getElementById('game').getContext('2d');
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        this.particles.forEach(p => {
-            ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
-        });
+        this.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); });
         ctx.globalAlpha = 1.0;
         const skin = skins.find(s => s.id === gameData.activeSkin);
         const walk = Math.sin(this.frame * 0.3) * 12;
         ctx.save(); ctx.translate(this.player.x, this.player.y);
         ctx.strokeStyle = "#2d3436"; ctx.lineWidth = 4; ctx.lineCap = "round";
-        ctx.beginPath(); ctx.moveTo(0, 5); ctx.lineTo(0, 18);
-        ctx.moveTo(0, 18); ctx.lineTo(-8, 30 + walk); ctx.moveTo(0, 18); ctx.lineTo(8, 30 - walk);
+        ctx.beginPath(); ctx.moveTo(0, 5); ctx.lineTo(0, 18); ctx.moveTo(0, 18); ctx.lineTo(-8, 30 + walk); ctx.moveTo(0, 18); ctx.lineTo(8, 30 - walk);
         ctx.moveTo(0, 8); ctx.lineTo(-15, 18); ctx.moveTo(0, 8); ctx.lineTo(15, 18);
         ctx.stroke(); ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.fillText(skin.head, 0, 5); ctx.restore();
         this.fruits.forEach(f => { ctx.font = "35px Arial"; ctx.fillText(f.type==='money'?"💰":levelConfigs[(this.lvl-1)%5].f, f.x, f.y+10); });
         ctx.fillStyle = gameData.hasLaser ? "#00d2ff" : "#2d3436";
-        this.bullets.forEach(b => { 
-            if(gameData.hasLaser) { ctx.fillRect(b.x-10, b.y-2, 20, 4); }
-            else { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); }
-        });
+        this.bullets.forEach(b => { if(gameData.hasLaser) { ctx.fillRect(b.x-10, b.y-2, 20, 4); } else { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); } });
     },
-
     win() { this.active=false; gameData.maxLevel++; saveData(); confetti(); setTimeout(()=> { buildMap(); this.init(this.lvl+1); }, 1500); },
     loop() { if(this.active) { this.update(); this.draw(); requestAnimationFrame(()=>this.loop()); } },
     spawnEnemy() {
@@ -351,12 +326,10 @@ const GameCore = {
 
 function logout() { location.reload(); }
 function exitToMap() { GameCore.active = false; document.getElementById('game-container').style.display='none'; document.getElementById('levelMap').classList.remove('hidden'); buildMap(); }
-
 function toggleShop(show) { 
     GameCore.paused = show; document.getElementById('shopPopup').style.display = show?'flex':'none'; 
     if(show) { renderSkins(); renderWeapons(); } else if(GameCore.active) GameCore.loop(); 
 }
-
 function renderSkins() {
     const list = document.getElementById('skins-list'); list.innerHTML = '';
     skins.forEach(s => {
@@ -366,7 +339,6 @@ function renderSkins() {
         list.innerHTML += `<div class="shop-item"><span>${s.head} ${s.name}</span><button class="shop-btn" onclick="buySkin('${s.id}')" style="background:${active?'#2ed573':(owned?'#0984e3':'#2d3436')}">${active?'مفعل':(owned?'تفعيل':priceTag)}</button></div>`;
     });
 }
-
 function renderWeapons() {
     const list = document.getElementById('weapons-list'); list.innerHTML = '';
     list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser?'disabled':''}>${gameData.hasLaser?'تم الشراء':'150000 🪙'}</button></div>`;
@@ -376,7 +348,6 @@ function renderWeapons() {
         list.innerHTML += `<div class="shop-item"><span>🔥 كثافة الرصاص (${gameData.fireRateLevel+1}/4)</span><button class="shop-btn" onclick="buyWeapon('fr')">${cost} 🪙</button></div>`;
     }
 }
-
 function buySkin(id) {
     const s = skins.find(x => x.id === id);
     if(gameData.ownedSkins.includes(id)) { gameData.activeSkin = id; }
@@ -389,7 +360,6 @@ function buySkin(id) {
     }
     saveData(); renderSkins(); GameCore.updateUI();
 }
-
 function buyWeapon(type) {
     if(type==='laser' && gameData.coins >= 150000) { gameData.coins-=150000; gameData.hasLaser=true; }
     else if(type==='nuke' && gameData.coins >= 20000) { gameData.coins-=20000; gameData.nukes++; }
@@ -399,7 +369,6 @@ function buyWeapon(type) {
     }
     saveData(); renderWeapons(); GameCore.updateUI();
 }
-
 function useNuke() { if(gameData.nukes > 0) { gameData.nukes--; gameData.maxLevel += 3; saveData(); confetti(); exitToMap(); } }
 function exchange() { if(gameData.coins >= 100) { gameData.coins -= 100; gameData.cash += 2; saveData(); GameCore.updateUI(); } }
 
