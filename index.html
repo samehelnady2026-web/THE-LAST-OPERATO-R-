@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NINJA SAGA - EDITION</title>
-    <link rel="manifest" href="manifest.json">
+    <title>NINJA SAGA - S -EDITION</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -32,6 +34,19 @@
         .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; }
         .guest-btn { background: #636e72 !important; margin-top: 5px; }
         .download-btn { background: #27ae60 !important; margin-top: 20px; width: 100%; padding: 12px; color: white; border-radius: 12px; font-weight: bold; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        /* تنسيق أيقونات التواصل الاجتماعي */
+        .social-links { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .social-icon { 
+            width: 45px; height: 45px; border-radius: 50%; display: flex; 
+            align-items: center; justify-content: center; text-decoration: none; 
+            font-size: 22px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            transition: 0.3s; 
+        }
+        .social-icon:active { transform: scale(0.9); }
+        .yt-icon { color: #FF0000; border: 1px solid #FF0000; }
+        .tg-icon { color: #0088cc; border: 1px solid #0088cc; }
+        .wa-icon { color: #25D366; border: 1px solid #25D366; }
     </style>
 </head>
 <body>
@@ -45,6 +60,19 @@
         <button class="shop-btn" style="padding:15px; font-size:14px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
         <div style="text-align: center; margin: 10px 0; color: #636e72; font-size: 12px;">أو</div>
         <button class="shop-btn guest-btn" style="padding:15px; font-size:14px;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
+        
+        <div class="social-links">
+            <a href="https://www.youtube.com/@THELASTOPERATOR-d1i" target="_blank" class="social-icon yt-icon" title="YouTube">
+                <i class="fab fa-youtube"></i>
+            </a>
+            <a href="https://t.me/Samelnady" target="_blank" class="social-icon tg-icon" title="Telegram">
+                <i class="fab fa-telegram-plane"></i>
+            </a>
+            <a href="https://wa.me/201287837118" target="_blank" class="social-icon wa-icon" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+        </div>
+
         <a href="#" id="installBtn" class="download-btn" style="display: none;" onclick="installApp(event)">📲 تحميل اللعبة على هاتفك</a>
     </div>
 </div>
@@ -101,46 +129,30 @@
 </div>
 
 <script>
-// --- إعدادات Supabase (تأكد من المفتاح الخاص بك) ---
 const SB_URL = 'https://ctnuuvdakmqpbuzhrsos.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // ضع مفتاحك هنا
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
 let currentUser = null;
 let isGuest = false;
 
-// البيانات الافتراضية
 let gameData = {
     coins: 0, cash: 0, maxLevel: 1, ownedSkins: ['n1'], activeSkin: 'n1',
     hasLaser: false, nukes: 0, fireRateLevel: 0
 };
 
-// 1. الدخول كضيف (حفظ في أعمدة الأوفلاين)
-async function startAsGuest() {
+// --- وظائف الدخول والضيف المحسنة ---
+
+function startAsGuest() {
     isGuest = true;
     currentUser = null;
     const localData = localStorage.getItem('n_guest_data');
     if(localData) gameData = JSON.parse(localData);
-
-    // تسجيل الضيف في السحاب ليظهر للأدمن
-    let gId = localStorage.getItem('n_guest_uuid') || 'G-' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('n_guest_uuid', gId);
-
-    await supabaseClient.from('players').upsert([
-        { 
-            guest_id: gId, 
-            email: 'guest@ninja.com', 
-            offline_level: gameData.maxLevel,
-            offline_coins: gameData.coins 
-        }
-    ], { onConflict: 'guest_id' });
-
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('levelMap').classList.remove('hidden');
     buildMap(); GameCore.updateUI();
 }
 
-// 2. نظام تسجيل الدخول الرسمي والتحقق من الحظر والتأمين
 async function handleAuth(type) {
     const email = document.getElementById('authEmail').value;
     const pass = document.getElementById('authPass').value;
@@ -149,7 +161,8 @@ async function handleAuth(type) {
     if(type === 'signup') {
         const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
         if(error) return alert(error.message);
-        alert("تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول الآن.");
+        await createPlayerRecord(data.user.id, email);
+        alert("تم إنشاء الحساب بنجاح! يمكنك الدخول الآن.");
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
         if(error) return alert(error.message);
@@ -159,74 +172,57 @@ async function handleAuth(type) {
     }
 }
 
-// 3. جلب البيانات ومطابقتها مع أعمدة قاعدة بياناتك (level, current, is_banned)
+async function createPlayerRecord(id, email) {
+    await supabaseClient.from('players').upsert([
+        { id: id, email: email, coins: 0, cash: 0, max_level: 1, owned_skins: ['n1'], active_skin: 'n1' }
+    ], { onConflict: 'id' });
+}
+
 async function loadOnlineData() {
-    let { data, error } = await supabaseClient.from('players').select('*').eq('id', currentUser.id).single();
-    
+    let { data } = await supabaseClient.from('players').select('*').eq('id', currentUser.id).single();
     if(!data) {
-        // إنشاء سجل جديد وتوجيهه للتأمين
-        await supabaseClient.from('players').insert([{ id: currentUser.id, email: currentUser.email }]);
-        window.location.href = "phone-auth.html";
-        return;
+        await createPlayerRecord(currentUser.id, currentUser.email);
+        const retry = await supabaseClient.from('players').select('*').eq('id', currentUser.id).single();
+        data = retry.data;
     }
-
-    // فحص الحظر
-    if(data.is_banned) {
-        alert("🚫 تم حظر هذا الحساب من قبل الإدارة.");
-        location.reload();
-        return;
+    if(data) {
+        gameData = {
+            coins: data.coins, cash: data.cash, maxLevel: data.max_level,
+            ownedSkins: data.owned_skins || ['n1'], activeSkin: data.active_skin || 'n1',
+            hasLaser: data.has_laser, nukes: data.nukes, fireRateLevel: data.fire_rate_level
+        };
     }
-
-    // فحص التأمين (الهاتف والـ PIN)
-    if(!data.phone || !data.pin_code) {
-        window.location.href = "phone-auth.html";
-        return;
-    }
-
-    // تعبئة البيانات من قاعدة البيانات (مطابقة لأسماء الأعمدة في صورتك)
-    gameData = {
-        coins: data.coins || 0,
-        cash: data.cash || 0,
-        maxLevel: data.level || 1, // العمود في صورتك اسمه level
-        ownedSkins: data.offline_unlocked_skins || ['n1'], 
-        activeSkin: data.current || 'n1', // العمود في صورتك اسمه current
-        hasLaser: data.has_laser || false,
-        nukes: data.nukes || 0,
-        fireRateLevel: data.fire_rate_level || 0
-    };
-
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('levelMap').classList.remove('hidden');
     buildMap(); GameCore.updateUI();
 }
 
-// 4. حفظ البيانات دورياً (عند كل عملية شراء أو فوز)
 async function saveData() {
     if(isGuest) {
         localStorage.setItem('n_guest_data', JSON.stringify(gameData));
-        const gId = localStorage.getItem('n_guest_uuid');
-        await supabaseClient.from('players').update({
-            offline_coins: gameData.coins,
-            offline_level: gameData.maxLevel
-        }).eq('guest_id', gId);
         return;
     }
-    
     if(!currentUser) return;
-    
-    // التحديث في السحاب (مطابق لصورتك)
     await supabaseClient.from('players').update({
-        coins: gameData.coins,
-        cash: gameData.cash,
-        level: gameData.maxLevel,
-        current: gameData.activeSkin,
-        has_laser: gameData.hasLaser,
-        nukes: gameData.nukes,
-        fire_rate_level: gameData.fireRateLevel
+        coins: gameData.coins, cash: gameData.cash, max_level: gameData.maxLevel,
+        owned_skins: gameData.ownedSkins, active_skin: gameData.activeSkin,
+        has_laser: gameData.hasLaser, nukes: gameData.nukes, fire_rate_level: gameData.fireRateLevel
     }).eq('id', currentUser.id);
 }
 
-// --- بقية كود المحرك (بدون تغيير) ---
+// --- PWA INSTALL ---
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('installBtn').style.display = 'flex';
+});
+function installApp(e) {
+    e.preventDefault(); if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; document.getElementById('installBtn').style.display = 'none'; });
+}
+
+// --- محرك اللعبة ---
 
 const SoundSystem = {
     enabled: true, ctx: null,
@@ -445,22 +441,6 @@ function buildMap() {
     }
 }
 Joysticks.init();
-
-// --- PWA INSTALL ---
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e;
-    document.getElementById('installBtn').style.display = 'flex';
-});
-function installApp(e) {
-    e.preventDefault(); if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; document.getElementById('installBtn').style.display = 'none'; });
-}
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-}
 </script>
 </body>
-                                                                                                                                </html>
+                    </html>
