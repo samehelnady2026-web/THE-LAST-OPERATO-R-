@@ -1,35 +1,14 @@
-const CACHE_NAME = 'operator-v2';
-const assets = [
-  './',
+const CACHE_NAME = 'ninja-v1';
+const ASSETS = [
   './index.html',
-  './manifest.json',
-  './icon.png'
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 
-// تثبيت الكاش وتخزين الملفات الأساسية
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('Caching assets...');
-      return cache.addAll(assets);
-    })
-  );
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)));
 });
 
-// تفعيل السيرفس وركر وحذف الكاش القديم
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
-    })
-  );
-});
-
-// الاستجابة للطلبات من الكاش أولاً ثم الإنترنت
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
+self.addEventListener('fetch', (e) => {
+  e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request)));
 });
