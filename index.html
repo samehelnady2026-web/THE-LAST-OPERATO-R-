@@ -13,6 +13,61 @@
         :root { --glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(0, 0, 0, 0.1); --neon-blue: #0984e3; --neon-red: #d63031; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
         body { background: #f0f2f5; height: 100vh; overflow: hidden; touch-action: none; color: #2d3436; transition: background 0.5s ease; }
+        
+        /* --- واجهة الترحيب المضافة OPERATOR --- */
+        #welcomeScreen {
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            z-index: 9000;
+            position: fixed;
+            inset: 0;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+
+        .hero-center { display: flex; flex-direction: column; align-items: center; gap: 80px; }
+        .vortex-container { position: relative; width: 350px; height: 350px; display: flex; justify-content: center; align-items: center; }
+        
+        .animated-word {
+            color: #ffffff; font-size: 2.8rem; font-weight: 900; letter-spacing: 10px; z-index: 10;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5); pointer-events: none;
+            animation: breathing 3s ease-in-out infinite;
+        }
+
+        @keyframes breathing {
+            0%, 100% { transform: scale(1); letter-spacing: 10px; opacity: 0.9; }
+            50% { transform: scale(1.15); letter-spacing: 15px; opacity: 1; }
+        }
+
+        .rainbow-halo {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000);
+            filter: blur(30px); animation: rotate-halo 5s linear infinite; opacity: 0.7;
+        }
+
+        .rainbow-halo.second { width: 120%; height: 120%; animation: rotate-halo 8s linear infinite reverse; opacity: 0.4; filter: blur(50px); }
+
+        @keyframes rotate-halo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .glass-btn-wrapper { position: relative; display: flex; justify-content: center; align-items: center; z-index: 20; }
+        .enter-game-btn.spectrum-glass {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            color: #2d3436; padding: 20px 60px; border-radius: 50px; border: 2px solid rgba(255, 255, 255, 0.5);
+            font-size: 22px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 15px;
+            transition: all 0.4s ease; overflow: hidden; position: relative;
+        }
+        .enter-game-btn.spectrum-glass:hover { transform: translateY(-8px) scale(1.05); background: rgba(255, 255, 255, 0.25); border-color: #0984e3; color: #000; }
+        
+        .btn-rainbow-shadow {
+            position: absolute; width: 85%; height: 15px; bottom: -8px;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            background-size: 300% 100%; filter: blur(18px); border-radius: 50px; opacity: 0.7; animation: shadow-flow 3s linear infinite; z-index: -1;
+        }
+        @keyframes shadow-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        /* --- تنسيقات الكود الأصلي --- */
         .screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; background: rgba(240, 242, 245, 0.98); backdrop-filter: blur(10px); overflow-y: auto; }
         .hidden { display: none !important; }
         .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 400px; padding: 20px 0; }
@@ -33,16 +88,10 @@
         .auth-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 10px; }
         .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; }
         .guest-btn { background: #636e72 !important; margin-top: 5px; }
-        .download-btn { background: #27ae60 !important; margin-top: 20px; width: 100%; padding: 12px; color: white; border-radius: 12px; font-weight: bold; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-        /* تنسيق أيقونات التواصل الاجتماعي */
+        .download-btn { background: #27ae60 !important; margin-top: 20px; width: 100%; padding: 12px; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        .download-btn:active { transform: scale(0.98); opacity: 0.9; }
         .social-links { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-        .social-icon { 
-            width: 45px; height: 45px; border-radius: 50%; display: flex; 
-            align-items: center; justify-content: center; text-decoration: none; 
-            font-size: 22px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            transition: 0.3s; 
-        }
+        .social-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 22px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
         .social-icon:active { transform: scale(0.9); }
         .yt-icon { color: #FF0000; border: 1px solid #FF0000; }
         .tg-icon { color: #0088cc; border: 1px solid #0088cc; }
@@ -50,6 +99,23 @@
     </style>
 </head>
 <body>
+
+<div id="welcomeScreen">
+    <div class="hero-center">
+        <div class="vortex-container">
+            <div class="rainbow-halo"></div>
+            <div class="rainbow-halo second"></div>
+            <h1 class="operator-title animated-word">OPERATOR</h1>
+        </div>
+        <div class="glass-btn-wrapper">
+            <div class="btn-rainbow-shadow"></div>
+            <button class="enter-game-btn spectrum-glass" onclick="revealGame()">
+                <span>ادخل اللعبة</span>
+                <i class="fas fa-bolt"></i>
+            </button>
+        </div>
+    </div>
+</div>
 
 <div id="authScreen" class="screen">
     <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; letter-spacing: 2px;">NINJA SAGA</h1>
@@ -72,8 +138,11 @@
                 <i class="fab fa-whatsapp"></i>
             </a>
         </div>
-
-        <a href="#" id="installBtn" class="download-btn" style="display: none;" onclick="installApp(event)">📲 تحميل اللعبة على هاتفك</a>
+        
+        <button id="installBtn" class="download-btn" style="display: none;" onclick="installApp()">
+            <i class="fas fa-download"></i>
+            <span>تحميل اللعبة على هاتفك</span>
+        </button>
     </div>
 </div>
 
@@ -129,6 +198,16 @@
 </div>
 
 <script>
+/* دالة كشف اللعبة */
+function revealGame() {
+    const ws = document.getElementById('welcomeScreen');
+    ws.style.opacity = '0';
+    setTimeout(() => {
+        ws.classList.add('hidden');
+        SoundSystem.init(); 
+    }, 800);
+}
+
 const SB_URL = 'https://ctnuuvdakmqpbuzhrsos.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -210,17 +289,28 @@ async function saveData() {
     }).eq('id', currentUser.id);
 }
 
-// --- PWA INSTALL ---
+// --- منطق تثبيت التطبيق (PWA INSTALL) المطور ---
 let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
 window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e;
-    document.getElementById('installBtn').style.display = 'flex';
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'flex';
 });
-function installApp(e) {
-    e.preventDefault(); if (!deferredPrompt) return;
+
+async function installApp() {
+    if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; document.getElementById('installBtn').style.display = 'none'; });
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
 }
+
+window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+});
 
 // --- محرك اللعبة ---
 
@@ -408,7 +498,7 @@ const Joysticks = {
             for(let t of e.changedTouches) {
                 const isL = t.clientX < window.innerWidth/2;
                 if(e.type === 'touchstart') { 
-                    if(isL && !this.mID) { this.mID = t.identifier; this.set('move', t); SoundSystem.init(); } 
+                    if(isL && !this.mID) { this.mID = t.identifier; this.set('move', t); } 
                     else if(!isL && !this.sID) { this.sID = t.identifier; this.set('shoot', t); } 
                 } else if(e.type === 'touchmove') { 
                     if(t.identifier === this.mID) this.move(t, 'move'); 
@@ -443,4 +533,4 @@ function buildMap() {
 Joysticks.init();
 </script>
 </body>
-                    </html>
+    </html>
