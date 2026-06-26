@@ -208,8 +208,10 @@ function revealGame() {
     }, 800);
 }
 
-const SB_URL = 'https://ctnuuvdakmqpbuzhrsos.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw';
+// تم تعديل الرابط هنا ليتطابق مع مشروعك الجديد
+const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
+// يرجى وضع الـ API Key الخاص بمشروعك الجديد بدلاً من النص أدناه
+const SB_KEY = 'ضَع_هُنا_الـ_API_KEY_الجديد';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
 let currentUser = null;
@@ -220,7 +222,7 @@ let gameData = {
     hasLaser: false, nukes: 0, fireRateLevel: 0
 };
 
-// --- وظائف الدخول والضيف المحسنة (المُعدلة والمُصلحة لتطابق قاعدة بياناتك) ---
+// --- وظائف الدخول والضيف المحسنة ---
 
 function startAsGuest() {
     isGuest = true;
