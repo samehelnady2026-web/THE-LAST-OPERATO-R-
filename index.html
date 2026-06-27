@@ -3,71 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NINJA SAGA - S -EDITION</title>
+    <title>THE LAST OPERATOR - S -EDITION</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(0, 0, 0, 0.1); --neon-blue: #0984e3; --neon-red: #d63031; }
+        :root { --glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(0, 0, 0, 0.1); --neon-blue: #0984e3; --neon-red: #d63031; --neon-purple: #9b59b6; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
         body { background: #f0f2f5; height: 100vh; overflow: hidden; touch-action: none; color: #2d3436; transition: background 0.5s ease; }
         
-        /* --- واجهة الترحيب المضافة OPERATOR --- */
+        /* --- واجهة الترحيب --- */
         #welcomeScreen {
-            background: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            z-index: 9000;
-            position: fixed;
-            inset: 0;
-            transition: opacity 0.8s ease, visibility 0.8s;
+            background: #ffffff; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 9000; position: fixed; inset: 0; transition: opacity 0.8s ease, visibility 0.8s;
         }
-
         .hero-center { display: flex; flex-direction: column; align-items: center; gap: 80px; }
         .vortex-container { position: relative; width: 350px; height: 350px; display: flex; justify-content: center; align-items: center; }
-        
         .animated-word {
-            color: #ffffff; font-size: 2.8rem; font-weight: 900; letter-spacing: 10px; z-index: 10;
-            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5); pointer-events: none;
-            animation: breathing 3s ease-in-out infinite;
+            color: #ffffff; font-size: 2.8rem; font-weight: 900; letter-spacing: 10px; z-index: 10; text-shadow: 0 0 20px rgba(0, 0, 0, 0.5); pointer-events: none; animation: breathing 3s ease-in-out infinite;
         }
-
-        @keyframes breathing {
-            0%, 100% { transform: scale(1); letter-spacing: 10px; opacity: 0.9; }
-            50% { transform: scale(1.15); letter-spacing: 15px; opacity: 1; }
-        }
-
+        @keyframes breathing { 0%, 100% { transform: scale(1); letter-spacing: 10px; opacity: 0.9; } 50% { transform: scale(1.15); letter-spacing: 15px; opacity: 1; } }
         .rainbow-halo {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000);
-            filter: blur(30px); animation: rotate-halo 5s linear infinite; opacity: 0.7;
+            position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000); filter: blur(30px); animation: rotate-halo 5s linear infinite; opacity: 0.7;
         }
-
         .rainbow-halo.second { width: 120%; height: 120%; animation: rotate-halo 8s linear infinite reverse; opacity: 0.4; filter: blur(50px); }
-
         @keyframes rotate-halo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
         .glass-btn-wrapper { position: relative; display: flex; justify-content: center; align-items: center; z-index: 20; }
         .enter-game-btn.spectrum-glass {
-            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            color: #2d3436; padding: 20px 60px; border-radius: 50px; border: 2px solid rgba(255, 255, 255, 0.5);
-            font-size: 22px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 15px;
-            transition: all 0.4s ease; overflow: hidden; position: relative;
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #2d3436; padding: 20px 60px; border-radius: 50px; border: 2px solid rgba(255, 255, 255, 0.5); font-size: 22px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.4s ease; overflow: hidden; position: relative;
         }
         .enter-game-btn.spectrum-glass:hover { transform: translateY(-8px) scale(1.05); background: rgba(255, 255, 255, 0.25); border-color: #0984e3; color: #000; }
-        
         .btn-rainbow-shadow {
-            position: absolute; width: 85%; height: 15px; bottom: -8px;
-            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-            background-size: 300% 100%; filter: blur(18px); border-radius: 50px; opacity: 0.7; animation: shadow-flow 3s linear infinite; z-index: -1;
+            position: absolute; width: 85%; height: 15px; bottom: -8px; background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); background-size: 300% 100%; filter: blur(18px); border-radius: 50px; opacity: 0.7; animation: shadow-flow 3s linear infinite; z-index: -1;
         }
         @keyframes shadow-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-        /* --- تنسيقات الكود الأصلي --- */
+        /* --- التنسيقات العامة للواجهات --- */
         .screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; background: rgba(240, 242, 245, 0.98); backdrop-filter: blur(10px); overflow-y: auto; }
         .hidden { display: none !important; }
         .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 400px; padding: 20px 0; }
@@ -77,25 +49,24 @@
         .joystick-base { position: absolute; bottom: 30px; width: 85px; height: 85px; background: rgba(0,0,0,0.05); border-radius: 50%; border: 2px solid rgba(0,0,0,0.1); z-index: 1000; }
         #moveJoy { left: 25px; } #shootJoy { right: 25px; border-color: var(--neon-red); }
         .stick { position: absolute; width: 35px; height: 35px; background: #2d3436; border-radius: 50%; left: 25px; top: 25px; pointer-events: none; }
+        
         .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .popup-content { background: white; width: 92%; max-width: 420px; padding: 20px; border-radius: 25px; color: #2d3436; max-height: 85vh; overflow-y: auto; }
-        .shop-sec { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .shop-item { background: #f8f9fa; padding: 10px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .shop-btn { padding: 6px 12px; border-radius: 8px; border: none; background: var(--neon-blue); color: white; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.2s; }
+        .popup-content { background: white; width: 94%; max-width: 440px; padding: 20px; border-radius: 25px; color: #2d3436; max-height: 85vh; overflow-y: auto; }
+        
+        .shop-sec { margin-bottom: 18px; border-bottom: 1px dashed #eee; padding-bottom: 12px; text-align: right; }
+        .shop-item { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .shop-btn { padding: 8px 14px; border-radius: 8px; border: none; background: var(--neon-blue); color: white; font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.2s; }
         .shop-btn:active { transform: scale(0.95); }
-        #special-actions { position: absolute; bottom: 130px; width: 100%; display: flex; justify-content: center; gap: 15px; pointer-events: none; }
-        .action-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--glass); border: 2px solid var(--neon-red); pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
         .auth-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 10px; }
-        .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; }
-        .guest-btn { background: #636e72 !important; margin-top: 5px; }
-        .download-btn { background: #27ae60 !important; margin-top: 20px; width: 100%; padding: 12px; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
-        .download-btn:active { transform: scale(0.98); opacity: 0.9; }
-        .social-links { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-        .social-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 22px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
-        .social-icon:active { transform: scale(0.9); }
-        .yt-icon { color: #FF0000; border: 1px solid #FF0000; }
-        .tg-icon { color: #0088cc; border: 1px solid #0088cc; }
-        .wa-icon { color: #25D366; border: 1px solid #25D366; }
+        .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; width: 100%; }
+        
+        .market-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #eee; padding: 4px; border-radius: 10px; }
+        .market-tab-btn { flex: 1; padding: 8px; border: none; background: transparent; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .market-tab-btn.active { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); color: var(--neon-blue); }
+        
+        .ledger-box { max-height: 120px; overflow-y: auto; background: #f1f2f6; border-radius: 10px; padding: 8px; font-size: 11px; text-align: right; }
+        .ledger-item { padding: 5px; border-bottom: 1px solid #e4e7eb; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -105,7 +76,7 @@
         <div class="vortex-container">
             <div class="rainbow-halo"></div>
             <div class="rainbow-halo second"></div>
-            <h1 class="operator-title animated-word">OPERATOR</h1>
+            <h1 class="operator-title animated-word" style="font-size: 1.8rem; text-align: center;">THE LAST<br>OPERATOR</h1>
         </div>
         <div class="glass-btn-wrapper">
             <div class="btn-rainbow-shadow"></div>
@@ -118,7 +89,7 @@
 </div>
 
 <div id="authScreen" class="screen">
-    <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; letter-spacing: 2px;">NINJA SAGA</h1>
+    <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; font-size: 24px; text-align: center;">THE LAST OPERATOR</h1>
     <div class="auth-form">
         <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
         <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input">
@@ -126,31 +97,15 @@
         <button class="shop-btn" style="padding:15px; font-size:14px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
         <div style="text-align: center; margin: 10px 0; color: #636e72; font-size: 12px;">أو</div>
         <button class="shop-btn guest-btn" style="padding:15px; font-size:14px;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
-        
-        <div class="social-links">
-            <a href="https://www.youtube.com/@THELASTOPERATOR-d1i" target="_blank" class="social-icon yt-icon" title="YouTube">
-                <i class="fab fa-youtube"></i>
-            </a>
-            <a href="https://t.me/TheLastOperator55bot" target="_blank" class="social-icon tg-icon" title="Telegram">
-                <i class="fab fa-telegram-plane"></i>
-            </a>
-            <a href="https://wa.me/201287837118" target="_blank" class="social-icon wa-icon" title="WhatsApp">
-                <i class="fab fa-whatsapp"></i>
-            </a>
-        </div>
-        
-        <button id="installBtn" class="download-btn" style="display: none;" onclick="installApp()">
-            <i class="fas fa-download"></i>
-            <span>تحميل اللعبة على هاتفك</span>
-        </button>
     </div>
 </div>
 
 <div id="levelMap" class="screen hidden">
-    <h1 style="color: var(--neon-blue); margin: 20px 0; font-weight: 900;">NINJA SAGA</h1>
-    <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;">
-        <div class="stat-badge">🪙 <span id="m-coins">0</span></div>
-        <div class="stat-badge">💵 <span id="m-cash">0</span></div>
+    <h1 style="color: var(--neon-blue); margin: 20px 0; font-weight: 900; font-size: 26px; text-align: center;">THE LAST OPERATOR</h1>
+    <div style="display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;">
+        <div class="stat-badge" onclick="openBankModal('coins')" style="cursor:pointer; border-color:orange;">🪙 <span id="m-coins">0</span></div>
+        <div class="stat-badge" onclick="openBankModal('cash')" style="cursor:pointer; border-color:green;">💵 <span id="m-cash">0</span></div>
+        <div class="stat-badge" onclick="toggleMarket(true)" style="background:#e17055; color:white; cursor:pointer;">🛒 السوق الأسود</div>
         <div class="stat-badge" onclick="toggleProfile(true)" style="background:#0984e3; color:white; cursor:pointer;">👤 الحساب</div>
         <div class="stat-badge" onclick="logout()" style="background:#fab1a0; cursor:pointer;">🚪 خروج</div>
     </div>
@@ -166,113 +121,130 @@
             <div class="stat-badge">🪙 <span id="h-coins">0</span></div>
             <div class="stat-badge">💵 <span id="h-cash">0</span></div>
         </div>
-        <div style="display:flex; gap:5px;">
-            <div class="stat-badge" onclick="SoundSystem.toggle()" id="sound-btn">🔊</div>
-            <div class="stat-badge" onclick="toggleShop(true)">🛒 السوق</div>
-        </div>
     </div>
     <canvas id="game"></canvas>
-    <div id="special-actions">
-        <div id="nuke-btn" class="action-btn hidden" onclick="useNuke()">☢️</div>
-    </div>
     <div id="moveJoy" class="joystick-base"><div id="moveStick" class="stick"></div></div>
     <div id="shootJoy" class="joystick-base"><div id="shootStick" class="stick"></div></div>
 </div>
 
-<div id="shopPopup" class="popup">
+<div id="marketPopup" class="popup">
     <div class="popup-content">
-        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر الملكي</h2>
-        <div class="shop-sec">
-            <h4 style="color:var(--neon-blue); margin-bottom:8px;">👕 الشخصيات</h4>
-            <div id="skins-list"></div>
+        <h2 style="text-align:center; margin-bottom:12px; color:var(--neon-purple);">🛒 سوق النيون المركزي</h2>
+        
+        <div class="market-tabs">
+            <button class="market-tab-btn active" onclick="switchMarketTab('skins', this)">👤 الشخصيات</button>
+            <button class="market-tab-btn" onclick="switchMarketTab('weapons', this)">⚔️ الأسلحة</button>
+            <button class="market-tab-btn" onclick="switchMarketTab('effects', this)">✨ التأثيرات</button>
+            <button class="market-tab-btn" onclick="switchMarketTab('abilities', this)">🔥 القدرات</button>
         </div>
-        <div class="shop-sec">
-            <h4 style="color:var(--neon-red); margin-bottom:8px;">⚔️ الأسلحة والقدرات</h4>
-            <div id="weapons-list"></div>
-        </div>
-        <div class="shop-sec">
-            <h4 style="color:orange; margin-bottom:8px;">🏦 البنك</h4>
-            <div class="shop-item"><span>100 🪙 ➔ 2 💵</span><button class="shop-btn" onclick="exchange()">تحويل</button></div>
-        </div>
-        <button onclick="toggleShop(false)" style="width:100%; padding:12px; border-radius:12px; background:#2d3436; color:white; border:none; font-weight:bold;">العودة للقتال</button>
+
+        <div id="marketItemsContainer" style="max-height: 45vh; overflow-y: auto; margin-bottom: 15px;"></div>
+
+        <button onclick="toggleMarket(false)" style="width:100%; padding:12px; border-radius:12px; background:#2d3436; color:white; border:none; font-weight:bold;">الخروج من السوق</button>
     </div>
 </div>
 
-<!-- واجهة الحساب الشخصي الجديدة والمطورة -->
 <div id="profilePopup" class="popup">
     <div class="popup-content" style="text-align: center;">
         <h2 style="margin-bottom:15px; color:var(--neon-blue);">👤 الملف الشخصي للاعب</h2>
-        
-        <div style="background:#f8f9fa; padding:15px; border-radius:15px; text-align:right; margin-bottom:15px; line-height:2; font-size:13px;">
-            <div>🆔 <strong>معرف الحساب (ID):</strong> <span id="p-id" style="font-family:monospace; color:#0984e3; font-weight:bold;">-</span></div>
+        <div style="background:#f8f9fa; padding:12px; border-radius:15px; text-align:right; margin-bottom:12px; line-height:1.8; font-size:13px;">
+            <div>🆔 <strong>ID:</strong> <span id="p-id" style="font-family:monospace; color:#0984e3;">-</span></div>
             <div>📧 <strong>البريد الإلكتروني:</strong> <span id="p-email">-</span></div>
-            <div>🏆 <strong>أعلى مستوى تم تخطيه:</strong> <span id="p-level">1</span></div>
-            <div>🪙 <strong>رصيد الذهب:</strong> <span id="p-coins">0</span></div>
-            <div>💵 <strong>رصيد الكاش الملكي:</strong> <span id="p-cash">0</span></div>
-            <div>⚔️ <strong>العتاد الحالي:</strong> <span id="p-laser">عادي</span></div>
-            <hr style="margin:8px 0; border:none; border-top:1px dashed #ddd;">
-            <div>🔄 <strong>آخر طلب شحن:</strong> <span id="p-last-charge" style="color: green; font-weight:bold;">لا يوجد</span></div>
-            <div>🔄 <strong>آخر طلب سحب:</strong> <span id="p-last-withdraw" style="color: #d35400; font-weight:bold;">لا يوجد</span></div>
+            <div>🏆 <strong>أعلى مستوى:</strong> <span id="p-level">1</span></div>
+            <div>✨ <strong>التأثير النشط الحالي:</strong> <span id="p-active-effect" style="color:var(--neon-purple);">العادي</span></div>
         </div>
 
-        <!-- بنك النيون المركزي للتبادل الثنائي المتطور -->
-        <div style="background:#fffaf0; border:1px solid #feebc8; padding:12px; border-radius:15px; margin-bottom:15px; text-align:right;">
-            <h4 style="color:orange; margin-bottom:8px; font-size:14px; text-align:center;">🏦 بنك النيون المركزي (تبديل ثنائي)</h4>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px; background:white; padding:6px; border-radius:8px;">
-                <span>🪙 10,000 كوينز ➔ 💵 10 كاش</span>
-                <button class="shop-btn" style="padding:4px 8px; font-size:11px;" onclick="exchangeSystem('coinsToCash')">تبديل</button>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; background:white; padding:6px; border-radius:8px;">
-                <span>💵 10 كاش ➔ 🪙 10,000 كوينز</span>
-                <button class="shop-btn" style="padding:4px 8px; font-size:11px; background:var(--neon-red);" onclick="exchangeSystem('cashToCoins')">تبديل</button>
-            </div>
+        <h4 style="text-align:right; margin-bottom:5px; font-size:12px; color:#2d3436;"><i class="fas fa-history"></i> سجل مشتريات المتجر والأرشيف:</h4>
+        <div class="ledger-box" id="purchaseLedger">
+            <div style="color:#636e72; text-align:center; padding:10px;">لا توجد عمليات شراء مسجلة بعد.</div>
         </div>
 
-        <!-- أزرار المعاملات المالية المربوطة بالبوت والقناة -->
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <button onclick="handleBotAction('charge')" class="shop-btn" style="flex:1; padding:12px; background:#27ae60; color:white; border-radius:12px; font-size:14px;">
-                <i class="fas fa-wallet"></i> طلب شحن
-            </button>
-            <button onclick="handleBotAction('withdraw')" class="shop-btn" style="flex:1; padding:12px; background:#d35400; color:white; border-radius:12px; font-size:14px;">
-                <i class="fas fa-hand-holding-usd"></i> طلب سحب
-            </button>
+        <div style="display:flex; gap:10px; margin:15px 0 10px 0;">
+            <button onclick="openTransactionModal('deposit')" class="shop-btn" style="flex:1; padding:12px; background:#27ae60; color:white; border-radius:12px; font-size:14px;">➕ طلب شحن</button>
+            <button onclick="openTransactionModal('withdraw')" class="shop-btn" style="flex:1; padding:12px; background:#d35400; color:white; border-radius:12px; font-size:14px;">➖ طلب سحب</button>
         </div>
-
         <button onclick="toggleProfile(false)" style="width:100%; padding:12px; border-radius:12px; background:#2d3436; color:white; border:none; font-weight:bold;">العودة للخريطة</button>
     </div>
 </div>
 
-<script>
-/* دالة كشف اللعبة */
-function revealGame() {
-    const ws = document.getElementById('welcomeScreen');
-    ws.style.opacity = '0';
-    setTimeout(() => {
-        ws.classList.add('hidden');
-        SoundSystem.init(); 
-    }, 800);
-}
+<div id="bankModal" class="popup">
+    <div class="popup-content">
+        <h3 id="bankTitle" style="text-align:center; margin-bottom:15px; color:orange;">🏦 بنك التبديل الفوري</h3>
+        <p id="bankAvailable" style="text-align:center; font-size:13px; color:#636e72; margin-bottom:12px;"></p>
+        <input type="number" id="bankInput" placeholder="أدخل الكمية هنا..." class="auth-input" oninput="updateExchangeRate()" style="text-align:center; font-size:16px; font-weight:bold; margin-bottom:15px;">
+        <div id="bankResult" style="text-align:center; background:#f1f2f6; padding:12px; border-radius:12px; font-weight:bold; margin-bottom:15px;">0 = 0</div>
+        <button onclick="confirmExchange()" class="shop-btn" style="width:100%; padding:12px; font-size:14px; margin-bottom:8px;">تأكيد وتحويل الرصيد فوراً</button>
+        <button onclick="closeBankModal()" style="width:100%; padding:10px; border-radius:12px; background:#636e72; color:white; border:none;">إلغاء</button>
+    </div>
+</div>
 
-// تم تعديل الرابط هنا ليتطابق مع مشروعك الجديد
+<div id="transactionModal" class="popup">
+    <div class="popup-content" style="text-align:right;">
+        <h3 id="transTitle" style="text-align:center; margin-bottom:15px; color:var(--neon-blue);">طلب معاملة مالية</h3>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+            <input type="text" id="transName" placeholder="الاسم الكامل" class="auth-input">
+            <input type="tel" id="transPhone" placeholder="رقم الهاتف المستخدم بالعملية" class="auth-input">
+            <input type="tel" id="transPhoneConfirm" placeholder="تأكيد رقم الهاتف" class="auth-input">
+            <input type="number" id="transAmount" placeholder="القيمة المطلوبة" class="auth-input">
+        </div>
+        <button onclick="submitTransaction()" class="shop-btn" style="width:100%; padding:12px; background:#27ae60; margin-bottom:8px;">إرسال الطلب إلى الإدارة</button>
+        <button onclick="closeTransactionModal()" style="width:100%; padding:10px; border-radius:12px; background:#636e72; color:white; border:none;">إلغاء</button>
+    </div>
+</div>
+
+<script>
 const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
-// يرجى وضع الـ API Key الخاص بمشروعك الجديد بدلاً من النص أدناه
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
 let currentUser = null;
 let isGuest = false;
+let currentMarketTab = 'skins';
+let currentBankMode = 'coins';
+let currentTransMode = 'deposit';
 
 let gameData = {
-    coins: 0, cash: 0, maxLevel: 1, ownedSkins: ['n1'], activeSkin: 'n1',
-    hasLaser: false, nukes: 0, fireRateLevel: 0
+    coins: 0, cash: 0, maxLevel: 1, 
+    ownedSkins: ['n1'], activeSkin: 'n1',
+    ownedEffects: ['e1'], activeEffect: 'e1',
+    hasLaser: false, nukes: 0, fireRateLevel: 0,
+    purchaseHistory: []
 };
 
-// --- وظائف الدخول والضيف المحسنة ---
+const marketData = {
+    skins: [
+        { id: 'n1', name: '🥷 نينجا كلاسيك', price: 0, type: 'coins' },
+        { id: 'n2', name: '🧕🏿 محاربة الظل', price: 5000, type: 'coins' },
+        { id: 'n3', name: '🧙‍♂️ الساحر العتيق', price: 50, type: 'cash' },
+        { id: 'n4', name: '👮 مفوض المدينة (نادر)', price: 150, type: 'cash' }
+    ],
+    weapons: [
+        { id: 'w_laser', name: '🔵 مدفع الليزر المتطور', price: 150000, type: 'coins' },
+        { id: 'w_nuke', name: '☢️ القنبلة الميدانية النووية', price: 20000, type: 'coins' }
+    ],
+    effects: [
+        { id: 'e1', name: '💥 شرارات بيضاء عادية', price: 0, type: 'coins' },
+        { id: 'e2', name: '🌈 جزيئات طيف قوس قزح', price: 30000, type: 'coins' },
+        { id: 'e3', name: '🔥 لهب النيران المشتعلة', price: 40, type: 'cash' },
+        { id: 'e4', name: '⚡ رعد البرق النيون الأزرق', price: 80, type: 'cash' }
+    ],
+    abilities: [
+        { id: 'a_speed_1', name: '⚡ تسريع الإطلاق (المستوى 1)', price: 2000, type: 'coins' },
+        { id: 'a_speed_2', name: '⚡ تسريع الإطلاق (المستوى الأقصى)', price: 20, type: 'cash' }
+    ]
+};
+
+const levelConfigs = [
+    { f: "🍎", bg: "#ffeaa7", p: "#e17055" },
+    { f: "🍉", bg: "#fab1a0", p: "#d63031" },
+    { f: "🍇", bg: "#e84393", p: "#6c5ce7" },
+    { f: "🍍", bg: "#fdcb6e", p: "#e17055" },
+    { f: "🍓", bg: "#ff7675", p: "#b2bec3" }
+];
 
 function startAsGuest() {
-    isGuest = true;
-    currentUser = null;
-    const localData = localStorage.getItem('n_guest_data');
+    isGuest = true; currentUser = null;
+    const localData = localStorage.getItem('n_saga_v3_guest');
     if(localData) gameData = JSON.parse(localData);
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('levelMap').classList.remove('hidden');
@@ -283,39 +255,28 @@ async function handleAuth(type) {
     const email = document.getElementById('authEmail').value;
     const pass = document.getElementById('authPass').value;
     if(!email || !pass) return alert("يرجى إدخال البريد وكلمة المرور");
-
     if(type === 'signup') {
-        const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
+        const { error } = await supabaseClient.auth.signUp({ email, password: pass });
         if(error) return alert(error.message);
-        await createPlayerRecord(email);
-        alert("تم إنشاء الحساب بنجاح! يمكنك الدخول الآن.");
+        await supabaseClient.from('players').upsert([{ email: email, coins: 0, cash: 0, max_level: 1, owned_skins: ['n1'], active_skin: 'n1', owned_effects:['e1'], active_effect:'e1', purchase_history:[] }], { onConflict: 'email' });
+        alert("تم إنشاء الحساب بنجاح!");
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
         if(error) return alert(error.message);
-        currentUser = data.user;
-        isGuest = false;
+        currentUser = data.user; isGuest = false;
         await loadOnlineData();
     }
 }
 
-async function createPlayerRecord(email) {
-    await supabaseClient.from('players').upsert([
-        { email: email, coins: 0, cash: 0, max_level: 1, owned_skins: ['n1'], active_skin: 'n1' }
-    ], { onConflict: 'email' });
-}
-
 async function loadOnlineData() {
     let { data } = await supabaseClient.from('players').select('*').eq('email', currentUser.email).single();
-    if(!data) {
-        await createPlayerRecord(currentUser.email);
-        const retry = await supabaseClient.from('players').select('*').eq('email', currentUser.email).single();
-        data = retry.data;
-    }
     if(data) {
         gameData = {
             coins: data.coins, cash: data.cash, maxLevel: data.max_level,
             ownedSkins: data.owned_skins || ['n1'], activeSkin: data.active_skin || 'n1',
-            hasLaser: data.has_laser, nukes: data.nukes, fireRateLevel: data.fire_rate_level
+            ownedEffects: data.owned_effects || ['e1'], activeEffect: data.active_effect || 'e1',
+            hasLaser: data.has_laser, nukes: data.nukes, fireRateLevel: data.fire_rate_level,
+            purchaseHistory: data.purchase_history || []
         };
     }
     document.getElementById('authScreen').classList.add('hidden');
@@ -324,201 +285,234 @@ async function loadOnlineData() {
 }
 
 async function saveData() {
-    if(isGuest) {
-        localStorage.setItem('n_guest_data', JSON.stringify(gameData));
-        return;
-    }
+    if(isGuest) { localStorage.setItem('n_saga_v3_guest', JSON.stringify(gameData)); return; }
     if(!currentUser) return;
     await supabaseClient.from('players').update({
         coins: gameData.coins, cash: gameData.cash, max_level: gameData.maxLevel,
         owned_skins: gameData.ownedSkins, active_skin: gameData.activeSkin,
-        has_laser: gameData.hasLaser, nukes: gameData.nukes, fire_rate_level: gameData.fireRateLevel
+        owned_effects: gameData.ownedEffects, active_effect: gameData.activeEffect,
+        has_laser: gameData.hasLaser, nukes: gameData.nukes, fire_rate_level: gameData.fireRateLevel,
+        purchase_history: gameData.purchaseHistory
     }).eq('email', currentUser.email);
 }
 
-// --- فتح وعرض بيانات الملف الشخصي بالـ ID المشفر والأرشيف ---
-async function toggleProfile(show) {
-    document.getElementById('profilePopup').style.display = show ? 'flex' : 'none';
-    if (show) {
-        if (isGuest) {
-            document.getElementById('p-email').innerText = "لاعب ضيف";
-            document.getElementById('p-id').innerText = "سجل حساباً أولاً";
-            document.getElementById('p-last-charge').innerText = "لا يوجد";
-            document.getElementById('p-last-withdraw').innerText = "لا يوجد";
-        } else {
-            const userId = currentUser.id; 
-            const maskedEmail = currentUser.email.replace(/(.{3})(.*)(?=@)/, "$1***");
-            
-            document.getElementById('p-id').innerText = userId;
-            document.getElementById('p-email').innerText = maskedEmail;
-
-            // جلب الأرشيف لطلبات المستخدم الحالي من السيرفر وعرضها
-            try {
-                let { data } = await supabaseClient.from('players').select('last_charge_req, last_withdraw_req').eq('email', currentUser.email).single();
-                if(data) {
-                    document.getElementById('p-last-charge').innerText = data.last_charge_req || 'لا يوجد';
-                    document.getElementById('p-last-withdraw').innerText = data.last_withdraw_req || 'لا يوجد';
-                }
-            } catch(e) { console.error(e); }
-        }
-        
-        document.getElementById('p-level').innerText = gameData.maxLevel;
-        document.getElementById('p-coins').innerText = gameData.coins.toLocaleString();
-        document.getElementById('p-cash').innerText = gameData.cash.toLocaleString();
-        document.getElementById('p-laser').innerText = gameData.hasLaser ? "ليزر متطور 🔵" : "سلاح عادي 🛡️";
-    }
+function toggleMarket(show) {
+    document.getElementById('marketPopup').style.display = show ? 'flex' : 'none';
+    if(show) { renderMarketItems(); }
 }
 
-// --- نظام الصيرفة والتبديل الثنائي العكسي المتطور لبنك النيون المركزي ---
-async function exchangeSystem(type) {
-    if(isGuest) return alert("⚠️ ميزة التبديل متاحة فقط للحسابات المسجلة!");
-    
-    if (type === 'coinsToCash') {
-        if (gameData.coins >= 10000) {
-            gameData.coins -= 10000;
-            gameData.cash += 10;
-            alert("✅ تم تحويل 10,000 كوينز إلى 10 كاش ملكي بنجاح!");
-        } else {
-            alert("❌ عذراً! رصيد الكوينز لديك أقل من 10,000.");
-            return;
+function switchMarketTab(tab, btn) {
+    currentMarketTab = tab;
+    document.querySelectorAll('.market-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderMarketItems();
+}
+
+function renderMarketItems() {
+    const container = document.getElementById('marketItemsContainer');
+    container.innerHTML = '';
+    const items = marketData[currentMarketTab];
+
+    items.forEach(item => {
+        let statusText = "";
+        let btnColor = "var(--neon-blue)";
+        let isOwned = false;
+
+        if(currentMarketTab === 'skins') {
+            isOwned = gameData.ownedSkins.includes(item.id);
+            statusText = gameData.activeSkin === item.id ? "مفعل" : (isOwned ? "تفعيل" : `${item.price} ${item.type === 'coins' ? '🪙' : '💵'}`);
+            if(gameData.activeSkin === item.id) btnColor = "#2ed573";
+        } else if(currentMarketTab === 'effects') {
+            isOwned = gameData.ownedEffects.includes(item.id);
+            statusText = gameData.activeEffect === item.id ? "مفعل" : (isOwned ? "تفعيل" : `${item.price} ${item.type === 'coins' ? '🪙' : '💵'}`);
+            if(gameData.activeEffect === item.id) btnColor = "#2ed573";
+        } else if(currentMarketTab === 'weapons') {
+            if(item.id === 'w_laser') {
+                isOwned = gameData.hasLaser;
+                statusText = isOwned ? "تمتلكه ⚔️" : `${item.price} 🪙`;
+            } else {
+                statusText = `شراء (${gameData.nukes}) | ${item.price} 🪙`;
+            }
+        } else if(currentMarketTab === 'abilities') {
+            statusText = `${item.price} ${item.type === 'coins' ? '🪙' : '💵'}`;
         }
-    } else if (type === 'cashToCoins') {
-        if (gameData.cash >= 10) {
-            gameData.cash -= 10;
-            gameData.coins += 10000;
-            alert("✅ تم تحويل 10 كاش إلى 10,000 كوينز بنجاح!");
-        } else {
-            alert("❌ عذراً! رصيد الكاش المتاح لديك أقل من 10 كاش.");
-            return;
-        }
+
+        container.innerHTML += `
+            <div class="shop-item">
+                <span>${item.name}</span>
+                <button class="shop-btn" style="background:${btnColor}" onclick="handlePurchase('${item.id}', '${currentMarketTab}')">${statusText}</button>
+            </div>
+        `;
+    });
+}
+
+async function handlePurchase(id, tab) {
+    const list = marketData[tab];
+    const item = list.find(x => x.id === id);
+    if(!item) return;
+
+    if(tab === 'skins' && gameData.ownedSkins.includes(id)) { gameData.activeSkin = id; await saveData(); renderMarketItems(); return; }
+    if(tab === 'effects' && gameData.ownedEffects.includes(id)) { gameData.activeEffect = id; await saveData(); renderMarketItems(); return; }
+    if(tab === 'weapons' && id === 'w_laser' && gameData.hasLaser) return alert("أنت تمتلك هذا السلاح بالفعل!");
+
+    let price = item.price;
+    if(item.type === 'coins' && gameData.coins < price) return alert("❌ رصيد الكوينز غير كافٍ!");
+    if(item.type === 'cash' && gameData.cash < price) return alert("❌ رصيد الكاش غير كافٍ!");
+
+    if(item.type === 'coins') gameData.coins -= price; else gameData.cash -= price;
+
+    if(tab === 'skins') { gameData.ownedSkins.push(id); gameData.activeSkin = id; }
+    else if(tab === 'effects') { gameData.ownedEffects.push(id); gameData.activeEffect = id; }
+    else if(tab === 'weapons') {
+        if(id === 'w_laser') gameData.hasLaser = true;
+        else if(id === 'w_nuke') gameData.nukes++;
+    } else if(tab === 'abilities') {
+        if(id === 'a_speed_1') gameData.fireRateLevel = 1;
+        else if(id === 'a_speed_2') gameData.fireRateLevel = 2;
     }
-    
+
+    const timestamp = new Date().toLocaleString('ar-EG');
+    gameData.purchaseHistory.unshift({
+        name: item.name,
+        date: timestamp,
+        cost: `${price} ${item.type === 'coins' ? 'كوينز' : 'كاش'}`
+    });
+
     await saveData();
     GameCore.updateUI();
-    toggleProfile(true); 
+    renderMarketItems();
+    alert(`🎉 تمت عملية شراء [${item.name}] بنجاح وتوثيقها.`);
 }
 
-// --- دالة التحكم الموحدة للشحن والسحب والتسجيل التلقائي في Supabase والتليجرام ---
-async function handleBotAction(actionType) {
-    if (isGuest) {
-        alert("⚠️ يرجى تسجيل حساب أولاً للقيام بالمعاملات المالية وبدء الشحن والسحب.");
-        return;
+function toggleProfile(show) {
+    document.getElementById('profilePopup').style.display = show ? 'flex' : 'none';
+    if(show) {
+        document.getElementById('p-id').innerText = isGuest ? "حساب ضيف" : currentUser.id;
+        document.getElementById('p-email').innerText = isGuest ? "لا يوجد" : currentUser.email;
+        document.getElementById('p-level').innerText = gameData.maxLevel;
+        
+        const currentFX = marketData.effects.find(e => e.id === gameData.activeEffect);
+        document.getElementById('p-active-effect').innerText = currentFX ? currentFX.name : "العادي";
+
+        const ledger = document.getElementById('purchaseLedger');
+        if(gameData.purchaseHistory && gameData.purchaseHistory.length > 0) {
+            ledger.innerHTML = '';
+            gameData.purchaseHistory.forEach(h => {
+                ledger.innerHTML += `
+                    <div class="ledger-item">
+                        <span>🏷️ ${h.name} (${h.cost})</span>
+                        <span style="color:#7f8c8d; font-size:9px;">${h.date}</span>
+                    </div>
+                `;
+            });
+        } else {
+            ledger.innerHTML = '<div style="color:#636e72; text-align:center; padding:10px;">لا توجد عمليات شراء مسجلة بعد.</div>';
+        }
     }
+}
+
+function openBankModal(mode) {
+    if(isGuest) return alert("⚠️ هذه الميزة متاحة للحسابات المسجلة فقط!");
+    currentBankMode = mode;
+    const input = document.getElementById('bankInput');
+    input.value = '';
+    document.getElementById('bankResult').innerText = "0 = 0";
+    document.getElementById('bankModal').style.display = 'flex';
+    if(mode === 'coins') {
+        document.getElementById('bankTitle').innerText = "🪙 تحويل الذهب إلى كاش";
+        document.getElementById('bankAvailable').innerText = `الرصيد المتاح: ${gameData.coins.toLocaleString()} كوينز`;
+    } else {
+        document.getElementById('bankTitle').innerText = "💵 تحويل الكاش إلى ذهب";
+        document.getElementById('bankAvailable').innerText = `الرصيد المتاح: ${gameData.cash.toLocaleString()} كاش`;
+    }
+}
+
+function updateExchangeRate() {
+    const input = document.getElementById('bankInput');
+    let val = parseInt(input.value) || 0;
+    if(val < 0) { val = 0; input.value = 0; }
+    if(currentBankMode === 'coins') {
+        if(val > gameData.coins) { val = gameData.coins; input.value = gameData.coins; }
+        let calculatedCash = (val / 100000);
+        document.getElementById('bankResult').innerText = `${val.toLocaleString()} كوينز = ${calculatedCash.toFixed(2)} كاش`;
+    } else {
+        if(val > gameData.cash) { val = gameData.cash; input.value = gameData.cash; }
+        let calculatedCoins = val * 100000;
+        document.getElementById('bankResult').innerText = `${val.toLocaleString()} كاش = ${calculatedCoins.toLocaleString()} كوينز`;
+    }
+}
+
+async function confirmExchange() {
+    const input = document.getElementById('bankInput');
+    let val = parseInt(input.value) || 0;
+    if(val <= 0) return alert("يرجى إدخال قيمة صحيحة.");
+    if(currentBankMode === 'coins') {
+        if(val > gameData.coins) return alert("الرصيد غير كافٍ!");
+        let getCash = Math.floor(val / 100000);
+        if(getCash <= 0) return alert("أدخل قيمة أكبر.");
+        gameData.coins -= (getCash * 100000); gameData.cash += getCash;
+    } else {
+        if(val > gameData.cash) return alert("الرصيد غير كافٍ!");
+        let getCoins = val * 100000;
+        gameData.cash -= val; gameData.coins += getCoins;
+    }
+    await saveData(); GameCore.updateUI(); closeBankModal();
+}
+function closeBankModal() { document.getElementById('bankModal').style.display = 'none'; }
+
+function openTransactionModal(mode) {
+    if(isGuest) return alert("⚠️ العمليات المالية تتطلب حساباً مسجلاً!");
+    currentTransMode = mode; toggleProfile(false);
+    document.getElementById('transactionModal').style.display = 'flex';
+}
+
+// التحديث الجديد: إرسال الطلبات لحساب Samelnady مع رسالة ثانية بالاسم فقط للتنظيم والفرز السريع
+async function submitTransaction() {
+    const name = document.getElementById('transName').value.trim();
+    const phone = document.getElementById('transPhone').value.trim();
+    const phoneConfirm = document.getElementById('transPhoneConfirm').value.trim();
+    const amount = document.getElementById('transAmount').value.trim();
+    if(!name || !phone || !phoneConfirm || !amount) return alert("يرجى ملء كافة الخانات!");
+    if(phone !== phoneConfirm) return alert("الهاتف غير متطابق!");
+
+    const actionText = currentTransMode === 'deposit' ? "📥 طلب إيداع / شحن" : "📤 طلب سحب كاش";
     
-    const userId = currentUser.id;
-    let channelMessage = "";
-    let playerMessage = "";
-    let dbUpdateData = {};
-    
+    // إعدادات البوت والوجهة الموجهة لحساب Samelnady (معرف الوجهة 5414603956)
     const botToken = "8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo";
-    const chatId = "@vtik2026"; 
-
-    if (actionType === 'charge') {
-        const timeStamp = new Date().toLocaleString('ar-EG');
-        const statusText = `طلب شحن بتاريخ ${timeStamp}`;
-        
-        dbUpdateData = { last_charge_req: statusText };
-        
-        channelMessage = `➕ **طلب شحن جديد في اللعبة**:\n\n🆔 معرف اللاعب الفريد: \`${userId}\`\n🪙 الذهب الحالي: ${gameData.coins.toLocaleString()}\n💵 الكاش الحالي: ${gameData.cash.toLocaleString()}`;
-        playerMessage = `👋 أهلاً بك في بوت شحن NINJA SAGA\n\nلقد قمت بطلب شحن رصيد لحسابك:\n🆔 معرف اللاعب: ${userId}\n\nاضغط على زر إرسال/Start ليتم تزويدك ببيانات الدفع فوراً ومراجعة حسابك ورصيدك الحالي.`;
-        
-    } else if (actionType === 'withdraw') {
-        if (gameData.cash < 10) return alert("⚠️ الحد الأدنى لطلب السحب هو 10 كاش!");
-        
-        const timeStamp = new Date().toLocaleString('ar-EG');
-        const statusText = `طلب سحب بقيمة ${gameData.cash} كاش بتاريخ ${timeStamp}`;
-        
-        dbUpdateData = { last_withdraw_req: statusText };
-        
-        channelMessage = `🚨 **طلب سحب كاش جديد**:\n\n🆔 معرف اللاعب الفريد: \`${userId}\`\n💵 الرصيد المطلوب سحبه: **${gameData.cash.toLocaleString()} كاش**`;
-        playerMessage = `👋 أهلاً بك في بوت سحب أرباح NINJA SAGA\n\nلقد قمت بطلب سحب رصيد الكاش المتاح بحسابك:\n🆔 معرف اللاعب: ${userId}\n\nاضغط على زر إرسال/Start لتقديم طلبك للمسؤول والموافقة عليه وإرسال كود الاستلام الفوري.`;
-    }
+    const destinationChatId = "5414603956"; 
     
-    // [1] تحديث قاعدة البيانات Supabase فوراً بالعملية الجديدة
-    try {
-        await supabaseClient.from('players').update(dbUpdateData).eq('email', currentUser.email);
-    } catch (e) {
-        console.error("خطأ في تحديث قاعدة البيانات:", e);
-    }
+    // الرسالة الأساسية الكاملة والمفصلة
+    const mainMsg = `🔔 **معاملة جديدة بانتظار التواصل**:\n\n` +
+                    `⚙️ **نوع العملية**: ${actionText}\n` +
+                    `👤 **الاسم**: ${name}\n` +
+                    `🆔 **ID الفريد**: \`${currentUser.id}\`\n` +
+                    `📞 **الهاتف**: ${phone}\n` +
+                    `💰 **القيمة المعلقة**: ${parseInt(amount).toLocaleString()}\n`;
+                    
+    // الرسالة الثانية الإضافية (نوع العملية + الاسم فقط) لسهولة الفرز والأرشفة
+    const shortMsg = `⚡ **${actionText} الجديد**:\n👤 **الاسم**: ${name}`;
 
-    // [2] إرسال الإشعار والإعلان التلقائي إلى قناتك التليجرام
     try {
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(channelMessage)}&parse_mode=Markdown`;
-        fetch(url); 
-    } catch (e) {
-        console.error("خطأ أثناء إرسال الإشعار للقناة:", e);
+        // إرسال الرسالة المفصلة الأولى
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${destinationChatId}&text=${encodeURIComponent(mainMsg)}&parse_mode=Markdown`);
+        
+        // إرسال الرسالة الثانية الإضافية بالاسم فقط فوراً بعد الأولى
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${destinationChatId}&text=${encodeURIComponent(shortMsg)}&parse_mode=Markdown`);
+        
+        alert("✅ تم إرسال طلبك بنجاح وجاري المراجعة.");
+        closeTransactionModal();
+    } catch(e) { 
+        alert("حدث خطأ أثناء الاتصال بالخادم، يرجى المحاولة مرة أخرى."); 
     }
-
-    // [3] فتح البوت للاعب وبدء المعاملة
-    const telegramBotUrl = `https://t.me/Operatorssm_bot?start=${actionType}_${userId}`;
-    window.open(telegramBotUrl, '_blank');
-    
-    toggleProfile(true);
 }
 
-// --- منطق تثبيت التطبيق (PWA INSTALL) المطور ---
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'flex';
-});
-
-async function installApp() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-}
-
-window.addEventListener('appinstalled', () => {
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-});
-
-// --- محرك اللعبة ---
-
-const SoundSystem = {
-    enabled: true, ctx: null,
-    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-    play(type) {
-        if (!this.enabled || !this.ctx) return;
-        const osc = this.ctx.createOscillator(); const g = this.ctx.createGain();
-        osc.connect(g); g.connect(this.ctx.destination);
-        if(type==='shoot'){ osc.frequency.setValueAtTime(gameData.hasLaser?1200:800, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+0.1); osc.start(); osc.stop(this.ctx.currentTime+0.1); }
-        else if(type==='hit'){ osc.type='square'; osc.frequency.setValueAtTime(120, this.ctx.currentTime); g.gain.linearRampToValueAtTime(0, this.ctx.currentTime+0.1); osc.start(); osc.stop(this.ctx.currentTime+0.1); }
-    },
-    toggle() { this.enabled = !this.enabled; document.getElementById('sound-btn').innerText = this.enabled ? '🔊' : '🔇'; }
-};
-
-const levelConfigs = [
-    {f:"🍓", p:"#ff4757", bg:"linear-gradient(135deg, #fff5f5, #fed7d7)"}, 
-    {f:"🍌", p:"#ffa502", bg:"linear-gradient(135deg, #fffaf0, #feebc8)"}, 
-    {f:"🍍", p:"#00d2ff", bg:"linear-gradient(135deg, #ebf8ff, #bee3f8)"}, 
-    {f:"🍇", p:"#9d50bb", bg:"linear-gradient(135deg, #faf5ff, #e9d8fd)"}, 
-    {f:"🍉", p:"#2ed573", bg:"linear-gradient(135deg, #f0fff4, #c6f6d5)"}
-];
-
-const skins = [
-    { id:'n1', head:'🥷', name:'نينجا', p:0, t:'coin' },
-    { id:'n2', head:'🧕🏿', name:'سيدة', p:0, t:'coin' },
-    { id:'n3', head:'🎅', name:'سانتا', p:10, t:'cash' },
-    { id:'n4', head:'🧙‍♂️', name:'ساحر', p:15, t:'cash' },
-    { id:'n5', head:'👨‍🎓', name:'خريج', p:20, t:'cash' },
-    { id:'n6', head:'👮', name:'شرطي', p:1000, t:'coin' },
-    { id:'n7', head:'🧔', name:'ملتحي', p:50, t:'cash' },
-    { id:'n8', head:'👩‍🦲', name:'صلعاء', p:100, t:'cash' },
-    { id:'n9', head:'👵', name:'جدة', p:1500, p2:60, t:'hybrid' }
-];
+function closeTransactionModal() { document.getElementById('transactionModal').style.display = 'none'; }
+function logout() { location.reload(); }
 
 const GameCore = {
-    active: false, paused: false, lvl: 1, score: 0, frame: 0,
+    active: false, paused: false, lvl: 1, score: 0,
     player: { x: 0, y: 0, vx: 0, vy: 0, lives: 5 },
-    fruits: [], bullets: [], particles: [], shootDir: { x: 0, y: 0 },
-    lastShoot: 0,
+    fruits: [], bullets: [], particles: [],
     init(lvl) {
         this.lvl = lvl; this.active = true; this.paused = false; this.score = 0;
         this.player.lives = 5; this.fruits = []; this.bullets = []; this.particles = [];
@@ -530,174 +524,77 @@ const GameCore = {
         this.player.x = cvs.width/2; this.player.y = cvs.height/2;
         this.updateUI(); this.loop();
     },
-    spawnParticles(x, y, color, count = 10) {
-        for(let i=0; i<count; i++) {
+    spawnParticles(x, y, baseColor) {
+        let fxColor = baseColor;
+        if(gameData.activeEffect === 'e2') { fxColor = `hsl(${Math.random()*360}, 100%, 50%)`; }
+        else if(gameData.activeEffect === 'e3') { fxColor = "orange"; }
+        else if(gameData.activeEffect === 'e4') { fxColor = "#00ffff"; }
+
+        for(let i=0; i<12; i++) {
             this.particles.push({
-                x, y, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-                life: 1.0, color, size: Math.random() * 4 + 2
+                x, y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+                life: 1.0, color: fxColor, size: Math.random() * 4 + 2
             });
         }
     },
     updateUI() {
         const u = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
-        u('h-score', this.score); u('h-lives', this.player.lives); u('h-coins', gameData.coins);
-        u('h-cash', gameData.cash); u('m-coins', gameData.coins); u('m-cash', gameData.cash);
-        document.getElementById('nuke-btn').classList.toggle('hidden', gameData.nukes <= 0);
+        u('h-score', this.score); u('h-lives', this.player.lives); u('h-coins', gameData.coins); u('h-cash', gameData.cash);
+        u('m-coins', gameData.coins); u('m-cash', gameData.cash);
     },
     update() {
         if(!this.active || this.paused) return;
-        this.frame++;
         this.player.x += this.player.vx; this.player.y += this.player.vy;
         this.player.x = Math.max(30, Math.min(window.innerWidth-30, this.player.x));
         this.player.y = Math.max(100, Math.min(window.innerHeight-30, this.player.y));
-        let rate = 300 - (gameData.fireRateLevel * 50);
-        if ((Math.abs(this.shootDir.x) > 0.1 || Math.abs(this.shootDir.y) > 0.1) && Date.now() - this.lastShoot > rate) {
-            this.bullets.push({ x: this.player.x, y: this.player.y, vx: this.shootDir.x * 22, vy: this.shootDir.y * 22 });
-            this.lastShoot = Date.now(); SoundSystem.play('shoot');
-        }
         if(Math.random() < 0.04) this.spawnEnemy();
-        this.fruits.forEach((f, i) => {
-            f.x += f.vx; f.y += f.vy;
-            if(Math.hypot(this.player.x-f.x, this.player.y-f.y) < 35) {
-                this.spawnParticles(this.player.x, this.player.y, '#d63031', 15);
-                this.player.lives--; this.fruits.splice(i,1); this.updateUI();
-                if(this.player.lives <= 0) exitToMap();
-            }
-        });
+        
         this.bullets.forEach((b, bi) => {
             b.x += b.vx; b.y += b.vy;
             this.fruits.forEach((f, fi) => {
                 if(Math.hypot(b.x-f.x, b.y-f.y) < 30) {
-                    const color = f.type==='money' ? '#ffd700' : levelConfigs[(this.lvl-1)%5].p;
-                    this.spawnParticles(f.x, f.y, color, 12);
-                    gameData.coins += 50; if(f.type==='money') gameData.cash+=2;
-                    this.score += 20; this.fruits.splice(fi,1); this.bullets.splice(bi,1);
-                    SoundSystem.play('hit'); this.updateUI(); saveData();
+                    this.spawnParticles(f.x, f.y, levelConfigs[(this.lvl-1)%5].p);
+                    gameData.coins += 50; this.score += 20;
+                    this.fruits.splice(fi,1); this.bullets.splice(bi,1);
+                    this.updateUI(); saveData();
                     if(this.score >= 200) this.win();
                 }
             });
-        });
-        this.particles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy; p.life -= 0.03;
-            if(p.life <= 0) this.particles.splice(i, 1);
         });
     },
     draw() {
         const ctx = document.getElementById('game').getContext('2d');
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        this.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); });
+        this.particles.forEach((p, i) => {
+            ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); p.life -= 0.03; if(p.life<=0) this.particles.splice(i,1);
+        });
         ctx.globalAlpha = 1.0;
-        const skin = skins.find(s => s.id === gameData.activeSkin);
-        const walk = Math.sin(this.frame * 0.3) * 12;
-        ctx.save(); ctx.translate(this.player.x, this.player.y);
-        ctx.strokeStyle = "#2d3436"; ctx.lineWidth = 4; ctx.lineCap = "round";
-        ctx.beginPath(); ctx.moveTo(0, 5); ctx.lineTo(0, 18); ctx.moveTo(0, 18); ctx.lineTo(-8, 30 + walk); ctx.moveTo(0, 18); ctx.lineTo(8, 30 - walk);
-        ctx.moveTo(0, 8); ctx.lineTo(-15, 18); ctx.moveTo(0, 8); ctx.lineTo(15, 18);
-        ctx.stroke(); ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.fillText(skin.head, 0, 5); ctx.restore();
-        this.fruits.forEach(f => { ctx.font = "35px Arial"; ctx.fillText(f.type==='money'?"💰":levelConfigs[(this.lvl-1)%5].f, f.x, f.y+10); });
+        
+        let headSymbol = "🥷";
+        if(gameData.activeSkin === 'n2') headSymbol = "🧕🏿";
+        else if(gameData.activeSkin === 'n3') headSymbol = "🧙‍♂️";
+        else if(gameData.activeSkin === 'n4') headSymbol = "👮";
+        ctx.font = "40px Arial"; ctx.fillText(headSymbol, this.player.x-15, this.player.y);
+        
+        this.fruits.forEach(f => { ctx.font = "35px Arial"; ctx.fillText(levelConfigs[(this.lvl-1)%5].f, f.x, f.y+10); });
         ctx.fillStyle = gameData.hasLaser ? "#00d2ff" : "#2d3436";
-        this.bullets.forEach(b => { if(gameData.hasLaser) { ctx.fillRect(b.x-10, b.y-2, 20, 4); } else { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); } });
+        this.bullets.forEach(b => { ctx.fillRect(b.x, b.y, 6, 6); });
     },
-    win() { this.active=false; gameData.maxLevel++; saveData(); confetti(); setTimeout(()=> { buildMap(); this.init(this.lvl+1); }, 1500); },
+    win() { this.active=false; gameData.maxLevel++; saveData(); confetti(); setTimeout(()=> { buildMap(); exitToMap(); }, 1500); },
     loop() { if(this.active) { this.update(); this.draw(); requestAnimationFrame(()=>this.loop()); } },
-    spawnEnemy() {
-        const side = Math.random(); let x, y, vx=0, vy=0, s=3;
-        if(side<0.25){ x=window.innerWidth; y=Math.random()*window.innerHeight; vx=-s; }
-        else if(side<0.5){ x=0; y=Math.random()*window.innerHeight; vx=s; }
-        else if(side<0.75){ x=Math.random()*window.innerWidth; y=0; vy=s; }
-        else { x=Math.random()*window.innerWidth; y=window.innerHeight; vy=-s; }
-        this.fruits.push({x, y, vx, vy, type: Math.random()<0.1?'money':'fruit'});
-    }
+    spawnEnemy() { this.fruits.push({x: Math.random()*window.innerWidth, y:0, vx:0, vy:3}); }
 };
 
-function logout() { location.reload(); }
 function exitToMap() { GameCore.active = false; document.getElementById('game-container').style.display='none'; document.getElementById('levelMap').classList.remove('hidden'); buildMap(); }
-function toggleShop(show) { 
-    GameCore.paused = show; document.getElementById('shopPopup').style.display = show?'flex':'none'; 
-    if(show) { renderSkins(); renderWeapons(); } else if(GameCore.active) GameCore.loop(); 
-}
-function renderSkins() {
-    const list = document.getElementById('skins-list'); list.innerHTML = '';
-    skins.forEach(s => {
-        const owned = gameData.ownedSkins.includes(s.id);
-        const active = gameData.activeSkin === s.id;
-        let priceTag = s.t==='hybrid'? `${s.p}🪙+${s.p2}💵` : `${s.p} ${s.t==='coin'?'🪙':'💵'}`;
-        list.innerHTML += `<div class="shop-item"><span>${s.head} ${s.name}</span><button class="shop-btn" onclick="buySkin('${s.id}')" style="background:${active?'#2ed573':(owned?'#0984e3':'#2d3436')}">${active?'مفعل':(owned?'تفعيل':priceTag)}</button></div>`;
-    });
-}
-function renderWeapons() {
-    const list = document.getElementById('weapons-list'); list.innerHTML = '';
-    list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser?'disabled':''}>${gameData.hasLaser?'تم الشراء':'150000 🪙'}</button></div>`;
-    list.innerHTML += `<div class="shop-item"><span>☢️ قنبلة نووية</span><button class="shop-btn" onclick="buyWeapon('nuke')">20000 🪙</button></div>`;
-    if(gameData.fireRateLevel < 4) {
-        let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
-        list.innerHTML += `<div class="shop-item"><span>🔥 كثافة الرصاص (${gameData.fireRateLevel+1}/4)</span><button class="shop-btn" onclick="buyWeapon('fr')">${cost} 🪙</button></div>`;
-    }
-}
-function buySkin(id) {
-    const s = skins.find(x => x.id === id);
-    if(gameData.ownedSkins.includes(id)) { gameData.activeSkin = id; }
-    else {
-        let canBuy = false;
-        if(s.t==='coin' && gameData.coins >= s.p) { gameData.coins-=s.p; canBuy=true; }
-        else if(s.t==='cash' && gameData.cash >= s.p) { gameData.cash-=s.p; canBuy=true; }
-        else if(s.t==='hybrid' && gameData.coins >= s.p && gameData.cash >= s.p2) { gameData.coins-=s.p; gameData.cash-=s.p2; canBuy=true; }
-        if(canBuy) { gameData.ownedSkins.push(id); gameData.activeSkin = id; }
-    }
-    saveData(); renderSkins(); GameCore.updateUI();
-}
-function buyWeapon(type) {
-    if(type==='laser' && gameData.coins >= 150000) { gameData.coins-=150000; gameData.hasLaser=true; }
-    else if(type==='nuke' && gameData.coins >= 20000) { gameData.coins-=20000; gameData.nukes++; }
-    else if(type==='fr') {
-        let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
-        if(gameData.coins >= cost) { gameData.coins-=cost; gameData.fireRateLevel++; }
-    }
-    saveData(); renderWeapons(); GameCore.updateUI();
-}
-function useNuke() { if(gameData.nukes > 0) { gameData.nukes--; gameData.maxLevel += 3; saveData(); confetti(); exitToMap(); } }
-function exchange() { if(gameData.coins >= 100) { gameData.coins -= 100; gameData.cash += 2; saveData(); GameCore.updateUI(); } }
-
-const Joysticks = {
-    mID: null, sID: null,
-    init() {
-        const h = (e) => {
-            for(let t of e.changedTouches) {
-                const isL = t.clientX < window.innerWidth/2;
-                if(e.type === 'touchstart') { 
-                    if(isL && !this.mID) { this.mID = t.identifier; this.set('move', t); } 
-                    else if(!isL && !this.sID) { this.sID = t.identifier; this.set('shoot', t); } 
-                } else if(e.type === 'touchmove') { 
-                    if(t.identifier === this.mID) this.move(t, 'move'); 
-                    if(t.identifier === this.sID) this.move(t, 'shoot'); 
-                } else { 
-                    if(t.identifier === this.mID) { this.mID = null; GameCore.player.vx=0; GameCore.player.vy=0; document.getElementById('moveStick').style.transform='none'; } 
-                    if(t.identifier === this.sID) { this.sID = null; GameCore.shootDir={x:0,y:0}; document.getElementById('shootStick').style.transform='none'; } 
-                }
-            }
-        };
-        window.addEventListener("touchstart", h, {passive:false}); window.addEventListener("touchmove", h, {passive:false}); window.addEventListener("touchend", h);
-    },
-    set(type, t) { const r = document.getElementById(type+'Joy').getBoundingClientRect(); this[type+'C'] = {x:r.left+42, y:r.top+42}; },
-    move(t, type) {
-        const c = this[type+'C']; let dx = t.clientX-c.x, dy = t.clientY-c.y, d = Math.hypot(dx,dy);
-        if(d>35) { dx*=35/d; dy*=35/d; }
-        document.getElementById(type+'Stick').style.transform = `translate(${dx}px,${dy}px)`;
-        if(type==='move') { GameCore.player.vx=dx/35*6; GameCore.player.vy=dy/35*6; } else GameCore.shootDir = {x:dx/35, y:dy/35};
-    }
-};
-
 function buildMap() {
     const grid = document.getElementById('grid'); grid.innerHTML = '';
     for(let i=1; i<=100; i++) {
-        const u = i <= gameData.maxLevel;
-        const card = document.createElement('div'); card.className = 'level-card';
+        const u = i <= gameData.maxLevel; const card = document.createElement('div'); card.className = 'level-card';
         if(u) card.onclick = () => GameCore.init(i);
-        card.innerHTML = `<b>${u?i:'🔒'}</b><div style="font-size:20px">${u?levelConfigs[(i-1)%5].f:''}</div>`;
-        grid.appendChild(card);
+        card.innerHTML = `<b>${u?i:'🔒'}</b><div style="font-size:20px">${u?levelConfigs[(i-1)%5].f:''}</div>`; grid.appendChild(card);
     }
 }
-Joysticks.init();
+function revealGame() { document.getElementById('welcomeScreen').style.opacity = '0'; setTimeout(() => { document.getElementById('welcomeScreen').classList.add('hidden'); }, 800); }
 </script>
 </body>
 </html>
