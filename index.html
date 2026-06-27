@@ -148,10 +148,11 @@
 
 <div id="levelMap" class="screen hidden">
     <h1 style="color: var(--neon-blue); margin: 20px 0; font-weight: 900;">NINJA SAGA</h1>
-    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+    <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;">
         <div class="stat-badge">🪙 <span id="m-coins">0</span></div>
         <div class="stat-badge">💵 <span id="m-cash">0</span></div>
-        <div class="stat-badge" onclick="logout()" style="background:#fab1a0;">🚪 خروج</div>
+        <div class="stat-badge" onclick="toggleProfile(true)" style="background:#0984e3; color:white; cursor:pointer;">👤 الحساب</div>
+        <div class="stat-badge" onclick="logout()" style="background:#fab1a0; cursor:pointer;">🚪 خروج</div>
     </div>
     <div class="level-grid" id="grid"></div>
 </div>
@@ -194,6 +195,50 @@
             <div class="shop-item"><span>100 🪙 ➔ 2 💵</span><button class="shop-btn" onclick="exchange()">تحويل</button></div>
         </div>
         <button onclick="toggleShop(false)" style="width:100%; padding:12px; border-radius:12px; background:#2d3436; color:white; border:none; font-weight:bold;">العودة للقتال</button>
+    </div>
+</div>
+
+<!-- واجهة الحساب الشخصي الجديدة والمطورة -->
+<div id="profilePopup" class="popup">
+    <div class="popup-content" style="text-align: center;">
+        <h2 style="margin-bottom:15px; color:var(--neon-blue);">👤 الملف الشخصي للاعب</h2>
+        
+        <div style="background:#f8f9fa; padding:15px; border-radius:15px; text-align:right; margin-bottom:15px; line-height:2; font-size:13px;">
+            <div>🆔 <strong>معرف الحساب (ID):</strong> <span id="p-id" style="font-family:monospace; color:#0984e3; font-weight:bold;">-</span></div>
+            <div>📧 <strong>البريد الإلكتروني:</strong> <span id="p-email">-</span></div>
+            <div>🏆 <strong>أعلى مستوى تم تخطيه:</strong> <span id="p-level">1</span></div>
+            <div>🪙 <strong>رصيد الذهب:</strong> <span id="p-coins">0</span></div>
+            <div>💵 <strong>رصيد الكاش الملكي:</strong> <span id="p-cash">0</span></div>
+            <div>⚔️ <strong>العتاد الحالي:</strong> <span id="p-laser">عادي</span></div>
+            <hr style="margin:8px 0; border:none; border-top:1px dashed #ddd;">
+            <div>🔄 <strong>آخر طلب شحن:</strong> <span id="p-last-charge" style="color: green; font-weight:bold;">لا يوجد</span></div>
+            <div>🔄 <strong>آخر طلب سحب:</strong> <span id="p-last-withdraw" style="color: #d35400; font-weight:bold;">لا يوجد</span></div>
+        </div>
+
+        <!-- بنك النيون المركزي للتبادل الثنائي المتطور -->
+        <div style="background:#fffaf0; border:1px solid #feebc8; padding:12px; border-radius:15px; margin-bottom:15px; text-align:right;">
+            <h4 style="color:orange; margin-bottom:8px; font-size:14px; text-align:center;">🏦 بنك النيون المركزي (تبديل ثنائي)</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px; background:white; padding:6px; border-radius:8px;">
+                <span>🪙 10,000 كوينز ➔ 💵 10 كاش</span>
+                <button class="shop-btn" style="padding:4px 8px; font-size:11px;" onclick="exchangeSystem('coinsToCash')">تبديل</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; background:white; padding:6px; border-radius:8px;">
+                <span>💵 10 كاش ➔ 🪙 10,000 كوينز</span>
+                <button class="shop-btn" style="padding:4px 8px; font-size:11px; background:var(--neon-red);" onclick="exchangeSystem('cashToCoins')">تبديل</button>
+            </div>
+        </div>
+
+        <!-- أزرار المعاملات المالية المربوطة بالبوت والقناة -->
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button onclick="handleBotAction('charge')" class="shop-btn" style="flex:1; padding:12px; background:#27ae60; color:white; border-radius:12px; font-size:14px;">
+                <i class="fas fa-wallet"></i> طلب شحن
+            </button>
+            <button onclick="handleBotAction('withdraw')" class="shop-btn" style="flex:1; padding:12px; background:#d35400; color:white; border-radius:12px; font-size:14px;">
+                <i class="fas fa-hand-holding-usd"></i> طلب سحب
+            </button>
+        </div>
+
+        <button onclick="toggleProfile(false)" style="width:100%; padding:12px; border-radius:12px; background:#2d3436; color:white; border:none; font-weight:bold;">العودة للخريطة</button>
     </div>
 </div>
 
@@ -289,6 +334,126 @@ async function saveData() {
         owned_skins: gameData.ownedSkins, active_skin: gameData.activeSkin,
         has_laser: gameData.hasLaser, nukes: gameData.nukes, fire_rate_level: gameData.fireRateLevel
     }).eq('email', currentUser.email);
+}
+
+// --- فتح وعرض بيانات الملف الشخصي بالـ ID المشفر والأرشيف ---
+async function toggleProfile(show) {
+    document.getElementById('profilePopup').style.display = show ? 'flex' : 'none';
+    if (show) {
+        if (isGuest) {
+            document.getElementById('p-email').innerText = "لاعب ضيف";
+            document.getElementById('p-id').innerText = "سجل حساباً أولاً";
+            document.getElementById('p-last-charge').innerText = "لا يوجد";
+            document.getElementById('p-last-withdraw').innerText = "لا يوجد";
+        } else {
+            const userId = currentUser.id; 
+            const maskedEmail = currentUser.email.replace(/(.{3})(.*)(?=@)/, "$1***");
+            
+            document.getElementById('p-id').innerText = userId;
+            document.getElementById('p-email').innerText = maskedEmail;
+
+            // جلب الأرشيف لطلبات المستخدم الحالي من السيرفر وعرضها
+            try {
+                let { data } = await supabaseClient.from('players').select('last_charge_req, last_withdraw_req').eq('email', currentUser.email).single();
+                if(data) {
+                    document.getElementById('p-last-charge').innerText = data.last_charge_req || 'لا يوجد';
+                    document.getElementById('p-last-withdraw').innerText = data.last_withdraw_req || 'لا يوجد';
+                }
+            } catch(e) { console.error(e); }
+        }
+        
+        document.getElementById('p-level').innerText = gameData.maxLevel;
+        document.getElementById('p-coins').innerText = gameData.coins.toLocaleString();
+        document.getElementById('p-cash').innerText = gameData.cash.toLocaleString();
+        document.getElementById('p-laser').innerText = gameData.hasLaser ? "ليزر متطور 🔵" : "سلاح عادي 🛡️";
+    }
+}
+
+// --- نظام الصيرفة والتبديل الثنائي العكسي المتطور لبنك النيون المركزي ---
+async function exchangeSystem(type) {
+    if(isGuest) return alert("⚠️ ميزة التبديل متاحة فقط للحسابات المسجلة!");
+    
+    if (type === 'coinsToCash') {
+        if (gameData.coins >= 10000) {
+            gameData.coins -= 10000;
+            gameData.cash += 10;
+            alert("✅ تم تحويل 10,000 كوينز إلى 10 كاش ملكي بنجاح!");
+        } else {
+            alert("❌ عذراً! رصيد الكوينز لديك أقل من 10,000.");
+            return;
+        }
+    } else if (type === 'cashToCoins') {
+        if (gameData.cash >= 10) {
+            gameData.cash -= 10;
+            gameData.coins += 10000;
+            alert("✅ تم تحويل 10 كاش إلى 10,000 كوينز بنجاح!");
+        } else {
+            alert("❌ عذراً! رصيد الكاش المتاح لديك أقل من 10 كاش.");
+            return;
+        }
+    }
+    
+    await saveData();
+    GameCore.updateUI();
+    toggleProfile(true); 
+}
+
+// --- دالة التحكم الموحدة للشحن والسحب والتسجيل التلقائي في Supabase والتليجرام ---
+async function handleBotAction(actionType) {
+    if (isGuest) {
+        alert("⚠️ يرجى تسجيل حساب أولاً للقيام بالمعاملات المالية وبدء الشحن والسحب.");
+        return;
+    }
+    
+    const userId = currentUser.id;
+    let channelMessage = "";
+    let playerMessage = "";
+    let dbUpdateData = {};
+    
+    const botToken = "8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo";
+    const chatId = "@vtik2026"; 
+
+    if (actionType === 'charge') {
+        const timeStamp = new Date().toLocaleString('ar-EG');
+        const statusText = `طلب شحن بتاريخ ${timeStamp}`;
+        
+        dbUpdateData = { last_charge_req: statusText };
+        
+        channelMessage = `➕ **طلب شحن جديد في اللعبة**:\n\n🆔 معرف اللاعب الفريد: \`${userId}\`\n🪙 الذهب الحالي: ${gameData.coins.toLocaleString()}\n💵 الكاش الحالي: ${gameData.cash.toLocaleString()}`;
+        playerMessage = `👋 أهلاً بك في بوت شحن NINJA SAGA\n\nلقد قمت بطلب شحن رصيد لحسابك:\n🆔 معرف اللاعب: ${userId}\n\nاضغط على زر إرسال/Start ليتم تزويدك ببيانات الدفع فوراً ومراجعة حسابك ورصيدك الحالي.`;
+        
+    } else if (actionType === 'withdraw') {
+        if (gameData.cash < 10) return alert("⚠️ الحد الأدنى لطلب السحب هو 10 كاش!");
+        
+        const timeStamp = new Date().toLocaleString('ar-EG');
+        const statusText = `طلب سحب بقيمة ${gameData.cash} كاش بتاريخ ${timeStamp}`;
+        
+        dbUpdateData = { last_withdraw_req: statusText };
+        
+        channelMessage = `🚨 **طلب سحب كاش جديد**:\n\n🆔 معرف اللاعب الفريد: \`${userId}\`\n💵 الرصيد المطلوب سحبه: **${gameData.cash.toLocaleString()} كاش**`;
+        playerMessage = `👋 أهلاً بك في بوت سحب أرباح NINJA SAGA\n\nلقد قمت بطلب سحب رصيد الكاش المتاح بحسابك:\n🆔 معرف اللاعب: ${userId}\n\nاضغط على زر إرسال/Start لتقديم طلبك للمسؤول والموافقة عليه وإرسال كود الاستلام الفوري.`;
+    }
+    
+    // [1] تحديث قاعدة البيانات Supabase فوراً بالعملية الجديدة
+    try {
+        await supabaseClient.from('players').update(dbUpdateData).eq('email', currentUser.email);
+    } catch (e) {
+        console.error("خطأ في تحديث قاعدة البيانات:", e);
+    }
+
+    // [2] إرسال الإشعار والإعلان التلقائي إلى قناتك التليجرام
+    try {
+        const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(channelMessage)}&parse_mode=Markdown`;
+        fetch(url); 
+    } catch (e) {
+        console.error("خطأ أثناء إرسال الإشعار للقناة:", e);
+    }
+
+    // [3] فتح البوت للاعب وبدء المعاملة
+    const telegramBotUrl = `https://t.me/Operatorssm_bot?start=${actionType}_${userId}`;
+    window.open(telegramBotUrl, '_blank');
+    
+    toggleProfile(true);
 }
 
 // --- منطق تثبيت التطبيق (PWA INSTALL) المطور ---
