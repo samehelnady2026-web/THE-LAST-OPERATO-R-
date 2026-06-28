@@ -13,14 +13,15 @@
         input[type="password"] { padding: 12px; border-radius: 8px; border: none; width: 200px; text-align: center; font-size: 1.2rem; margin-bottom: 15px; }
         
         /* محتوى الأدمن (مخفي في البداية) */
-        #admin-content { display: none; width: 95%; max-width: 1100px; height: 90vh; overflow-y: auto; background: #1e293b; padding: 20px; border-radius: 15px; }
+        #admin-content { display: none; width: 95%; max-width: 1200px; height: 90vh; overflow-y: auto; background: #1e293b; padding: 20px; border-radius: 15px; }
         
         .hidden { display: none !important; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: center; }
+        th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: center; font-size: 13px; }
         button { cursor: pointer; padding: 8px 15px; border-radius: 6px; border: none; font-weight: bold; }
         .btn-primary { background: var(--accent); color: #000; }
         .btn-save { background: #2ecc71; color: white; }
+        input[type="number"] { padding: 6px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 5px; text-align: center; }
     </style>
 </head>
 <body>
@@ -35,18 +36,18 @@
 
 <div id="admin-content">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h1>إدارة اللاعبين 🛠️</h1>
-        <button class="btn-primary" onclick="loadData()">تحديث 🔄</button>
+        <h1>لوحة الإدارة اليدوية الفورية 🛠️</h1>
+        <button class="btn-primary" onclick="loadData()">تحديث القائمة 🔄</button>
     </div>
-    <div id="msg" style="color: #888; margin: 10px 0;"></div>
+    <div id="msg" style="color: var(--accent); margin: 10px 0;"></div>
     <table>
         <thead>
             <tr>
-                <th>البريد</th>
-                <th>المستوى</th>
-                <th>🪙</th>
-                <th>💵</th>
-                <th>الحالة</th>
+                <th>ID اللاعب</th>
+                <th>البريد الإلكتروني</th>
+                <th>المستوى الحالي</th>
+                <th>الرصيد (🪙 كوينز)</th>
+                <th>الرصيد (💵 كاش)</th>
                 <th>إجراء</th>
             </tr>
         </thead>
@@ -55,64 +56,113 @@
 </div>
 
 <script>
-    // --- إعداداتك ---
-    const PASS_KEY = "500500"; // ⬅️ غير كلمة السر من هنا
+    // --- إعدادات الربط بقاعدة البيانات والسر ---
+    const PASS_KEY = "500500"; 
     const URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
     const KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
     const supabaseAdmin = supabase.createClient(URL, KEY);
 
-    // دالة التحقق من كلمة السر
+    // قائمة تخزين مؤقت لبيانات اللاعبين لمقارنة التغييرات وتوثيقها بالسجل
+    let cachedPlayers = {};
+
     function checkPass() {
         const input = document.getElementById('admin-pass').value;
         if (input === PASS_KEY) {
             document.getElementById('lock-screen').classList.add('hidden');
             document.getElementById('admin-content').style.display = 'block';
-            loadData(); // جلب البيانات فور الدخول الصحيح
+            loadData();
         } else {
             alert("كلمة المرور خاطئة! ❌");
         }
     }
 
-    // جلب البيانات (كما في الكود السابق)
     async function loadData() {
         const msg = document.getElementById('msg');
-        msg.innerText = "جاري تحميل البيانات...";
+        msg.innerText = "جاري جلب بيانات اللاعبين من السيرفر...";
+        
+        // جلب البيانات من الجدول
         const { data, error } = await supabaseAdmin.from('players').select('*');
 
         if (error) {
-            msg.innerText = "خطأ: " + error.message;
+            msg.innerText = "خطأ في الاتصال: " + error.message;
             return;
         }
 
         const tbody = document.getElementById('rows');
         tbody.innerHTML = '';
+        cachedPlayers = {}; // إعادة تعيين الكاش
+
         data.forEach(p => {
+            // حفظ نسخة أصلية لمقارنتها عند الحفظ لمعرفة ما إذا قام الآدمن بزيادة أو نقص الرصيد
+            cachedPlayers[p.id] = p;
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="font-size:0.8rem">${p.email}</td>
-                <td><input type="number" style="width:50px" id="lv-${p.email}" value="${p.level}"></td>
-                <td><input type="number" style="width:60px" id="co-${p.email}" value="${p.coins}"></td>
-                <td><input type="number" style="width:60px" id="ca-${p.email}" value="${p.cash}"></td>
-                <td style="color:${p.is_banned ? 'red' : 'green'}">${p.is_banned ? 'محظور' : 'نشط'}</td>
-                <td><button class="btn-save" onclick="updatePlayer('${p.email}')">حفظ</button></td>
+                <td style="font-family: monospace; color: #94a3b8;">${p.id}</td>
+                <td>${p.email || 'لاعب ضيف'}</td>
+                <td><input type="number" style="width:60px" id="lv-${p.id}" value="${p.max_level || p.level || 1}"></td>
+                <td><input type="number" style="width:100px" id="co-${p.id}" value="${p.coins || 0}"></td>
+                <td><input type="number" style="width:100px" id="ca-${p.id}" value="${p.cash || 0}"></td>
+                <td><button class="btn-save" onclick="updatePlayer('${p.id}')">تطبيق وحفظ ✅</button></td>
             `;
             tbody.appendChild(tr);
         });
-        msg.innerText = "تم تحديث البيانات.";
+        msg.innerText = "تم تحديث كافة البيانات بنجاح المباشر.";
     }
 
-    async function updatePlayer(email) {
-        const lv = document.getElementById(`lv-${email}`).value;
-        const co = document.getElementById(`co-${email}`).value;
-        const ca = document.getElementById(`ca-${email}`).value;
+    async function updatePlayer(id) {
+        const msg = document.getElementById('msg');
+        const oldData = cachedPlayers[id];
 
+        // قراءة القيم الجديدة المدخلة يدوياً من الأدمن
+        const nextLvl = parseInt(document.getElementById(`lv-${id}`).value) || 1;
+        const nextCoins = parseInt(document.getElementById(`co-${id}`).value) || 0;
+        const nextCash = parseInt(document.getElementById(`ca-${id}`).value) || 0;
+
+        let currentHistory = oldData.purchase_history || [];
+
+        // 🧠 المقارنة الذكية لمعرفة نوع العملية (شحن أم خصم) لإضافتها في سجل المستخدم
+        if (nextCoins !== (oldData.coins || 0)) {
+            const diff = nextCoins - (oldData.coins || 0);
+            const statusSymbol = diff > 0 ? "✅ تعديل إداري" : "🛑 خصم إداري";
+            currentHistory.unshift({
+                name: `${statusSymbol}: ${diff > 0 ? '+' : ''}${diff.toLocaleString()} كوينز`,
+                date: new Date().toLocaleString('ar-EG'),
+                cost: "لوحة التحكم"
+            });
+        }
+
+        if (nextCash !== (oldData.cash || 0)) {
+            const diff = nextCash - (oldData.cash || 0);
+            const statusSymbol = diff > 0 ? "✅ تعديل إداري" : "🛑 خصم إداري";
+            currentHistory.unshift({
+                name: `${statusSymbol}: ${diff > 0 ? '+' : ''}${diff.toLocaleString()} كاش`,
+                date: new Date().toLocaleString('ar-EG'),
+                cost: "لوحة التحكم"
+            });
+        }
+
+        msg.innerText = "جاري حفظ التعديلات وإرسال الإشعار الفوري للمستخدم...";
+
+        // إرسال التعديل النهائي لـ Supabase
         const { error } = await supabaseAdmin
             .from('players')
-            .update({ level: lv, coins: co, cash: ca })
-            .eq('email', email);
+            .update({ 
+                max_level: nextLvl, 
+                level: nextLvl, // للتوافق مع مسمى الحقل القديم أو الجديد
+                coins: nextCoins, 
+                cash: nextCash,
+                purchase_history: currentHistory
+            })
+            .eq('id', id);
 
-        if (error) alert(error.message);
-        else loadData();
+        if (error) {
+            alert("فشل الحفظ: " + error.message);
+            msg.innerText = "حدث خطأ أثناء الحفظ.";
+        } else {
+            msg.innerText = "🚀 تم الحفظ بنجاح وتحديث شاشة اللاعب فوراً!";
+            loadData(); // إعادة التحميل لضمان مزامنة البيانات بالكامل
+        }
     }
 </script>
 </body>
