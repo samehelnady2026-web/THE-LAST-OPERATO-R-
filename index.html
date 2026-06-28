@@ -57,6 +57,7 @@
 </head>
 <body>
 
+<!-- واجهة عرض إعلانات Adsterra التفاعلية المكافئة -->
 <div id="adNetworkModal">
     <div class="ad-container">
         <button id="skipAdBtn" class="skip-ad-btn" onclick="skipAd()">تخطي ومغادرة ✕</button>
@@ -88,6 +89,7 @@
     </div>
 </div>
 
+<!-- واجهة التسجيل بخيار نسيت كلمة المرور وزر الضيف الواضح -->
 <div id="authScreen" class="screen hidden">
     <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; font-size: 24px;">THE LAST OPERATOR</h1>
     <div class="auth-form">
@@ -159,13 +161,14 @@
 </div>
 
 <script>
+// الإعدادات المحدثة بالكامل بناءً على بياناتك المرسلة
 const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
-const SB_KEY = 'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-const TG_TOKEN = "7334791789:AAE61m3V7S-y7UeZ-Qat88wB6I_b_vN7wS4";
+const TG_TOKEN = "8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo";
 const TG_CHAT_ID = "6190547048"; 
-const TG_CHANNEL_ID = "@YourChannelName"; 
+const TG_CHANNEL_ID = "-1003614080639"; // معرف صفحة/قناة تليجرام الخاصة بك بالكامل
 
 let currentUser = null;
 let isGuest = false;
@@ -209,7 +212,6 @@ async function handleAuth(type) {
     }
 }
 
-// دالة نسيت كلمة المرور لاستعادة الحساب عبر البريد الإلكتروني
 async function handleForgotPassword() {
     const email = document.getElementById('authEmail').value;
     if(!email) return alert("يرجى كتابة بريدك الإلكتروني أولاً في خانة الإدخال ليتم إرسال رابط استعادة كلمة المرور إليه.");
