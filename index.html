@@ -2,100 +2,488 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE LAST OPERATOR - PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>THE LAST OPERATOR - LIVE ADS EDITION</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { margin: 0; background: #0f172a; color: white; font-family: sans-serif; overflow: hidden; }
-        #gameCanvas { display: block; width: 100vw; height: 100vh; }
-        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 9999; }
-        .btn { padding: 15px 30px; background: #2ecc71; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
+        :root { --glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(0, 0, 0, 0.1); --neon-blue: #0984e3; --neon-red: #d63031; --neon-purple: #9b59b6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        body { background: #f0f2f5; height: 100vh; overflow: hidden; touch-action: none; color: #2d3436; transition: background 0.5s ease; }
+        
+        /* --- واجهة الترحيب --- */
+        #welcomeScreen { background: #ffffff; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 9000; position: fixed; inset: 0; transition: opacity 0.8s ease, visibility 0.8s; }
+        .hero-center { display: flex; flex-direction: column; align-items: center; gap: 80px; }
+        .vortex-container { position: relative; width: 350px; height: 350px; display: flex; justify-content: center; align-items: center; }
+        .animated-word { color: #2d3436; font-size: 2.8rem; font-weight: 900; letter-spacing: 10px; z-index: 10; text-shadow: 0 0 20px rgba(0, 0, 0, 0.1); pointer-events: none; animation: breathing 3s ease-in-out infinite; }
+        @keyframes breathing { 0%, 100% { transform: scale(1); letter-spacing: 10px; opacity: 0.9; } 50% { transform: scale(1.15); letter-spacing: 15px; opacity: 1; } }
+        .rainbow-halo { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000); filter: blur(30px); animation: rotate-halo 5s linear infinite; opacity: 0.7; }
+        @keyframes rotate-halo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .glass-btn-wrapper { position: relative; display: flex; justify-content: center; align-items: center; z-index: 20; }
+        .enter-game-btn.spectrum-glass { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); color: #2d3436; padding: 20px 60px; border-radius: 50px; border: 2px solid rgba(255, 255, 255, 0.5); font-size: 22px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.4s ease; }
+        .btn-rainbow-shadow { position: absolute; width: 85%; height: 15px; bottom: -8px; background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); background-size: 300% 100%; filter: blur(18px); border-radius: 50px; opacity: 0.7; animation: shadow-flow 3s linear infinite; z-index: -1; }
+        @keyframes shadow-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        /* --- التنسيقات العامة للواجهات --- */
+        .screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; background: rgba(240, 242, 245, 0.98); backdrop-filter: blur(10px); overflow-y: auto; }
+        .hidden { display: none !important; }
+        .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 400px; padding: 20px 0; }
+        .level-card { border: 1px solid var(--glass-border); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; min-height: 80px; cursor: pointer; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-weight: bold; text-align: center; }
+        #hud { position: absolute; top: 15px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 1100; pointer-events: none; }
+        .stat-badge { background: var(--glass); padding: 8px 12px; border-radius: 20px; font-weight: bold; backdrop-filter: blur(10px); border: 1px solid var(--glass-border); pointer-events: auto; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #2d3436; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .joystick-base { position: absolute; bottom: 30px; width: 85px; height: 85px; background: rgba(0,0,0,0.1); border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); z-index: 1000; touch-action: none; }
+        #moveJoy { left: 25px; } #shootJoy { right: 25px; border-color: var(--neon-red); }
+        .stick { position: absolute; width: 35px; height: 35px; background: #2d3436; border-radius: 50%; left: 25px; top: 25px; pointer-events: none; }
+        
+        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .popup-content { background: white; width: 94%; max-width: 440px; padding: 20px; border-radius: 25px; color: #2d3436; max-height: 85vh; overflow-y: auto; }
+        .shop-btn { padding: 8px 14px; border-radius: 8px; border: none; background: var(--neon-blue); color: white; font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.2s; }
+        .auth-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 10px; }
+        .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; width: 100%; }
+        .forgot-pass-link { text-align: right; font-size: 13px; color: var(--neon-blue); cursor: pointer; text-decoration: none; margin-top: -4px; margin-bottom: 4px; font-weight: 600; display: inline-block; }
+        .forgot-pass-link:hover { text-decoration: underline; }
+        .ledger-box { max-height: 120px; overflow-y: auto; background: #f1f2f6; border-radius: 10px; padding: 8px; font-size: 11px; text-align: right; margin-top: 8px; }
+
+        /* --- واجهة شبكة إعلانات Adsterra الحية --- */
+        #adNetworkModal { z-index: 9999; background: #000000fa; color: white; text-align: center; display: none; position: fixed; inset: 0; flex-direction: column; justify-content: center; align-items: center; }
+        .ad-container { background: #1a1c23; border: 2px solid #05c46b; padding: 25px; border-radius: 24px; max-width: 420px; width: 92%; position: relative; box-shadow: 0 10px 30px rgba(5, 196, 107, 0.3); }
+        .ad-timer { font-size: 14px; color: #ffc048; margin-bottom: 15px; font-weight: bold; }
+        .skip-ad-btn { position: absolute; top: 15px; right: 15px; background: #ff3f34; border: none; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; display: none; font-weight: bold; z-index: 10001; }
+        #adPlacementBox { width: 100%; min-height: 150px; background: #0f1115; border-radius: 14px; margin: 15px 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
     </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+<!-- واجهة عرض إعلانات Adsterra التفاعلية المكافئة -->
+<div id="adNetworkModal">
+    <div class="ad-container">
+        <button id="skipAdBtn" class="skip-ad-btn" onclick="skipAd()">تخطي ومغادرة ✕</button>
+        <h3 style="color: #05c46b; margin-bottom: 8px;"><i class="fas fa-play-circle"></i> جاري عرض إعلان المكافأة الحية</h3>
+        <p id="adDescription" style="color: #d2dae2; font-size: 13px; margin-bottom: 10px;">انتظر انتهاء الوقت بالكامل لتفعيل الجائزة.</p>
+        
+        <div id="adPlacementBox"></div>
 
-<!-- شاشة الإعلان -->
-<div id="adNetworkModal" class="overlay" style="display: none;">
-    <div style="background:#1a1c23; padding:20px; border-radius:20px; text-align:center;">
-        <h2 id="adTitle">نَفِدت محاولاتك!</h2>
-        <div id="adPlacementBox" style="margin: 20px 0;"></div>
-        <p id="adTimer">العداد: 10 ثوانٍ</p>
+        <div id="adCountdown" class="ad-timer">متبقي: 10 ثوانٍ</div>
+        <div style="width: 100%; background: #2f3640; height: 6px; border-radius: 10px; overflow: hidden;">
+            <div id="adProgressBar" style="width: 0%; height: 100%; background: #05c46b; transition: width 1s linear;"></div>
+        </div>
+    </div>
+</div>
+
+<div id="welcomeScreen">
+    <div class="hero-center">
+        <div class="vortex-container">
+            <div class="rainbow-halo"></div>
+            <h1 class="animated-word" style="font-size: 1.8rem; text-align: center;">THE LAST<br>OPERATOR</h1>
+        </div>
+        <div class="glass-btn-wrapper">
+            <div class="btn-rainbow-shadow"></div>
+            <button class="enter-game-btn spectrum-glass" onclick="revealGame()">
+                <span>ادخل اللعبة</span>
+                <i class="fas fa-bolt"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- واجهة التسجيل بخيار نسيت كلمة المرور وزر الضيف الواضح -->
+<div id="authScreen" class="screen hidden">
+    <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; font-size: 24px;">THE LAST OPERATOR</h1>
+    <div class="auth-form">
+        <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
+        <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input">
+        
+        <a class="forgot-pass-link" onclick="handleForgotPassword()">نسيت كلمة المرور؟</a>
+        
+        <button class="shop-btn" style="padding:15px; font-size:14px;" onclick="handleAuth('login')">تسجيل دخول</button>
+        <button class="shop-btn" style="padding:15px; font-size:14px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
+        
+        <div style="text-align: center; margin: 5px 0; color: #636e72; font-weight: bold;">أو</div>
+        
+        <button class="shop-btn guest-btn" style="padding:15px; font-size:14px; background: #e67e22; border: 2px solid #d35400;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
+    </div>
+</div>
+
+<div id="levelMap" class="screen hidden">
+    <h1 style="color: var(--neon-blue); margin: 20px 0; font-weight: 900; font-size: 26px;">THE LAST OPERATOR</h1>
+    <div style="display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;">
+        <div class="stat-badge" style="border-color:orange;">🪙 <span id="m-coins">0</span></div>
+        <div class="stat-badge" style="border-color:green;">💵 <span id="m-cash">0</span></div>
+        <div class="stat-badge" onclick="watchAdForCoins()" style="background:#27ae60; color:white; cursor:pointer;"><i class="fas fa-video"></i> 50k كوينز مجاناً</div>
+        <div class="stat-badge" onclick="toggleMarket(true)" style="background:#e17055; color:white; cursor:pointer;">🛒 السوق</div>
+        <div class="stat-badge" onclick="toggleProfile(true)" style="background:#0984e3; color:white; cursor:pointer;">👤 الحساب</div>
+        <div class="stat-badge" onclick="logout()" style="background:#fab1a0; cursor:pointer;">🚪 خروج</div>
+    </div>
+    <div class="level-grid" id="grid"></div>
+</div>
+
+<div id="game-container" style="position: fixed; inset: 0; display: none;">
+    <div id="hud">
+        <div style="display:flex; gap:5px;">
+            <div class="stat-badge" onclick="exitToMap()" style="cursor:pointer; pointer-events:auto;">🏠 إعادة / خروج</div>
+            <div class="stat-badge" style="background:#e74c3c; color:white;">❤️ <span id="h-lives">5</span></div>
+            <div class="stat-badge" style="background:#9b59b6; color:white;">🏆 الهدف: <span id="h-legend">0</span></div>
+            <div class="stat-badge">🪙 <span id="h-coins">0</span></div>
+            <div class="stat-badge">💵 <span id="h-cash">0</span></div>
+        </div>
+    </div>
+    <canvas id="game" style="background:#0f172a; width:100%; height:100%; display:block;"></canvas>
+    
+    <button onclick="simulatePlayerDeath()" style="position:absolute; top:80px; left:20px; padding:10px; background:red; color:white; border:none; border-radius:5px; z-index:2000; cursor:pointer;">محاكاة الموت (لتجربة الإعلان)</button>
+    
+    <div id="moveJoy" class="joystick-base"><div class="stick"></div></div>
+    <div id="shootJoy" class="joystick-base"><div class="stick"></div></div>
+</div>
+
+<div id="marketPopup" class="popup"><div class="popup-content"><h2 style="text-align:center; margin-bottom:12px; color:var(--neon-purple);">🛒 سوق النيون</h2><button onclick="toggleMarket(false)" style="width:100%; padding:12px; background:#2d3436; color:white; border:none; font-weight:bold;">الخروج</button></div></div>
+
+<div id="profilePopup" class="popup">
+    <div class="popup-content" style="text-align: center;">
+        <h2 style="margin-bottom:15px; color:var(--neon-blue);">👤 الحساب والمعاملات المالية</h2>
+        <div style="background:#f8f9fa; padding:12px; border-radius:15px; text-align:right; margin-bottom:12px; font-size:13px;">
+            <div>🆔 <strong>ID:</strong> <span id="p-id">-</span></div>
+            <div>📧 <strong>البريد:</strong> <span id="p-email">-</span></div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <button class="shop-btn" style="flex: 1; background: #2ecc71;" onclick="openTransactionModal('deposit')"><i class="fas fa-plus-circle"></i> طلب شحن</button>
+            <button class="shop-btn" style="flex: 1; background: #e74c3c;" onclick="openTransactionModal('withdraw')"><i class="fas fa-minus-circle"></i> طلب سحب</button>
+        </div>
+
+        <h4 style="text-align: right; font-size: 12px; color: #7f8c8d; margin-top: 10px;">📋 سجل المعاملات الحالي:</h4>
+        <div id="ledger" class="ledger-box">لا توجد عمليات مسجلة حالياً.</div>
+
+        <button onclick="toggleProfile(false)" style="width:100%; padding:12px; background:#2d3436; color:white; border:none; font-weight:bold; border-radius:10px; margin-top:12px;">العودة للخريطة</button>
     </div>
 </div>
 
 <script>
-// الإعدادات والربط
+// الإعدادات المحدثة بالكامل بناءً على بياناتك المرسلة
 const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // ضع مفتاحك هنا
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-let gameData = { coins: 5000, cash: 100, level: 1, lives: 5 };
-let currentLevel = 1, animationId = null, isPlaying = false;
-let canvas = document.getElementById('gameCanvas');
-let ctx = canvas.getContext('2d');
+const TG_TOKEN = "8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo";
+const TG_CHAT_ID = "6190547048"; 
+const TG_CHANNEL_ID = "-1003614080639"; // معرف صفحة/قناة تليجرام الخاصة بك بالكامل
 
-// تشغيل اللعبة
-function runGame() {
-    isPlaying = true;
-    updateGame();
+let currentUser = null;
+let isGuest = false;
+let currentLevelPlaying = 1;
+let gameData = { coins: 0, cash: 0, level: 1, lives: 5, purchaseHistory: [] };
+
+let adTimerInterval = null;
+let adTimeLeft = 10; 
+let currentAdRewardType = ''; 
+
+function revealGame() { 
+    document.getElementById('welcomeScreen').style.opacity = '0'; 
+    setTimeout(() => { 
+        document.getElementById('welcomeScreen').classList.add('hidden'); 
+        document.getElementById('authScreen').classList.remove('hidden');
+    }, 500); 
 }
 
-function updateGame() {
-    if (!isPlaying) return;
+function startAsGuest() {
+    isGuest = true; currentUser = null;
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('levelMap').classList.remove('hidden');
+    buildMap(); GameCore.updateUI();
+}
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+async function handleAuth(type) {
+    const email = document.getElementById('authEmail').value;
+    const pass = document.getElementById('authPass').value;
+    if(!email || !pass) return alert("يرجى إدخال البيانات كاملة");
     
-    // منطق الصعوبة: بعد المستوى 3 تزداد السرعة
-    let speedMultiplier = 1 + (Math.max(0, currentLevel - 3) * 0.1);
-    
-    // [هنا يتم رسم اللاعب والفواكه]
-    // مثال: سرعة الفاكهة = 2 * speedMultiplier
-
-    if (gameData.lives > 0) {
-        animationId = requestAnimationFrame(updateGame);
+    if(type === 'signup') {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
+        if (error) return alert("خطأ في التسجيل: " + error.message);
+        
+        await supabaseClient.from('players').upsert([{ email: email, coins: 1000, cash: 0, level: 1, purchase_history:[] }], { onConflict: 'email' });
+        alert("تم إرسال رسالة التفعيل إلى بريدك الإلكتروني بنجاح! يرجى تأكيده ثم تسجيل الدخول.");
     } else {
-        triggerAd();
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+        if (error) return alert("خطأ في تسجيل الدخول: " + error.message);
+        if(data?.user) { currentUser = data.user; isGuest = false; await loadOnlineData(); }
     }
 }
 
-// تشغيل الإعلان
-function triggerAd() {
-    isPlaying = false;
-    cancelAnimationFrame(animationId);
-    document.getElementById('adNetworkModal').style.display = 'flex';
+async function handleForgotPassword() {
+    const email = document.getElementById('authEmail').value;
+    if(!email) return alert("يرجى كتابة بريدك الإلكتروني أولاً في خانة الإدخال ليتم إرسال رابط استعادة كلمة المرور إليه.");
     
-    let timeLeft = 10;
-    const timer = setInterval(() => {
-        timeLeft--;
-        document.getElementById('adTimer').innerText = `العداد: ${timeLeft} ثوانٍ`;
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            completeAd();
+    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email);
+    if(error) return alert("خطأ: " + error.message);
+    alert("🎯 تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني بنجاح!");
+}
+
+async function loadOnlineData() {
+    if(!currentUser) return;
+    let { data, error } = await supabaseClient.from('players').select('*').eq('email', currentUser.email).maybeSingle();
+    
+    if(!data) {
+        const { data: newData } = await supabaseClient.from('players').insert([{ email: currentUser.email, coins: 1000, cash: 0, level: 1, purchase_history:[] }]).select().single();
+        data = newData;
+    }
+    
+    if(data) {
+        gameData.coins = data.coins || 0; 
+        gameData.cash = data.cash || 0; 
+        gameData.level = data.level || 1;
+        gameData.purchaseHistory = data.purchase_history || [];
+        renderLedger();
+    }
+    
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('levelMap').classList.remove('hidden');
+    buildMap(); 
+    GameCore.updateUI();
+}
+
+function renderLedger() {
+    const ledger = document.getElementById('ledger');
+    if(!ledger) return;
+    if(gameData.purchaseHistory.length === 0) {
+        ledger.innerHTML = "لا توجد عمليات مسجلة حالياً.";
+        return;
+    }
+    ledger.innerHTML = gameData.purchaseHistory.map(item => `
+        <div style="border-bottom:1px solid #ddd; padding:4px 0; display:flex; justify-content:space-between;">
+            <span>${item.type === 'deposit' ? '🟢 شحن' : '🔴 سحب'}</span>
+            <span>${item.amount}</span>
+            <span style="color:#7f8c8d; font-size:9px;">${item.date || ''}</span>
+        </div>
+    `).join('');
+}
+
+async function openTransactionModal(actionType) {
+    if(isGuest) return alert("اللاعب الضيف لا يمكنه استخدام المعاملات المالية.");
+    
+    const actionName = actionType === 'deposit' ? "شحن" : "سحب";
+    const amount = prompt(`أدخل القيمة المراد ${actionName}ها:`);
+    if(!amount || isNaN(amount) || amount <= 0) return alert("يرجى كتابة قيمة صالحة");
+
+    const phone = prompt("أدخل رقم الهاتف المستخدم للتحويل:");
+    if(!phone) return alert("رقم الهاتف مطلوب لتأكيد العملية");
+    
+    const confirmPhone = prompt("أعد كتابة رقم الهاتف للتأكيد وضمان الدقة:");
+    if(phone !== confirmPhone) return alert("خطأ! رقم الهاتف المكتوب غير متطابق.");
+
+    const timestamp = new Date().toLocaleString('ar-EG');
+    const transactionItem = { type: actionType, amount: amount, date: timestamp, name: currentUser.email };
+
+    gameData.purchaseHistory.push(transactionItem);
+    renderLedger();
+    await saveData();
+
+    const botMessage = `⚠️ طلب مالي جديد في اللعبة ⚠️\n\n` +
+                       `▪️ نوع العملية: ${actionName}\n` +
+                       `▪️ اسم الحساب: ${currentUser.email}\n` +
+                       `▪️ القيمة: ${amount}\n` +
+                       `▪️ الهاتف: ${phone}\n` +
+                       `▪️ تأكيد الهاتف: ${confirmPhone}\n` +
+                       `▪️ التوقيت: ${timestamp}`;
+
+    const channelMessage = `🔔 إشعار منصة اللعبة 🔔\n\n` +
+                          `▪️ نوع العملية: ${actionName}\n` +
+                          `▪️ القيمة: ${amount}\n` +
+                          `▪️ حساب اللاعب: ${currentUser.email.split('@')[0]}***\n` +
+                          `▪️ الحالة: جاري المراجعة والتحويل الفوري...`;
+
+    try {
+        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: botMessage })
+        });
+        
+        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TG_CHANNEL_ID, text: channelMessage })
+        });
+
+        alert(`🎯 تم إرسال طلب الـ ${actionName} بنجاح للتحقق والبث العام!`);
+    } catch(err) {
+        alert("تم الحفظ وتحديث السجل باللعبة، لكن فشل إرسال بث التليجرام.");
+    }
+}
+
+const GameCore = {
+    updateUI: function() {
+        if(document.getElementById('m-coins')) document.getElementById('m-coins').innerText = gameData.coins.toLocaleString();
+        if(document.getElementById('m-cash')) document.getElementById('m-cash').innerText = gameData.cash.toLocaleString();
+        if(document.getElementById('h-coins')) document.getElementById('h-coins').innerText = gameData.coins.toLocaleString();
+        if(document.getElementById('h-cash')) document.getElementById('h-cash').innerText = gameData.cash.toLocaleString();
+        if(document.getElementById('h-lives')) document.getElementById('h-lives').innerText = gameData.lives;
+    }
+};
+
+function buildMap() {
+    const grid = document.getElementById('grid');
+    if(!grid) return; grid.innerHTML = '';
+    for(let i = 1; i <= 20; i++) {
+        const card = document.createElement('div');
+        card.className = 'level-card';
+        card.style.opacity = i <= gameData.level ? '1' : '0.4';
+        
+        let levelLegend = 1000; 
+        if (i >= 11) {
+            levelLegend = 3500 + ((i - 11) * 50); 
+        } else if (i === 10) {
+            levelLegend = 3000;
+        } else {
+            levelLegend = i * 300; 
+        }
+        
+        card.innerHTML = `<div>المستوى ${i}</div><div style="font-size:10px; color:var(--neon-purple);">🏆 ${levelLegend}</div>`;
+        
+        if(i <= gameData.level) {
+            card.onclick = () => { currentLevelPlaying = i; startLevel(i); };
+        }
+        grid.appendChild(card);
+    }
+}
+
+function startLevel(lvl) {
+    document.getElementById('levelMap').classList.add('hidden');
+    document.getElementById('game-container').style.display = 'block';
+    
+    let targetLegend = 1000;
+    if (lvl >= 11) {
+        targetLegend = 3500 + ((lvl - 11) * 50);
+    } else if (lvl === 10) {
+        targetLegend = 3000;
+    } else {
+        targetLegend = lvl * 300;
+    }
+    document.getElementById('h-legend').innerText = targetLegend;
+    gameData.lives = 5; 
+    
+    if(lvl >= 10) {
+        if(Math.random() < 0.08) { 
+            gameData.cash += 1;
+            alert("✨ محظوظ! ظهر لك 1 كاش نادر في هذا المستوى العالي!");
+            saveData();
+        }
+    }
+    GameCore.updateUI();
+}
+
+function simulatePlayerDeath() {
+    gameData.lives--;
+    GameCore.updateUI();
+    if(gameData.lives <= 0) {
+        triggerAdNetwork('lives');
+    }
+}
+
+function exitToMap() {
+    triggerAdNetwork('replay');
+}
+
+function watchAdForCoins() {
+    triggerAdNetwork('coins');
+}
+
+function triggerAdNetwork(rewardType) {
+    currentAdRewardType = rewardType;
+    adTimeLeft = 10; 
+    
+    const adContainerBox = document.getElementById('adPlacementBox');
+    adContainerBox.innerHTML = ''; 
+
+    const scriptAd = document.createElement('script');
+    if (rewardType === 'coins' || rewardType === 'lives') {
+        scriptAd.src = "https://pl30116722.effectivecpmnetwork.com/23/be/d7/23bed7c11e86a84c58177346d89284c0.js";
+        document.getElementById('adDescription').innerText = rewardType === 'coins' ? "شاهد الإعلان بالكامل لشحن 50,000 كوينز مجاناً!" : "شاهد الإعلان بالكامل لاستعادة 5 حيوات إضافية ومتابعة اللعب.";
+    } else {
+        scriptAd.src = "https://pl30116721.effectivecpmnetwork.com/36/00/ba/3600ba62094ff4693b4541513751d3e8.js";
+        document.getElementById('adDescription').innerText = "شاهد الإعلان بالكامل لتتمكن من إعادة تعيين المستوى وفتح الخريطة.";
+    }
+    adContainerBox.appendChild(scriptAd);
+    
+    document.getElementById('adNetworkModal').style.display = 'flex';
+    document.getElementById('skipAdBtn').style.display = 'none';
+    document.getElementById('adProgressBar').style.width = '0%';
+
+    adTimerInterval = setInterval(() => {
+        adTimeLeft--;
+        let progressPercent = ((10 - adTimeLeft) / 10) * 100;
+        document.getElementById('adProgressBar').style.width = progressPercent + '%';
+        document.getElementById('adCountdown').innerText = `متبقي على انتهاء الإعلان: ${adTimeLeft} ثانية`;
+        
+        if(adTimeLeft <= 5) {
+            document.getElementById('skipAdBtn').style.display = 'block';
+        }
+
+        if(adTimeLeft <= 0) {
+            clearInterval(adTimerInterval);
+            finishAdSuccessfully();
         }
     }, 1000);
 }
 
-// استئناف اللعبة بعد الإعلان
-function completeAd() {
+function skipAd() {
+    clearInterval(adTimerInterval);
     document.getElementById('adNetworkModal').style.display = 'none';
-    gameData.lives = 5;
-    isPlaying = true;
-    runGame(); // إعادة تشغيل المحرك
+    alert("⚠️ قمت بتخطي الإعلان، لن تحصل على المكافأة وتم إلغاء المحاولة الحالية.");
+    if(currentAdRewardType === 'replay' || currentAdRewardType === 'lives') {
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('levelMap').classList.remove('hidden');
+        buildMap(); GameCore.updateUI();
+    }
 }
 
-// حفظ البيانات
+function finishAdSuccessfully() {
+    document.getElementById('adNetworkModal').style.display = 'none';
+    confetti({ particleCount: 100, spread: 70 });
+    
+    if(currentAdRewardType === 'coins') {
+        gameData.coins += 50000;
+        alert("💰 ممتاز! تم إضافة 50,000 كوينز إلى رصيدك بنجاح.");
+        saveData();
+    } else if(currentAdRewardType === 'lives') {
+        gameData.lives = 5;
+        alert("❤️ تم منحك 5 حيوات إضافية! يمكنك إكمال اللعب الآن.");
+    } else if(currentAdRewardType === 'replay') {
+        alert("🔄 تم تأكيد مشاهدة الإعلان والسماح بإعادة المستوى.");
+        if(currentLevelPlaying === gameData.level && gameData.level < 20) {
+            gameData.level += 1;
+        }
+        saveData();
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('levelMap').classList.remove('hidden');
+        buildMap();
+    }
+    GameCore.updateUI();
+}
+
 async function saveData() {
-    await supabaseClient.from('players').update({
+    if(isGuest || !currentUser) return;
+    await supabaseClient.from('players').update({ 
+        coins: gameData.coins, 
+        cash: gameData.cash,
         level: gameData.level,
-        coins: gameData.coins
-    }).eq('id', 'USER_ID'); // تأكد من مطابقة الـ ID
+        purchase_history: gameData.purchaseHistory
+    }).eq('email', currentUser.email);
 }
 
-// البدء
-runGame();
+function logout() { location.reload(); }
+function toggleMarket(show) { document.getElementById('marketPopup').style.display = show ? 'flex' : 'none'; }
+function toggleProfile(show) { 
+    document.getElementById('profilePopup').style.display = show ? 'flex' : 'none'; 
+    if(currentUser) {
+        document.getElementById('p-id').innerText = currentUser.id.substring(0, 8) + "...";
+        document.getElementById('p-email').innerText = currentUser.email;
+        renderLedger();
+    }
+    GameCore.updateUI(); 
+}
 </script>
 </body>
 </html>
