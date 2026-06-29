@@ -2,573 +2,100 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>THE LAST OPERATOR - NINJA EDITION</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE LAST OPERATOR - PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
     <style>
-        :root { --glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(0, 0, 0, 0.1); --neon-blue: #0984e3; --neon-red: #d63031; --neon-purple: #9b59b6; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
-        body { background: #f0f2f5; height: 100vh; overflow: hidden; touch-action: none; color: #2d3436; }
-        
-        /* --- الواجهات --- */
-        #welcomeScreen { background: #ffffff; display: flex; justify-content: center; align-items: center; z-index: 9000; position: fixed; inset: 0; transition: opacity 0.5s; }
-        .hero-center { display: flex; flex-direction: column; align-items: center; gap: 60px; }
-        .vortex-container { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; }
-        .animated-word { color: #2d3436; font-size: 2.2rem; font-weight: 900; letter-spacing: 8px; text-align: center; animation: breathing 3s infinite; }
-        @keyframes breathing { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        .rainbow-halo { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); filter: blur(25px); animation: rotate-halo 5s linear infinite; opacity: 0.6; }
-        @keyframes rotate-halo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .enter-game-btn { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); padding: 15px 40px; border-radius: 50px; border: 2px solid #ddd; font-size: 18px; font-weight: 900; cursor: pointer; }
-        
-        .screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; background: rgba(240, 242, 245, 0.98); backdrop-filter: blur(10px); overflow-y: auto; }
-        .hidden { display: none !important; }
-        
-        /* --- الخريطة المتعرجة --- */
-        .map-wrapper { width: 100%; max-width: 450px; height: 65vh; overflow-y: auto; background: #eef2f7; border-radius: 20px; border: 2px dashed #b2bec3; position: relative; scroll-behavior: smooth; margin-top: 10px; }
-        .map-path-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 3500px; pointer-events: none; z-index: 1; }
-        .map-scroll-container { position: relative; width: 100%; height: 3500px; z-index: 2; }
-        .level-node { position: absolute; width: 45px; height: 45px; background: #ffeaa7; border: 3px solid #fdcb6e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; cursor: pointer; transform: translate(-50%, -50%); transition: 0.3s; }
-        .level-node.unlocked { background: #55efc4; border-color: #00b894; color: white; }
-        .level-node.current { background: #ff7675; border-color: #d63031; color: white; animation: pulse 1.5s infinite; transform: translate(-50%, -50%) scale(1.1); }
-        .level-node.locked { background: #b2bec3; border-color: #636e72; opacity: 0.5; cursor: not-allowed; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(214,48,49,0.5); } 70% { box-shadow: 0 0 0 10px rgba(214,48,49,0); } 100% { box-shadow: 0 0 0 0 rgba(214,48,49,0); } }
-        .cycle-banner { position: absolute; left: 5%; width: 90%; background: var(--neon-purple); color: white; text-align: center; padding: 6px; font-weight: bold; border-radius: 8px; font-size: 11px; transform: translateY(-50%); }
-
-        /* --- الجويستيك --- */
-        .joystick-base { position: absolute; bottom: 40px; width: 90px; height: 90px; background: rgba(0,0,0,0.15); border-radius: 50%; border: 3px solid rgba(0,0,0,0.2); z-index: 1000; touch-action: none; opacity: 0.8; }
-        #moveJoy { left: 30px; } 
-        #shootJoy { right: 30px; border-color: var(--neon-red); }
-        .stick { position: absolute; width: 35px; height: 35px; background: #2d3436; border-radius: 50%; left: 25px; top: 25px; pointer-events: none; }
-        
-        #hud { position: absolute; top: 15px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 1100; pointer-events: none; }
-        .stat-badge { background: var(--glass); padding: 6px 10px; border-radius: 20px; font-weight: bold; border: 1px solid var(--glass-border); pointer-events: auto; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #2d3436; }
-        
-        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .popup-content { background: white; width: 94%; max-width: 420px; padding: 20px; border-radius: 20px; max-height: 80vh; overflow-y: auto; }
-        .shop-btn { padding: 8px 12px; border-radius: 8px; border: none; background: var(--neon-blue); color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .auth-form { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; margin-top: 10px; }
-        .auth-input { padding: 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; font-size: 14px; width: 100%; margin-bottom: 5px; }
-        
-        .forgot-link { text-align: right; font-size: 12px; color: var(--neon-blue); cursor: pointer; font-weight: bold; text-decoration: underline; margin-top: -3px; margin-bottom: 5px; }
-
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .shop-item { border: 1px solid #ddd; padding: 10px; border-radius: 12px; text-align: center; background: #f9f9f9; }
-
-        #adNetworkModal { z-index: 9999; background: #000000f2; color: white; text-align: center; display: none; position: fixed; inset: 0; flex-direction: column; justify-content: center; align-items: center; }
-        .ad-container { background: #1a1c23; border: 2px solid #05c46b; padding: 20px; border-radius: 20px; max-width: 380px; width: 90%; position: relative; }
-        .skip-ad-btn { position: absolute; top: 10px; right: 10px; background: #ff3f34; border: none; color: white; padding: 4px 10px; border-radius: 15px; font-size: 11px; cursor: pointer; display: none; }
-        #adPlacementBox { width: 100%; min-height: 140px; background: #0f1115; border-radius: 10px; margin: 10px 0; display: flex; justify-content: center; align-items: center; color: gray; font-size: 12px; }
-
-        .settings-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; text-align: right; }
-        .settings-row label { font-size: 12px; font-weight: bold; color: #555; }
-        .settings-row input[type="range"] { width: 100%; accent-color: var(--neon-blue); }
-        
-        .ledger-box { max-height: 150px; overflow-y: auto; background: #f1f2f6; border-radius: 10px; padding: 8px; font-size: 12px; margin-top: 10px; border: 1px solid #ddd; text-align: right; }
-        .ledger-item { border-bottom: 1px dashed #ccc; padding: 5px 0; display: flex; justify-content: space-between; }
+        body { margin: 0; background: #0f172a; color: white; font-family: sans-serif; overflow: hidden; }
+        #gameCanvas { display: block; width: 100vw; height: 100vh; }
+        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 9999; }
+        .btn { padding: 15px 30px; background: #2ecc71; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="adNetworkModal">
-    <div class="ad-container">
-        <button id="skipAdBtn" class="skip-ad-btn" onclick="skipAd()">تخطي ومغادرة ✕</button>
-        <h3 id="adTitle" style="color: #05c46b; margin-bottom: 5px;"><i class="fas fa-play-circle"></i> إعلان مكافأة مكثف</h3>
-        <p id="adDescription" style="color: #d2dae2; font-size: 12px;">انتظر العداد لشحن 50,000 كوينز مجاناً.</p>
-        <div id="adPlacementBox"></div>
-        <div id="adCountdown" style="font-size:12px; color:#ffc048; margin-bottom:8px;">متبقي: 10 ثوانٍ</div>
-        <div style="width: 100%; background: #2f3640; height: 5px; border-radius: 5px; overflow: hidden;">
-            <div id="adProgressBar" style="width: 0%; height: 100%; background: #05c46b; transition: width 1s linear;"></div>
-        </div>
-    </div>
-</div>
+<canvas id="gameCanvas"></canvas>
 
-<div id="welcomeScreen">
-    <div class="hero-center">
-        <div class="vortex-container">
-            <div class="rainbow-halo"></div>
-            <h1 class="animated-word">THE LAST<br>OPERATOR</h1>
-        </div>
-        <button class="enter-game-btn" onclick="revealGame()">ادخل اللعبة <i class="fas fa-bolt"></i></button>
-    </div>
-</div>
-
-<div id="authScreen" class="screen hidden">
-    <h2 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900;">THE LAST OPERATOR</h2>
-    <div class="auth-form">
-        <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
-        <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input">
-        <div class="forgot-link" onclick="openResetPasswordModal()">نسيت كلمة المرور؟</div>
-        <button class="shop-btn" style="padding:12px;" onclick="handleAuth('login')">تسجيل دخول</button>
-        <button class="shop-btn" style="padding:12px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
-        <div style="text-align: center; color: #636e72; font-size:12px;">أو</div>
-        <button class="shop-btn" style="padding:12px; background: #e67e22;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
-    </div>
-</div>
-
-<div id="forgotPasswordModal" class="popup">
-    <div class="popup-content" style="max-width:350px;">
-        <h3 style="text-align:center; color:var(--neon-blue); margin-bottom:10px;"><i class="fas fa-key"></i> استعادة الحساب</h3>
-        <p style="font-size:12px; text-align:center; color:#555; margin-bottom:12px;">أدخل بريدك الإلكتروني وسيتم إرسال رسالة رسمية لتغيير كلمة المرور من سوبابيز.</p>
-        <input type="email" id="resetEmailInput" placeholder="أدخل بريدك الإلكتروني المسجل" class="auth-input" style="margin-bottom:15px;">
-        <div style="display:flex; gap:10px;">
-            <button class="shop-btn" style="flex:1; background:#2ecc71;" onclick="submitForgotPasswordToSupabase()">إرسال الرابط</button>
-            <button class="shop-btn" style="flex:1; background:gray;" onclick="document.getElementById('forgotPasswordModal').style.display='none'">إلغاء</button>
-        </div>
-    </div>
-</div>
-
-<div id="levelMap" class="screen hidden">
-    <h2 style="color: var(--neon-blue); margin: 5px 0;">خريطة مستويات الفاكهة</h2>
-    <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center;">
-        <div class="stat-badge" style="border-color:orange;">🪙 <span id="m-coins">0</span></div>
-        <div class="stat-badge" style="border-color:green;">💵 <span id="m-cash">0</span></div>
-        <div class="stat-badge" onclick="watchAdForCoins()" style="background:#27ae60; color:white; cursor:pointer;"><i class="fas fa-video"></i> 50k مجاناً</div>
-        <div class="stat-badge" onclick="toggleMarket(true)" style="background:#e17055; color:white; cursor:pointer;">🛒 المتجر</div>
-        <div class="stat-badge" onclick="toggleProfile(true)" style="background:#0984e3; color:white; cursor:pointer;">👤 حسابي</div>
-        <div class="stat-badge" onclick="logout()" style="background:#fab1a0; cursor:pointer;">🚪 خروج</div>
-    </div>
-    <div class="map-wrapper" id="mapWrapper">
-        <canvas id="mapCanvas" class="map-path-canvas" width="450" height="3500"></canvas>
-        <div class="map-scroll-container" id="nodesContainer"></div>
-    </div>
-</div>
-
-<div id="game-container" style="position: fixed; inset: 0; display: none;">
-    <div id="hud">
-        <div style="display:flex; gap:5px;">
-            <div class="stat-badge" onclick="exitToMap()" style="cursor:pointer; pointer-events:auto;">🏠 انسحاب</div>
-            <div class="stat-badge" onclick="openGameSettingsModal()" style="cursor:pointer; pointer-events:auto; background:#fdcb6e;"><i class="fas fa-cog"></i> الإعدادات</div>
-            <div class="stat-badge" style="background:#e74c3c; color:white;">❤️ <span id="h-lives">5</span></div>
-            <div class="stat-badge" style="background:#2ecc71; color:white;">🔄 دورة: <span id="h-cycle">1</span></div>
-            <div class="stat-badge" style="background:#9b59b6; color:white;">🎯 هدف: <span id="h-legend">0</span> / <span id="h-score">0</span></div>
-        </div>
-    </div>
-    <canvas id="gameCanvas" style="background:#0f172a; width:100%; height:100%; display:block;"></canvas>
-    <div id="moveJoy" class="joystick-base"><div class="stick" id="moveStick"></div></div>
-    <div id="shootJoy" class="joystick-base"><div class="stick" id="shootStick"></div></div>
-</div>
-
-<div id="marketPopup" class="popup">
-    <div class="popup-content">
-        <h2 style="text-align:center; color:var(--neon-purple); margin-bottom:10px;">🛒 متجر الأسلحة وسكنات النينجا</h2>
-        <div style="font-size:12px; margin-bottom:10px; text-align:center;">رصيد الكاش الحالي: <span id="shop-current-cash" style="color:green; font-weight:bold;">0</span> كاش</div>
-        
-        <h3 style="font-size:14px; border-bottom:1px solid #ddd; padding-bottom:3px;">🔫 ترقية ترسانة الأسلحة:</h3>
-        <div class="shop-grid">
-            <div class="shop-item">
-                <h5>مسدس طلقات سريع</h5>
-                <p style="font-size:10px; color:gray;">سرعة ضرب فائقة فردية</p>
-                <button class="shop-btn" style="margin-top:5px; background:#2ecc71;" onclick="buyItem('weapon', 'fast', 50)">شراء بـ 50 كاش</button>
-            </div>
-            <div class="shop-item">
-                <h5>بندقية ثلاثية الاتجاه</h5>
-                <p style="font-size:10px; color:gray;">تطلق 3 رصاصات معاً</p>
-                <button class="shop-btn" style="margin-top:5px; background:#2ecc71;" onclick="buyItem('weapon', 'triple', 120)">شراء بـ 120 كاش</button>
-            </div>
-        </div>
-        
-        <h3 style="font-size:14px; border-bottom:1px solid #ddd; padding-bottom:3px; margin-top:15px;">🥷 سكنات ومظهر أبطال النينجا النادرة:</h3>
-        <div class="shop-grid" id="ninjaSkinsGrid"></div>
-        <button onclick="toggleMarket(false)" style="width:100%; padding:10px; background:#2d3436; color:white; border:none; margin-top:15px; border-radius:8px;">إغلاق السوق</button>
-    </div>
-</div>
-
-<div id="gameSettingsModal" class="popup" style="z-index: 5000;">
-    <div class="popup-content" style="max-width:350px;">
-        <h3 style="text-align:center; margin-bottom:15px;"><i class="fas fa-sliders-h"></i> إعدادات أزرار وحجم اللعبة</h3>
-        <div class="settings-row">
-            <label>حجم أزرار التحكم (القطر): <span id="val-joySize">90</span>px</label>
-            <input type="range" id="range-joySize" min="60" max="160" value="90" oninput="applyLiveSettings()">
-        </div>
-        <div class="settings-row">
-            <label>شفافية أزرار الاستيك (Opacity): <span id="val-joyOpacity">80</span>%</label>
-            <input type="range" id="range-joyOpacity" min="20" max="100" value="80" oninput="applyLiveSettings()">
-        </div>
-        <div class="settings-row">
-            <label>حجم البطل (المقاتل في المركز): <span id="val-heroSize">20</span>px</label>
-            <input type="range" id="range-heroSize" min="12" max="45" value="20" oninput="applyLiveSettings()">
-        </div>
-        <button class="shop-btn" style="width:100%; padding:10px; margin-top:10px; background:#2d3436;" onclick="closeGameSettingsModal()">تثبيت والعودة للقتال</button>
-    </div>
-</div>
-
-<div id="profilePopup" class="popup">
-    <div class="popup-content" style="text-align: center;">
-        <h2 style="margin-bottom:12px; color:var(--neon-blue);">👤 الحساب الشخصي والمالي</h2>
-        <div style="background:#f8f9fa; padding:12px; border-radius:12px; text-align:right; font-size:12px; display:flex; flex-direction:column; gap:5px;">
-            <div>📧 البريد الإلكتروني: <span id="p-email">-</span></div>
-            <div>🆔 الـ ID الخاص بك: <span id="p-id">-</span></div>
-            <div>📊 ترتيبك الحالي: <span id="p-level" style="color:var(--neon-purple); font-weight:bold;">-</span></div>
-            <div>🪙 رصيد الكوينز: <span id="p-coins" style="color:orange;">0</span></div>
-            <div>💵 رصيد الكاش: <span id="p-cash" style="color:green;">0</span></div>
-        </div>
-        <div style="display: flex; gap: 8px; margin-top: 10px;">
-            <button class="shop-btn" style="flex: 1; background: #2ecc71;" onclick="openCheckModal('إيداع')">إيداع أموال</button>
-            <button class="shop-btn" style="flex: 1; background: #e74c3c;" onclick="openCheckModal('سحب')">سحب أموال</button>
-        </div>
-        <h4 style="text-align:right; margin-top:15px; font-size:13px; color:#555;">📋 سجل حركات الحساب المرجعي:</h4>
-        <div id="ledger" class="ledger-box">لا يوجد عمليات مسجلة حتى الآن.</div>
-        <button onclick="toggleProfile(false)" style="width:100%; padding:10px; background:#2d3436; color:white; border:none; margin-top:10px; border-radius:8px;">موافق</button>
-    </div>
-</div>
-
-<div id="checkModal" class="popup" style="z-index:4500;">
-    <div class="popup-content" style="max-width:340px;">
-        <h4 id="checkModalTitle" style="text-align:center; margin-bottom:15px;">إدخال تفاصيل العملية المالية</h4>
-        <div style="text-align: right; display: flex; flex-direction: column; gap: 3px;">
-            <label style="font-size:11px; font-weight:bold;">الاسم كاملاً:</label>
-            <input type="text" id="opName" class="auth-input" placeholder="أدخل اسمك ثلاثي">
-            
-            <label style="font-size:11px; font-weight:bold;">رقم هاتف العملية:</label>
-            <input type="tel" id="opPhone" class="auth-input" placeholder="رقم المحفظة / الحساب">
-            
-            <label style="font-size:11px; font-weight:bold;">تأكيد رقم الهاتف:</label>
-            <input type="tel" id="opPhoneConfirm" class="auth-input" placeholder="أعد كتابة الرقم للتأكيد">
-            
-            <label style="font-size:11px; font-weight:bold;">القيمة المطلوبة بالجنيه:</label>
-            <input type="number" id="opAmount" class="auth-input" placeholder="0.00">
-        </div>
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="shop-btn" style="flex:1; background:#2ecc71;" onclick="submitCheckTransaction()">إرسال العملية</button>
-            <button class="shop-btn" style="flex:1; background:gray;" onclick="document.getElementById('checkModal').style.display='none'">إلغاء</button>
-        </div>
+<!-- شاشة الإعلان -->
+<div id="adNetworkModal" class="overlay" style="display: none;">
+    <div style="background:#1a1c23; padding:20px; border-radius:20px; text-align:center;">
+        <h2 id="adTitle">نَفِدت محاولاتك!</h2>
+        <div id="adPlacementBox" style="margin: 20px 0;"></div>
+        <p id="adTimer">العداد: 10 ثوانٍ</p>
     </div>
 </div>
 
 <script>
+// الإعدادات والربط
 const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // ضع مفتاحك هنا
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-const TG_TOKEN = "8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo";
-const TG_CHAT_ID = "6190547048"; 
-const TG_CHANNEL_ID = "-1003614080639"; 
+let gameData = { coins: 5000, cash: 100, level: 1, lives: 5 };
+let currentLevel = 1, animationId = null, isPlaying = false;
+let canvas = document.getElementById('gameCanvas');
+let ctx = canvas.getContext('2d');
 
-let currentUser = null, isGuest = false;
-let gameData = { coins: 0, cash: 0, level: 1, lives: 5, purchaseHistory: [], activeSkin: '#0984e3', activeWeapon: 'normal' };
-let currentLevelPlaying = 1;
-let adTimerInterval = null, adTimeLeft = 10, activeTransactionType = '';
-let customSettings = { joySize: 90, joyOpacity: 0.8, heroSize: 20 };
-let adReason = 'coins'; // 'coins' أو 'failed_revive' لإنقاذ اللاعب
-
-const ninjaSkins = [
-    { name: "النينجا الأزرق الأسد", color: "#0984e3", cost: 0 },
-    { name: "النينجا الأحمر الغاضب", color: "#d63031", cost: 20 },
-    { name: "النينجا الأرجواني الظلي", color: "#9b59b6", cost: 40 },
-    { name: "النينجا الذهبي الإمبراطور", color: "#f1c40f", cost: 70 },
-    { name: "النينجا الأخضر السام", color: "#2ecc71", cost: 90 },
-    { name: "النينجا البرتقالي اللهب", color: "#e67e22", cost: 120 }
-];
-
-function buildShopSkins() {
-    const grid = document.getElementById('ninjaSkinsGrid');
-    if(!grid) return;
-    grid.innerHTML = ninjaSkins.map(n => `
-        <div class="shop-item">
-            <h5>${n.name}</h5>
-            <div style="width:40px; height:40px; background:${n.color}; margin:8px auto; border-radius:50%; position:relative; border:2px solid #2d3436; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-                <div style="position:absolute; width:100%; height:12px; background:#2d3436; top:12px; left:0;"></div>
-                <div style="position:absolute; width:5px; height:5px; background:white; border-radius:50%; top:15px; left:12px;"></div>
-                <div style="position:absolute; width:5px; height:5px; background:white; border-radius:50%; top:15px; right:12px;"></div>
-            </div>
-            <button class="shop-btn" style="background:#9b59b6; width:100%; padding:5px; font-size:11px;" onclick="buyItem('skin', '${n.color}', ${n.cost})">
-                ${n.cost === 0 ? 'تفعيل مجاني' : `امتلاك بـ ${n.cost} كاش`}
-            </button>
-        </div>
-    `).join('');
+// تشغيل اللعبة
+function runGame() {
+    isPlaying = true;
+    updateGame();
 }
 
-function revealGame() { document.getElementById('welcomeScreen').style.opacity='0'; setTimeout(()=>{ document.getElementById('welcomeScreen').classList.add('hidden'); document.getElementById('authScreen').classList.remove('hidden'); },400); }
-function startAsGuest() { isGuest = true; document.getElementById('authScreen').classList.add('hidden'); document.getElementById('levelMap').classList.remove('hidden'); buildInfinitePathMap(); updateGlobalUI(); buildShopSkins(); }
+function updateGame() {
+    if (!isPlaying) return;
 
-async function handleAuth(type) {
-    const email = document.getElementById('authEmail').value; const pass = document.getElementById('authPass').value;
-    if(!email || !pass) return alert("اكتب البيانات كامله");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    if(type === 'signup') {
-        const { data: sData, error: sErr } = await supabaseClient.auth.signUp({ email, password: pass });
-        if(sErr) return alert(sErr.message);
-        await supabaseClient.from('players').insert([{ email: email, coins: 5000, cash: 100, level: 1, purchase_history:[] }]);
-        alert("تم التسجيل! فعل إيميلك ثم سجل دخولك.");
+    // منطق الصعوبة: بعد المستوى 3 تزداد السرعة
+    let speedMultiplier = 1 + (Math.max(0, currentLevel - 3) * 0.1);
+    
+    // [هنا يتم رسم اللاعب والفواكه]
+    // مثال: سرعة الفاكهة = 2 * speedMultiplier
+
+    if (gameData.lives > 0) {
+        animationId = requestAnimationFrame(updateGame);
     } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-        if(error) return alert(error.message);
-        currentUser = data.user; 
-        await loadOnlineData();
+        triggerAd();
     }
 }
 
-async function openResetPasswordModal() {
-    document.getElementById('resetEmailInput').value = document.getElementById('authEmail').value;
-    document.getElementById('forgotPasswordModal').style.display = 'flex';
-}
-
-async function submitForgotPasswordToSupabase() {
-    const email = document.getElementById('resetEmailInput').value;
-    if(!email) return alert("يرجى إدخال البريد الإلكتروني أولاً!");
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
-    if(error) alert("خطأ: " + error.message);
-    else { alert("🔒 تم إرسال رسالة استعادة الباسورد لإيميلك."); document.getElementById('forgotPasswordModal').style.display = 'none'; }
-}
-
-async function loadOnlineData() {
-    if(isGuest || !currentUser) return;
-    let { data, error } = await supabaseClient.from('players').select('*').eq('email', currentUser.email).maybeSingle();
-    if(data) {
-        gameData.coins = data.coins ?? 0; 
-        gameData.cash = data.cash ?? 0; 
-        gameData.level = data.level ?? 1;
-        gameData.purchaseHistory = data.purchase_history ?? [];
-    } else {
-        await supabaseClient.from('players').insert([{ email: currentUser.email, coins: 5000, cash: 100, level: 1, purchase_history:[] }]);
-        gameData.level = 1; gameData.coins = 5000; gameData.cash = 100; gameData.purchaseHistory = [];
-    }
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('levelMap').classList.remove('hidden');
-    buildInfinitePathMap(); updateGlobalUI(); buildShopSkins();
-}
-
-function buildInfinitePathMap() {
-    const container = document.getElementById('nodesContainer'); const canvas = document.getElementById('mapCanvas');
-    if(!container || !canvas) return; container.innerHTML = '';
-    const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
-    
-    const currentCycle = Math.floor((gameData.level - 1) / 100) + 1;
-    const points = [];
-    
-    for(let i=1; i<=100; i++) {
-        const globalLvl = ((currentCycle - 1) * 100) + i;
-        const row = Math.floor((i - 1) / 4); const col = (i - 1) % 4;
-        const actualCol = (row % 2 === 0) ? col : (3 - col);
-        const x = 60 + (actualCol * 100); const y = 3400 - (row * 120);
-        points.push({ x, y, globalLvl });
-    }
-    
-    ctx.beginPath(); ctx.strokeStyle = '#b2bec3'; ctx.lineWidth = 10;
-    points.forEach((pt, idx) => { if(idx===0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y); }); ctx.stroke();
-    
-    ctx.beginPath(); ctx.strokeStyle = '#00b894'; ctx.lineWidth = 5;
-    points.forEach((pt, idx) => { if(pt.globalLvl <= gameData.level) { if(idx===0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y); } }); ctx.stroke();
-    
-    const banner = document.createElement('div'); banner.className = 'cycle-banner'; banner.style.top = '3460px';
-    banner.innerText = `🌌 الدورة رقم [ ${currentCycle} ] - الصعوبة وسرعة الفواكه مضاعفة x${currentCycle}`; container.appendChild(banner);
-
-    let focusY = 3400;
-    points.forEach(pt => {
-        const node = document.createElement('div'); node.className = 'level-node';
-        if(pt.globalLvl < gameData.level) { node.classList.add('unlocked'); node.innerHTML = `✓`; }
-        else if(pt.globalLvl === gameData.level) { node.classList.add('current'); node.innerText = pt.globalLvl; focusY = pt.y; }
-        else { node.classList.add('locked'); node.innerHTML = `🔒`; }
-        node.style.left = `${pt.x}px`; node.style.top = `${pt.y}px`;
-        if(pt.globalLvl <= gameData.level) { node.onclick = async () => { await loadOnlineData(); startLevel(pt.globalLvl); }; }
-        container.appendChild(node);
-    });
-    setTimeout(() => { document.getElementById('mapWrapper').scrollTop = focusY - 180; }, 50);
-}
-
-function updateGlobalUI() {
-    document.getElementById('m-coins').innerText = gameData.coins.toLocaleString();
-    document.getElementById('m-cash').innerText = gameData.cash.toLocaleString();
-    document.getElementById('shop-current-cash').innerText = gameData.cash;
-}
-
-function openGameSettingsModal() { document.getElementById('gameSettingsModal').style.display = 'flex'; }
-function closeGameSettingsModal() { document.getElementById('gameSettingsModal').style.display = 'none'; }
-
-function applyLiveSettings() {
-    const size = document.getElementById('range-joySize').value;
-    const opacity = document.getElementById('range-joyOpacity').value;
-    const heroS = document.getElementById('range-heroSize').value;
-    
-    document.getElementById('val-joySize').innerText = size;
-    document.getElementById('val-joyOpacity').innerText = opacity;
-    document.getElementById('val-heroSize').innerText = heroS;
-    
-    customSettings.joySize = parseInt(size);
-    customSettings.joyOpacity = parseFloat(opacity) / 100;
-    customSettings.heroSize = parseInt(heroS);
-    
-    const bases = document.querySelectorAll('.joystick-base');
-    bases.forEach(b => { b.style.width = size + 'px'; b.style.height = size + 'px'; b.style.opacity = customSettings.joyOpacity; });
-}
-
-/* --- محرك اللعبة الحركي --- */
-let canvas, engineCtx, animationId;
-let playerHero = { x: 0, y: 0 }, fruitsArray = [], bulletsArray = [];
-let moveInput = { x: 0, y: 0 }, shootInput = { x: 0, y: 0 };
-let currentScore = 0, targetScoreGoal = 1000;
-let lastShotTime = 0;
-let limbSwingAngle = 0;
-
-function startLevel(lvl) {
-    currentLevelPlaying = lvl;
-    document.getElementById('levelMap').classList.add('hidden');
-    document.getElementById('game-container').style.display = 'block';
-    
-    canvas = document.getElementById('gameCanvas');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    engineCtx = canvas.getContext('2d');
-    
-    const cycle = Math.floor((lvl - 1) / 100) + 1;
-    targetScoreGoal = lvl * 250; 
-    currentScore = 0; gameData.lives = 5;
-    
-    playerHero.x = canvas.width / 2; playerHero.y = canvas.height / 2;
-    fruitsArray = []; bulletsArray = [];
-    limbSwingAngle = 0;
-    
-    document.getElementById('h-legend').innerText = targetScoreGoal;
-    document.getElementById('h-score').innerText = currentScore;
-    document.getElementById('h-cycle').innerText = cycle;
-    document.getElementById('h-lives').innerText = gameData.lives;
-    
-    setupJoystickTouch('moveJoy', (x, y) => { moveInput.x = x; moveInput.y = y; });
-    setupJoystickTouch('shootJoy', (x, y) => { shootInput.x = x; shootInput.y = y; });
-    
-    applyLiveSettings();
-    if(animationId) cancelAnimationFrame(animationId);
-    runGameEngineLoop();
-}
-
-function setupJoystickTouch(id, callback) {
-    const el = document.getElementById(id); const stick = el.querySelector('.stick');
-    const handleTouch = (e) => {
-        const t = e.touches[0]; const rect = el.getBoundingClientRect();
-        const centerX = rect.left + rect.width/2; const centerY = rect.top + rect.height/2;
-        let dx = t.clientX - centerX; let dy = t.clientY - centerY;
-        const dist = Math.sqrt(dx*dx + dy*dy); const maxDist = rect.width/2;
-        if(dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
-        stick.style.transform = `translate(${dx}px, ${dy}px)`;
-        callback(dx/maxDist, dy/maxDist);
-    };
-    el.ontouchstart = handleTouch; el.ontouchmove = handleTouch;
-    el.ontouchend = () => { stick.style.transform = 'translate(0px, 0px)'; callback(0, 0); };
-}
-
-function drawMovingNinja(ctx, x, y, size, color, mx, my) {
-    const isMoving = (mx !== 0 || my !== 0);
-    if(isMoving) limbSwingAngle += 0.25; else limbSwingAngle = 0;
-    const swing = Math.sin(limbSwingAngle) * (size * 0.6);
-
-    ctx.save();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#2d3436';
-    ctx.beginPath(); ctx.arc(x - (size * 0.4), y + size + (isMoving ? swing : 0), size * 0.25, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + (size * 0.4), y + size + (isMoving ? -swing : 0), size * 0.25, 0, Math.PI * 2); ctx.fill();
-
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(x - size - (isMoving ? 2 : 0), y + (size * 0.3) + (isMoving ? -swing : 0), size * 0.22, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + size + (isMoving ? 2 : 0), y + (size * 0.3) + (isMoving ? swing : 0), size * 0.22, 0, Math.PI * 2); ctx.fill();
-
-    ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
-    ctx.shadowColor = color; ctx.shadowBlur = 15; ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5; ctx.stroke();
-
-    ctx.shadowBlur = 0; ctx.fillStyle = '#2d3436'; ctx.fillRect(x - size + 1, y - (size * 0.35), (size * 2) - 2, size * 0.6);
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(x - (size * 0.4), y - (size * 0.05), size * 0.15, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + (size * 0.4), y - (size * 0.05), size * 0.15, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-}
-
-function runGameEngineLoop() {
-    engineCtx.clearRect(0, 0, canvas.width, canvas.height);
-    const cycleFactor = Math.floor((currentLevelPlaying - 1) / 100) + 1;
-    
-    playerHero.x += moveInput.x * 4; playerHero.y += moveInput.y * 4;
-    if(playerHero.x < 10) playerHero.x = 10; if(playerHero.x > canvas.width - 10) playerHero.x = canvas.width - 10;
-    if(playerHero.y < 10) playerHero.y = 10; if(playerHero.y > canvas.height - 10) playerHero.y = canvas.height - 10;
-    
-    drawMovingNinja(engineCtx, playerHero.x, playerHero.y, customSettings.heroSize, gameData.activeSkin, moveInput.x, moveInput.y);
-    
-    const now = Date.now();
-    let fireCooldown = gameData.activeWeapon === 'fast' ? 180 : 350;
-    if((shootInput.x !== 0 || shootInput.y !== 0) && (now - lastShotTime > fireCooldown)) {
-        lastShotTime = now;
-        const angle = Math.atan2(shootInput.y, shootInput.x);
-        if(gameData.activeWeapon === 'triple') {
-            bulletsArray.push({ x: playerHero.x, y: playerHero.y, vx: Math.cos(angle)*7, vy: Math.sin(angle)*7 });
-            bulletsArray.push({ x: playerHero.x, y: playerHero.y, vx: Math.cos(angle-0.2)*7, vy: Math.sin(angle-0.2)*7 });
-            bulletsArray.push({ x: playerHero.x, y: playerHero.y, vx: Math.cos(angle+0.2)*7, vy: Math.sin(angle+0.2)*7 });
-        } else {
-            bulletsArray.push({ x: playerHero.x, y: playerHero.y, vx: Math.cos(angle)*8, vy: Math.sin(angle)*8 });
-        }
-    }
-    
-    bulletsArray.forEach((b, i) => {
-        b.x += b.vx; b.y += b.vy;
-        engineCtx.beginPath(); engineCtx.arc(b.x, b.y, 4, 0, Math.PI*2); engineCtx.fillStyle = '#ff3f34'; engineCtx.fill();
-        if(b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bulletsArray.splice(i, 1);
-    });
-    
-    if(Math.random() < 0.02 + (cycleFactor * 0.005)) {
-        let fx, fy, fvx, fvy; const side = Math.floor(Math.random() * 4);
-        const speed = (1.5 + Math.random() * 2) * (1 + (cycleFactor - 1) * 0.25);
-        if(side === 0) { fx = Math.random()*canvas.width; fy = -20; fvx = (Math.random()-0.5)*2; fvy = speed; }
-        else if(side === 1) { fx = Math.random()*canvas.width; fy = canvas.height+20; fvx = (Math.random()-0.5)*2; fvy = -speed; }
-        else if(side === 2) { fx = -20; fy = Math.random()*canvas.height; fvx = speed; fvy = (Math.random()-0.5)*2; }
-        else { fx = canvas.width+20; fy = Math.random()*canvas.height; fvx = -speed; fvy = (Math.random()-0.5)*2; }
-        const types = ['🍎','🍌','🍓','🍉','🍊'];
-        fruitsArray.push({ x: fx, y: fy, vx: fvx, vy: fvy, emoji: types[Math.floor(Math.random()*types.length)], radius: 15 });
-    }
-    
-    fruitsArray.forEach((f, fi) => {
-        f.x += f.vx; f.y += f.vy;
-        engineCtx.font = "24px Arial"; engineCtx.fillText(f.emoji, f.x - 12, f.y + 8);
-        
-        if(Math.hypot(f.x - playerHero.x, f.y - playerHero.y) < f.radius + customSettings.heroSize) {
-            fruitsArray.splice(fi, 1); gameData.lives--;
-            document.getElementById('h-lives').innerText = gameData.lives;
-            if(gameData.lives <= 0) { cancelAnimationFrame(animationId); handleFailedLivesAdFlow(); return; }
-        }
-        
-        bulletsArray.forEach((b, bi) => {
-            if(Math.hypot(f.x - b.x, f.y - b.y) < f.radius + 4) {
-                fruitsArray.splice(fi, 1); bulletsArray.splice(bi, 1);
-                currentScore += 100; gameData.coins += 50; gameData.cash += 1;
-                document.getElementById('h-score').innerText = currentScore;
-                if(currentScore >= targetScoreGoal) { gameOver(true); return; }
-            }
-        });
-    });
-    
-    if(gameData.lives > 0 && currentScore < targetScoreGoal) { animationId = requestAnimationFrame(runGameEngineLoop); }
-}
-
-// نافذة التنشيط التلقائي لإعلان الوفاة ونفاد الأرواح
-function handleFailedLivesAdFlow() {
-    adReason = 'failed_revive';
-    adTimeLeft = 10;
-    document.getElementById('adTitle').innerText = "💥 نَفِدت محاولاتك! الإعلان منقذ الحياة";
-    document.getElementById('adDescription').innerText = "شاهد الإعلان بالكامل لتحصل على 5 محاولات وتكمل مستواك الحالى، التخطي يعيدك للخلف!";
+// تشغيل الإعلان
+function triggerAd() {
+    isPlaying = false;
+    cancelAnimationFrame(animationId);
     document.getElementById('adNetworkModal').style.display = 'flex';
-    triggerAdsterraLoad();
-}
-
-function triggerAdsterraLoad() {
-    const box = document.getElementById('adPlacementBox'); box.innerHTML = '';
-    const s = document.createElement('script'); s.src = "https://pl30116722.effectivecpmnetwork.com/23/be/d7/23bed7c11e86a84c58177346d89284c0.js"; 
-    box.appendChild(s);
     
-    document.getElementById('skipAdBtn').style.display = 'none';
-    if(adTimerInterval) clearInterval(adTimerInterval);
-    
-    adTimerInterval = setInterval(() => {
-        adTimeLeft--;
-        document.getElementById('adProgressBar').style.width = ((10 - adTimeLeft) / 10) * 100 + '%';
-        document.getElementById('adCountdown').innerText = `متبقي: ${adTimeLeft} ثانية`;
-        if(adTimeLeft <= 5) document.getElementById('skipAdBtn').style.display = 'block';
-        if(adTimeLeft <= 0) {
-            clearInterval(adTimerInterval);
-            document.getElementById('adNetworkModal').style.display = 'none';
-            executeAdRewardSuccess();
+    let timeLeft = 10;
+    const timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('adTimer').innerText = `العداد: ${timeLeft} ثوانٍ`;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            completeAd();
         }
     }, 1000);
 }
 
-// في حال أكمل اللاعب الإعلان بالكامل دون تخطي
-async function executeAdRewardSuccess() {
-    if(adReason === 'failed_revive')
+// استئناف اللعبة بعد الإعلان
+function completeAd() {
+    document.getElementById('adNetworkModal').style.display = 'none';
+    gameData.lives = 5;
+    isPlaying = true;
+    runGame(); // إعادة تشغيل المحرك
+}
+
+// حفظ البيانات
+async function saveData() {
+    await supabaseClient.from('players').update({
+        level: gameData.level,
+        coins: gameData.coins
+    }).eq('id', 'USER_ID'); // تأكد من مطابقة الـ ID
+}
+
+// البدء
+runGame();
+</script>
+</body>
+</html>
