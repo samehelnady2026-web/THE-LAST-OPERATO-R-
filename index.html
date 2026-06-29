@@ -73,11 +73,10 @@
 </head>
 <body>
 
-<!-- شاشة إعلانات Adsterra -->
 <div id="adNetworkModal">
     <div class="ad-container">
         <button id="skipAdBtn" class="skip-ad-btn" onclick="skipAd()">تخطي ومغادرة ✕</button>
-        <h3 style="color: #05c46b; margin-bottom: 5px;"><i class="fas fa-play-circle"></i> إعلان مكافأة مكثف</h3>
+        <h3 id="adTitle" style="color: #05c46b; margin-bottom: 5px;"><i class="fas fa-play-circle"></i> إعلان مكافأة مكثف</h3>
         <p id="adDescription" style="color: #d2dae2; font-size: 12px;">انتظر العداد لشحن 50,000 كوينز مجاناً.</p>
         <div id="adPlacementBox"></div>
         <div id="adCountdown" style="font-size:12px; color:#ffc048; margin-bottom:8px;">متبقي: 10 ثوانٍ</div>
@@ -87,7 +86,6 @@
     </div>
 </div>
 
-<!-- واجهة البداية والترحيب -->
 <div id="welcomeScreen">
     <div class="hero-center">
         <div class="vortex-container">
@@ -98,15 +96,12 @@
     </div>
 </div>
 
-<!-- واجهة الحساب والتسجيل -->
 <div id="authScreen" class="screen hidden">
     <h2 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900;">THE LAST OPERATOR</h2>
     <div class="auth-form">
         <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
         <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input">
-        
         <div class="forgot-link" onclick="openResetPasswordModal()">نسيت كلمة المرور؟</div>
-        
         <button class="shop-btn" style="padding:12px;" onclick="handleAuth('login')">تسجيل دخول</button>
         <button class="shop-btn" style="padding:12px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
         <div style="text-align: center; color: #636e72; font-size:12px;">أو</div>
@@ -114,7 +109,6 @@
     </div>
 </div>
 
-<!-- نافذة استعادة كلمة المرور عبر Supabase -->
 <div id="forgotPasswordModal" class="popup">
     <div class="popup-content" style="max-width:350px;">
         <h3 style="text-align:center; color:var(--neon-blue); margin-bottom:10px;"><i class="fas fa-key"></i> استعادة الحساب</h3>
@@ -127,7 +121,6 @@
     </div>
 </div>
 
-<!-- خريطة مستويات الفواكه المتعرجة -->
 <div id="levelMap" class="screen hidden">
     <h2 style="color: var(--neon-blue); margin: 5px 0;">خريطة مستويات الفاكهة</h2>
     <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center;">
@@ -144,7 +137,6 @@
     </div>
 </div>
 
-<!-- واجهة ساحة اللعب الحية -->
 <div id="game-container" style="position: fixed; inset: 0; display: none;">
     <div id="hud">
         <div style="display:flex; gap:5px;">
@@ -160,7 +152,6 @@
     <div id="shootJoy" class="joystick-base"><div class="stick" id="shootStick"></div></div>
 </div>
 
-<!-- متجر السكنات والأسلحة - تحديث الأبطال النينجا -->
 <div id="marketPopup" class="popup">
     <div class="popup-content">
         <h2 style="text-align:center; color:var(--neon-purple); margin-bottom:10px;">🛒 متجر الأسلحة وسكنات النينجا</h2>
@@ -181,19 +172,16 @@
         </div>
         
         <h3 style="font-size:14px; border-bottom:1px solid #ddd; padding-bottom:3px; margin-top:15px;">🥷 سكنات ومظهر أبطال النينجا النادرة:</h3>
-        <div class="shop-grid" id="ninjaSkinsGrid">
-            <!-- سيتم بناؤها تلقائياً بـ 6 شخصيات نينجا بألوان مختلفة -->
-        </div>
+        <div class="shop-grid" id="ninjaSkinsGrid"></div>
         <button onclick="toggleMarket(false)" style="width:100%; padding:10px; background:#2d3436; color:white; border:none; margin-top:15px; border-radius:8px;">إغلاق السوق</button>
     </div>
 </div>
 
-<!-- لوحة التحكم من الترس -->
 <div id="gameSettingsModal" class="popup" style="z-index: 5000;">
     <div class="popup-content" style="max-width:350px;">
         <h3 style="text-align:center; margin-bottom:15px;"><i class="fas fa-sliders-h"></i> إعدادات أزرار وحجم اللعبة</h3>
         <div class="settings-row">
-            <label>حجم أزرار الاستيك التحكم (القطر): <span id="val-joySize">90</span>px</label>
+            <label>حجم أزرار التحكم (القطر): <span id="val-joySize">90</span>px</label>
             <input type="range" id="range-joySize" min="60" max="160" value="90" oninput="applyLiveSettings()">
         </div>
         <div class="settings-row">
@@ -208,7 +196,6 @@
     </div>
 </div>
 
-<!-- الصفحة الشخصية المحسنة بجدول المراجعة -->
 <div id="profilePopup" class="popup">
     <div class="popup-content" style="text-align: center;">
         <h2 style="margin-bottom:12px; color:var(--neon-blue);">👤 الحساب الشخصي والمالي</h2>
@@ -223,15 +210,12 @@
             <button class="shop-btn" style="flex: 1; background: #2ecc71;" onclick="openCheckModal('إيداع')">إيداع أموال</button>
             <button class="shop-btn" style="flex: 1; background: #e74c3c;" onclick="openCheckModal('سحب')">سحب أموال</button>
         </div>
-        
         <h4 style="text-align:right; margin-top:15px; font-size:13px; color:#555;">📋 سجل حركات الحساب المرجعي:</h4>
         <div id="ledger" class="ledger-box">لا يوجد عمليات مسجلة حتى الآن.</div>
-        
         <button onclick="toggleProfile(false)" style="width:100%; padding:10px; background:#2d3436; color:white; border:none; margin-top:10px; border-radius:8px;">موافق</button>
     </div>
 </div>
 
-<!-- واجهة إدخال بيانات العملية المالية المحدثة كلياً -->
 <div id="checkModal" class="popup" style="z-index:4500;">
     <div class="popup-content" style="max-width:340px;">
         <h4 id="checkModalTitle" style="text-align:center; margin-bottom:15px;">إدخال تفاصيل العملية المالية</h4>
@@ -269,8 +253,8 @@ let gameData = { coins: 0, cash: 0, level: 1, lives: 5, purchaseHistory: [], act
 let currentLevelPlaying = 1;
 let adTimerInterval = null, adTimeLeft = 10, activeTransactionType = '';
 let customSettings = { joySize: 90, joyOpacity: 0.8, heroSize: 20 };
+let adReason = 'coins'; // 'coins' أو 'failed_revive' لإنقاذ اللاعب
 
-// قائمة سكنات النينجا بالأيقونات الملونة المطلوبة
 const ninjaSkins = [
     { name: "النينجا الأزرق الأسد", color: "#0984e3", cost: 0 },
     { name: "النينجا الأحمر الغاضب", color: "#d63031", cost: 20 },
@@ -286,11 +270,8 @@ function buildShopSkins() {
     grid.innerHTML = ninjaSkins.map(n => `
         <div class="shop-item">
             <h5>${n.name}</h5>
-            <!-- أيقونة نينجا دائرية ملونة ومحاطة بوشاح حول الأعين -->
             <div style="width:40px; height:40px; background:${n.color}; margin:8px auto; border-radius:50%; position:relative; border:2px solid #2d3436; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-                <!-- غطاء أعين النينجا الأسود الشهير -->
                 <div style="position:absolute; width:100%; height:12px; background:#2d3436; top:12px; left:0;"></div>
-                <!-- أعين النينجا البيضاء الحادة الحية داخل العصبة -->
                 <div style="position:absolute; width:5px; height:5px; background:white; border-radius:50%; top:15px; left:12px;"></div>
                 <div style="position:absolute; width:5px; height:5px; background:white; border-radius:50%; top:15px; right:12px;"></div>
             </div>
@@ -311,11 +292,7 @@ async function handleAuth(type) {
     if(type === 'signup') {
         const { data: sData, error: sErr } = await supabaseClient.auth.signUp({ email, password: pass });
         if(sErr) return alert(sErr.message);
-        
-        let { data: exist } = await supabaseClient.from('players').select('*').eq('email', email).maybeSingle();
-        if(!exist) {
-            await supabaseClient.from('players').insert([{ email: email, coins: 5000, cash: 100, level: 1, purchase_history:[] }]);
-        }
+        await supabaseClient.from('players').insert([{ email: email, coins: 5000, cash: 100, level: 1, purchase_history:[] }]);
         alert("تم التسجيل! فعل إيميلك ثم سجل دخولك.");
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
@@ -339,12 +316,13 @@ async function submitForgotPasswordToSupabase() {
 }
 
 async function loadOnlineData() {
+    if(isGuest || !currentUser) return;
     let { data, error } = await supabaseClient.from('players').select('*').eq('email', currentUser.email).maybeSingle();
     if(data) {
-        gameData.coins = data.coins || 0; 
-        gameData.cash = data.cash || 0; 
-        gameData.level = data.level || 1;
-        gameData.purchaseHistory = data.purchase_history || [];
+        gameData.coins = data.coins ?? 0; 
+        gameData.cash = data.cash ?? 0; 
+        gameData.level = data.level ?? 1;
+        gameData.purchaseHistory = data.purchase_history ?? [];
     } else {
         await supabaseClient.from('players').insert([{ email: currentUser.email, coins: 5000, cash: 100, level: 1, purchase_history:[] }]);
         gameData.level = 1; gameData.coins = 5000; gameData.cash = 100; gameData.purchaseHistory = [];
@@ -386,7 +364,7 @@ function buildInfinitePathMap() {
         else if(pt.globalLvl === gameData.level) { node.classList.add('current'); node.innerText = pt.globalLvl; focusY = pt.y; }
         else { node.classList.add('locked'); node.innerHTML = `🔒`; }
         node.style.left = `${pt.x}px`; node.style.top = `${pt.y}px`;
-        if(pt.globalLvl <= gameData.level) { node.onclick = () => startLevel(pt.globalLvl); }
+        if(pt.globalLvl <= gameData.level) { node.onclick = async () => { await loadOnlineData(); startLevel(pt.globalLvl); }; }
         container.appendChild(node);
     });
     setTimeout(() => { document.getElementById('mapWrapper').scrollTop = focusY - 180; }, 50);
@@ -418,13 +396,13 @@ function applyLiveSettings() {
     bases.forEach(b => { b.style.width = size + 'px'; b.style.height = size + 'px'; b.style.opacity = customSettings.joyOpacity; });
 }
 
-/* --- محرك اللعبة المحسن ليدين وقدمين متحركتين --- */
+/* --- محرك اللعبة الحركي --- */
 let canvas, engineCtx, animationId;
 let playerHero = { x: 0, y: 0 }, fruitsArray = [], bulletsArray = [];
 let moveInput = { x: 0, y: 0 }, shootInput = { x: 0, y: 0 };
 let currentScore = 0, targetScoreGoal = 1000;
 let lastShotTime = 0;
-let limbSwingAngle = 0; // زاوية حركة الأطراف الترددية أثناء المشي
+let limbSwingAngle = 0;
 
 function startLevel(lvl) {
     currentLevelPlaying = lvl;
@@ -436,8 +414,7 @@ function startLevel(lvl) {
     engineCtx = canvas.getContext('2d');
     
     const cycle = Math.floor((lvl - 1) / 100) + 1;
-    const internalLvl = ((lvl - 1) % 100) + 1;
-    targetScoreGoal = internalLvl * 300;
+    targetScoreGoal = lvl * 250; 
     currentScore = 0; gameData.lives = 5;
     
     playerHero.x = canvas.width / 2; playerHero.y = canvas.height / 2;
@@ -472,58 +449,28 @@ function setupJoystickTouch(id, callback) {
     el.ontouchend = () => { stick.style.transform = 'translate(0px, 0px)'; callback(0, 0); };
 }
 
-// دالة رسم النينجا الكامل بالأطراف المتحركة
 function drawMovingNinja(ctx, x, y, size, color, mx, my) {
     const isMoving = (mx !== 0 || my !== 0);
-    
-    if(isMoving) {
-        // زيادة سرعة تأرجح الأيدي والأرجل تدريجياً مع الحركة
-        limbSwingAngle += 0.25;
-    } else {
-        // إرجاع الأطراف لوضع السكون الثابت عند التوقف
-        limbSwingAngle = 0;
-    }
-
+    if(isMoving) limbSwingAngle += 0.25; else limbSwingAngle = 0;
     const swing = Math.sin(limbSwingAngle) * (size * 0.6);
 
     ctx.save();
-    // إزالة توهج الظلال للأطراف لمنع البطء
     ctx.shadowBlur = 0;
-
-    // 1. رسم القدمين (تحت الرداء)
     ctx.fillStyle = '#2d3436';
-    // قدم يسرى وقدم يمنى يتأرجحان بشكل عكسي
     ctx.beginPath(); ctx.arc(x - (size * 0.4), y + size + (isMoving ? swing : 0), size * 0.25, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(x + (size * 0.4), y + size + (isMoving ? -swing : 0), size * 0.25, 0, Math.PI * 2); ctx.fill();
 
-    // 2. رسم اليدين (على الجانبين)
     ctx.fillStyle = color;
     ctx.beginPath(); ctx.arc(x - size - (isMoving ? 2 : 0), y + (size * 0.3) + (isMoving ? -swing : 0), size * 0.22, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(x + size + (isMoving ? 2 : 0), y + (size * 0.3) + (isMoving ? swing : 0), size * 0.22, 0, Math.PI * 2); ctx.fill();
 
-    // 3. رسم الرأس والوشاح الدائري الأساسي المحسن للإصدار
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+    ctx.shadowColor = color; ctx.shadowBlur = 15; ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5; ctx.stroke();
 
-    // إعادة التوهج النيون للرأس فقط لتوفير الأداء والجمالية
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 15;
-    ctx.strokeStyle = '#111';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // 4. رسم غطاء النينجا الأسود (الوشاح حول الأعين)
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#2d3436';
-    ctx.fillRect(x - size + 1, y - (size * 0.35), (size * 2) - 2, size * 0.6);
-
-    // 5. رسم أعين النينجا الحادة البيضاء الساطعة داخله
+    ctx.shadowBlur = 0; ctx.fillStyle = '#2d3436'; ctx.fillRect(x - size + 1, y - (size * 0.35), (size * 2) - 2, size * 0.6);
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(x - (size * 0.4), y - (size * 0.05), size * 0.15, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(x + (size * 0.4), y - (size * 0.05), size * 0.15, 0, Math.PI * 2); ctx.fill();
-    
     ctx.restore();
 }
 
@@ -535,7 +482,6 @@ function runGameEngineLoop() {
     if(playerHero.x < 10) playerHero.x = 10; if(playerHero.x > canvas.width - 10) playerHero.x = canvas.width - 10;
     if(playerHero.y < 10) playerHero.y = 10; if(playerHero.y > canvas.height - 10) playerHero.y = canvas.height - 10;
     
-    // استدعاء دالة النينجا المطور مع تمرير قيم الجويستيك لتفعيل حركة الأطراف الحية
     drawMovingNinja(engineCtx, playerHero.x, playerHero.y, customSettings.heroSize, gameData.activeSkin, moveInput.x, moveInput.y);
     
     const now = Date.now();
@@ -559,15 +505,12 @@ function runGameEngineLoop() {
     });
     
     if(Math.random() < 0.02 + (cycleFactor * 0.005)) {
-        let fx, fy, fvx, fvy;
-        const side = Math.floor(Math.random() * 4);
+        let fx, fy, fvx, fvy; const side = Math.floor(Math.random() * 4);
         const speed = (1.5 + Math.random() * 2) * (1 + (cycleFactor - 1) * 0.25);
-        
         if(side === 0) { fx = Math.random()*canvas.width; fy = -20; fvx = (Math.random()-0.5)*2; fvy = speed; }
         else if(side === 1) { fx = Math.random()*canvas.width; fy = canvas.height+20; fvx = (Math.random()-0.5)*2; fvy = -speed; }
         else if(side === 2) { fx = -20; fy = Math.random()*canvas.height; fvx = speed; fvy = (Math.random()-0.5)*2; }
         else { fx = canvas.width+20; fy = Math.random()*canvas.height; fvx = -speed; fvy = (Math.random()-0.5)*2; }
-        
         const types = ['🍎','🍌','🍓','🍉','🍊'];
         fruitsArray.push({ x: fx, y: fy, vx: fvx, vy: fvy, emoji: types[Math.floor(Math.random()*types.length)], radius: 15 });
     }
@@ -576,11 +519,10 @@ function runGameEngineLoop() {
         f.x += f.vx; f.y += f.vy;
         engineCtx.font = "24px Arial"; engineCtx.fillText(f.emoji, f.x - 12, f.y + 8);
         
-        let distToHero = Math.hypot(f.x - playerHero.x, f.y - playerHero.y);
-        if(distToHero < f.radius + customSettings.heroSize) {
+        if(Math.hypot(f.x - playerHero.x, f.y - playerHero.y) < f.radius + customSettings.heroSize) {
             fruitsArray.splice(fi, 1); gameData.lives--;
             document.getElementById('h-lives').innerText = gameData.lives;
-            if(gameData.lives <= 0) { gameOver(false); return; }
+            if(gameData.lives <= 0) { cancelAnimationFrame(animationId); handleFailedLivesAdFlow(); return; }
         }
         
         bulletsArray.forEach((b, bi) => {
@@ -591,127 +533,42 @@ function runGameEngineLoop() {
                 if(currentScore >= targetScoreGoal) { gameOver(true); return; }
             }
         });
-        
-        if(f.x < -40 || f.x > canvas.width + 40 || f.y < -40 || f.y > canvas.height + 40) { fruitsArray.splice(fi, 1); }
     });
     
     if(gameData.lives > 0 && currentScore < targetScoreGoal) { animationId = requestAnimationFrame(runGameEngineLoop); }
 }
 
-async function gameOver(isWin) {
-    cancelAnimationFrame(animationId);
-    if(isWin) {
-        confetti({ particleCount: 80, spread: 60 });
-        alert(`🎉 انتصار ساحق! تم إنهاء المستوى ${currentLevelPlaying} وحصد الجوائز!`);
-        if(currentLevelPlaying === gameData.level) { gameData.level++; await saveData(); }
-    } else {
-        alert("💥 لقد نفذت أرواحك! حاول مجدداً بترقية سلاحك ومظهرك.");
-    }
-    exitToMap();
+// نافذة التنشيط التلقائي لإعلان الوفاة ونفاد الأرواح
+function handleFailedLivesAdFlow() {
+    adReason = 'failed_revive';
+    adTimeLeft = 10;
+    document.getElementById('adTitle').innerText = "💥 نَفِدت محاولاتك! الإعلان منقذ الحياة";
+    document.getElementById('adDescription').innerText = "شاهد الإعلان بالكامل لتحصل على 5 محاولات وتكمل مستواك الحالى، التخطي يعيدك للخلف!";
+    document.getElementById('adNetworkModal').style.display = 'flex';
+    triggerAdsterraLoad();
 }
 
-function exitToMap() {
-    cancelAnimationFrame(animationId);
-    document.getElementById('game-container').style.display = 'none';
-    document.getElementById('levelMap').classList.remove('hidden');
-    buildInfinitePathMap(); updateGlobalUI();
-}
-
-function toggleMarket(s) { document.getElementById('marketPopup').style.display = s?'flex':'none'; updateGlobalUI(); }
-function buyItem(type, val, cost) {
-    if(gameData.cash < cost) return alert("ليس لديك كاش كافي!");
-    gameData.cash -= cost;
-    if(type === 'skin') { gameData.activeSkin = val; alert("تم تفعيل النينجا المختار بنجاح!"); }
-    else if(type === 'weapon') { gameData.activeWeapon = val; alert("تم تزويدك بالسلاح الجديد."); }
-    saveData(); toggleMarket(false); updateGlobalUI();
-}
-
-function toggleProfile(show) {
-    document.getElementById('profilePopup').style.display = show ? 'flex' : 'none';
-    if(currentUser) {
-        document.getElementById('p-email').innerText = currentUser.email; 
-        document.getElementById('p-id').innerText = currentUser.id;
-        document.getElementById('p-level').innerText = "المستوى الإجمالي الحالي " + gameData.level;
-        document.getElementById('p-coins').innerText = gameData.coins.toLocaleString() + " كوينز";
-        document.getElementById('p-cash').innerText = gameData.cash.toLocaleString() + " كاش";
-        renderLedger();
-    }
-}
-
-function openCheckModal(type) {
-    if(isGuest) return alert("حساب الضيف محظور مالياً.");
-    if(type==='سحب') {
-        const depositOk = gameData.purchaseHistory.some(i => i.type==='إإيداع' || i.type==='إيداع');
-        if(!depositOk) return alert("❌ السحب مرفوض! يجب إجراء إيداع أولاً لتفعيل السحب.");
-    }
-    activeTransactionType = type;
-    document.getElementById('checkModalTitle').innerText = "طلب عملية: " + type;
-    document.getElementById('opName').value = '';
-    document.getElementById('opPhone').value = '';
-    document.getElementById('opPhoneConfirm').value = '';
-    document.getElementById('opAmount').value = '';
-    document.getElementById('checkModal').style.display='flex';
-}
-
-async function submitCheckTransaction() {
-    const name = document.getElementById('opName').value;
-    const phone = document.getElementById('opPhone').value;
-    const phoneConfirm = document.getElementById('opPhoneConfirm').value;
-    const amount = document.getElementById('opAmount').value;
-    
-    if(!name || !phone || !phoneConfirm || !amount) return alert("الرجاء ملء جميع الحقول المطلوبة!");
-    if(phone !== phoneConfirm) return alert("خطأ! رقم الهاتف لا يطابق تأكيد الهاتف.");
-    
-    const newTransaction = { 
-        name: name, 
-        type: activeTransactionType, 
-        amount: amount, 
-        phone: phone, 
-        date: new Date().toLocaleString('ar-EG') 
-    };
-    
-    gameData.purchaseHistory.push(newTransaction); 
-    await saveData(); 
-    document.getElementById('checkModal').style.display='none';
-    
-    const botMsg = `⚠️ معاملة مالية جديدة ⚠️\n\n▪️ الاسم: ${name}\n▪️ رقم هاتف العملية: ${phone}\n▪️ تأكيد الهاتف: ${phoneConfirm}\n▪️ القيمة: ${amount} جنيه\n▪️ العملية: ${activeTransactionType}\n▪️ بريد الحساب: ${currentUser.email}`;
-    const channelMsg = `🔔 إشعار منصة اللعبة 🔔\n\n▪️ الاسم: ${name.split(' ')[0]}***\n▪️ العملية: طلب ${activeTransactionType} بنجاح`;
-    
-    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:TG_CHAT_ID, text:botMsg}) });
-    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:TG_CHANNEL_ID, text:channelMsg}) });
-    
-    alert("تم تسجيل المعاملة في حسابك بنجاح وجاري مراجعة الطلب!");
-    renderLedger();
-}
-
-function renderLedger() {
-    const ledgerBox = document.getElementById('ledger');
-    if(gameData.purchaseHistory.length === 0) {
-        ledgerBox.innerHTML = "لا يوجد عمليات مسجلة حتى الآن.";
-        return;
-    }
-    ledgerBox.innerHTML = gameData.purchaseHistory.map(i => `
-        <div class="ledger-item">
-            <span>${i.type === 'إيداع' ? '🟢 إيداع' : '🔴 سحب'}: <b>${i.amount} ج</b></span>
-            <span style="font-size:10px; color:gray;">${i.date.split(' ')[0]}</span>
-        </div>
-    `).join('');
-}
-
-function watchAdForCoins() {
-    adTimeLeft = 10; document.getElementById('adNetworkModal').style.display='flex';
+function triggerAdsterraLoad() {
     const box = document.getElementById('adPlacementBox'); box.innerHTML = '';
-    const s = document.createElement('script'); s.src="https://pl30116722.effectivecpmnetwork.com/23/be/d7/23bed7c11e86a84c58177346d89284c0.js"; box.appendChild(s);
+    const s = document.createElement('script'); s.src = "https://pl30116722.effectivecpmnetwork.com/23/be/d7/23bed7c11e86a84c58177346d89284c0.js"; 
+    box.appendChild(s);
+    
+    document.getElementById('skipAdBtn').style.display = 'none';
+    if(adTimerInterval) clearInterval(adTimerInterval);
+    
     adTimerInterval = setInterval(() => {
-        adTimeLeft--; document.getElementById('adProgressBar').style.width = ((10-adTimeLeft)/10)*100+'%';
-        document.getElementById('adCountdown').innerText=`متبقي: ${adTimeLeft} ثانية`;
-        if(adTimeLeft<=5) document.getElementById('skipAdBtn').style.display='block';
-        if(adTimeLeft<=0) { clearInterval(adTimerInterval); document.getElementById('adNetworkModal').style.display='none'; gameData.coins+=50000; updateGlobalUI(); saveData(); }
-    },1000);
+        adTimeLeft--;
+        document.getElementById('adProgressBar').style.width = ((10 - adTimeLeft) / 10) * 100 + '%';
+        document.getElementById('adCountdown').innerText = `متبقي: ${adTimeLeft} ثانية`;
+        if(adTimeLeft <= 5) document.getElementById('skipAdBtn').style.display = 'block';
+        if(adTimeLeft <= 0) {
+            clearInterval(adTimerInterval);
+            document.getElementById('adNetworkModal').style.display = 'none';
+            executeAdRewardSuccess();
+        }
+    }, 1000);
 }
-function skipAd() { clearInterval(adTimerInterval); document.getElementById('adNetworkModal').style.display='none'; }
-async function saveData() { if(!isGuest && currentUser) await supabaseClient.from('players').update({ coins: gameData.coins, cash: gameData.cash, level: gameData.level, purchase_history: gameData.purchaseHistory }).eq('email', currentUser.email); }
-function logout() { location.reload(); }
-</script>
-</body>
-</html>
+
+// في حال أكمل اللاعب الإعلان بالكامل دون تخطي
+async function executeAdRewardSuccess() {
+    if(adReason === 'failed_revive')
