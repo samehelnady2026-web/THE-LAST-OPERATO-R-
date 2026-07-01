@@ -2,167 +2,255 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>دخول الأدمن - THE LAST OPERATOR</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الأوبرايتور - Ninja Saga</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --accent: #00d2ff; --bg: #0f172a; }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        
-        /* شاشة القفل */
-        #lock-screen { text-align: center; background: #1e293b; padding: 40px; border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        input[type="password"] { padding: 12px; border-radius: 8px; border: none; width: 200px; text-align: center; font-size: 1.2rem; margin-bottom: 15px; }
-        
-        /* محتوى الأدمن (مخفي في البداية) */
-        #admin-content { display: none; width: 95%; max-width: 1200px; height: 90vh; overflow-y: auto; background: #1e293b; padding: 20px; border-radius: 15px; }
-        
-        .hidden { display: none !important; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: center; font-size: 13px; }
-        button { cursor: pointer; padding: 8px 15px; border-radius: 6px; border: none; font-weight: bold; }
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-save { background: #2ecc71; color: white; }
-        input[type="number"] { padding: 6px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 5px; text-align: center; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0984e3;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* تصميم زر التحميل الذكي */
+        #installBtn {
+            display: none; /* مخفي افتراضياً ويظهر فقط إذا كان المتصفح يدعم التثبيت واللعبة غير محملة */
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #installBtn:hover {
+            background-color: #27ae60;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #dfe6e9;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .btn-success { background-color: #2ecc71; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        .btn-primary { background-color: #3498db; color: white; }
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div id="lock-screen">
-    <h2 style="color: var(--accent)">لوحة التحكم المحمية 🛡️</h2>
-    <p>أدخل كلمة مرور الأدمن للمتابعة</p>
-    <input type="password" id="admin-pass" placeholder="****">
-    <br>
-    <button class="btn-primary" onclick="checkPass()">دخول 🔓</button>
-</div>
+<div class="container">
+    <header>
+        <h2><i class="fas fa-user-shield"></i> لوحة تحكم الـ Operator (إدارة السحب والإيداع)</h2>
+        <button id="installBtn"><i class="fas fa-download"></i> تحميل التطبيق على الجهاز</button>
+    </header>
 
-<div id="admin-content">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h1>لوحة الإدارة اليدوية الفورية 🛠️</h1>
-        <button class="btn-primary" onclick="loadData()">تحديث القائمة 🔄</button>
+    <div class="card">
+        <h3><i class="fas fa-users"></i> قائمة اللاعبين والطلبات الحالية</h3>
+        <p>ملاحظة: تعديل الرصيد هنا يتم حفظه فوراً في قاعدة البيانات ويظهر للاعب عند دخوله أو فوزه بالمستوى التالي.</p>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>البريد الإلكتروني</th>
+                        <th>المستوى الأقصى</th>
+                        <th>الذهب (Coins)</th>
+                        <th>الكاش الحالي</th>
+                        <th>آخر طلب شحن</th>
+                        <th>آخر طلب سحب</th>
+                        <th>إجراءات مالية</th>
+                    </tr>
+                </thead>
+                <tbody id="playersTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center;">جاري تحميل بيانات اللاعبين من Supabase...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div id="msg" style="color: var(--accent); margin: 10px 0;"></div>
-    <table>
-        <thead>
-            <tr>
-                <th>ID اللاعب</th>
-                <th>البريد الإلكتروني</th>
-                <th>المستوى الحالي</th>
-                <th>الرصيد (🪙 كوينز)</th>
-                <th>الرصيد (💵 كاش)</th>
-                <th>إجراء</th>
-            </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-    </table>
 </div>
 
 <script>
-    // --- إعدادات الربط بقاعدة البيانات والسر ---
-    const PASS_KEY = "500500"; 
-    const URL = "https://ctnuuvdakmqpbuzhrsos.supabase.co";
-    const KEY = "sb_publishable_1FObDLbOBvb3CBqfCOOQkw_2p6v1ObQ";
-    const supabaseAdmin = supabase.createClient(URL, KEY);
+    // 1. إعداد ربط Supabase (استبدل القيم ببيانات مشروعك الحقيقية)
+    const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
+    const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"; 
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // قائمة تخزين مؤقت لبيانات اللاعبين لمقارنة التغييرات وتوثيقها بالسجل
-    let cachedPlayers = {};
-
-    function checkPass() {
-        const input = document.getElementById('admin-pass').value;
-        if (input === PASS_KEY) {
-            document.getElementById('lock-screen').classList.add('hidden');
-            document.getElementById('admin-content').style.display = 'block';
-            loadData();
-        } else {
-            alert("كلمة المرور خاطئة! ❌");
-        }
-    }
-
-    async function loadData() {
-        const msg = document.getElementById('msg');
-        msg.innerText = "جاري جلب بيانات اللاعبين من السيرفر...";
-        
-        // جلب البيانات من الجدول
-        const { data, error } = await supabaseAdmin.from('players').select('*');
+    // 2. دالة جلب وعرض بيانات اللاعبين للـ Operator
+    async function fetchPlayersData() {
+        const { data: players, error } = await supabase
+            .from('players')
+            .select('*')
+            .order('created_at', { ascending: false });
 
         if (error) {
-            msg.innerText = "خطأ في الاتصال: " + error.message;
+            console.error("خطأ في جلب البيانات:", error.message);
             return;
         }
 
-        const tbody = document.getElementById('rows');
+        const tbody = document.getElementById('playersTableBody');
         tbody.innerHTML = '';
-        cachedPlayers = {}; // إعادة تعيين الكاش
 
-        data.forEach(p => {
-            // حفظ نسخة أصلية لمقارنتها عند الحفظ لمعرفة ما إذا قام الآدمن بزيادة أو نقص الرصيد
-            cachedPlayers[p.id] = p;
-
+        players.forEach(player => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="font-family: monospace; color: #94a3b8;">${p.id}</td>
-                <td>${p.email || 'لاعب ضيف'}</td>
-                <td><input type="number" style="width:60px" id="lv-${p.id}" value="${p.max_level || p.level || 1}"></td>
-                <td><input type="number" style="width:100px" id="co-${p.id}" value="${p.coins || 0}"></td>
-                <td><input type="number" style="width:100px" id="ca-${p.id}" value="${p.cash || 0}"></td>
-                <td><button class="btn-save" onclick="updatePlayer('${p.id}')">تطبيق وحفظ ✅</button></td>
+                <td><strong>${player.email}</strong></td>
+                <td><span style="color:#0984e3; font-weight:bold;">${player.max_level}</span></td>
+                <td>${player.coins}</td>
+                <td><span style="color:#2ecc71; font-weight:bold;">${player.cash} كاش</span></td>
+                <td style="font-size: 13px; color: #666;">${player.last_charge_req || 'لا يوجد'}</td>
+                <td style="font-size: 13px; color: #e74c3c;">${player.last_withdraw_req || 'لا يوجد'}</td>
+                <td>
+                    <input type="number" id="amount-${player.id}" placeholder="المبلغ" value="100">
+                    <button class="btn btn-success" onclick="updateCash('${player.email}', ${player.cash}, 'add', ${player.id})">إيداع</button>
+                    <button class="btn btn-danger" onclick="updateCash('${player.email}', ${player.cash}, 'sub', ${player.id})">خصم/سحب</button>
+                    <button class="btn btn-primary" onclick="clearRequests('${player.email}')">تصفير الطلبات</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
-        msg.innerText = "تم تحديث كافة البيانات بنجاح المباشر.";
     }
 
-    async function updatePlayer(id) {
-        const msg = document.getElementById('msg');
-        const oldData = cachedPlayers[id];
-
-        // قراءة القيم الجديدة المدخلة يدوياً من الأدمن
-        const nextLvl = parseInt(document.getElementById(`lv-${id}`).value) || 1;
-        const nextCoins = parseInt(document.getElementById(`co-${id}`).value) || 0;
-        const nextCash = parseInt(document.getElementById(`ca-${id}`).value) || 0;
-
-        let currentHistory = oldData.purchase_history || [];
-
-        // 🧠 المقارنة الذكية لمعرفة نوع العملية (شحن أم خصم) لإضافتها في سجل المستخدم
-        if (nextCoins !== (oldData.coins || 0)) {
-            const diff = nextCoins - (oldData.coins || 0);
-            const statusSymbol = diff > 0 ? "✅ تعديل إداري" : "🛑 خصم إداري";
-            currentHistory.unshift({
-                name: `${statusSymbol}: ${diff > 0 ? '+' : ''}${diff.toLocaleString()} كوينز`,
-                date: new Date().toLocaleString('ar-EG'),
-                cost: "لوحة التحكم"
-            });
+    // 3. دالة تعديل الكاش (إيداع أو سحب يدوياً من الـ Operator)
+    async function updateCash(email, currentCash, action, playerId) {
+        const inputAmount = parseInt(document.getElementById(`amount-${playerId}`).value);
+        if (isNaN(inputAmount) || inputAmount <= 0) {
+            alert("يرجى إدخال مبلغ صحيح!");
+            return;
         }
 
-        if (nextCash !== (oldData.cash || 0)) {
-            const diff = nextCash - (oldData.cash || 0);
-            const statusSymbol = diff > 0 ? "✅ تعديل إداري" : "🛑 خصم إداري";
-            currentHistory.unshift({
-                name: `${statusSymbol}: ${diff > 0 ? '+' : ''}${diff.toLocaleString()} كاش`,
-                date: new Date().toLocaleString('ar-EG'),
-                cost: "لوحة التحكم"
-            });
-        }
+        let newCash = action === 'add' ? currentCash + inputAmount : currentCash - inputAmount;
+        if (newCash < 0) newCash = 0;
 
-        msg.innerText = "جاري حفظ التعديلات وإرسال الإشعار الفوري للمستخدم...";
-
-        // إرسال التعديل النهائي لـ Supabase
-        const { error } = await supabaseAdmin
+        const { error } = await supabase
             .from('players')
-            .update({ 
-                max_level: nextLvl, 
-                level: nextLvl, // للتوافق مع مسمى الحقل القديم أو الجديد
-                coins: nextCoins, 
-                cash: nextCash,
-                purchase_history: currentHistory
-            })
-            .eq('id', id);
+            .update({ cash: newCash })
+            .eq('email', email);
 
         if (error) {
-            alert("فشل الحفظ: " + error.message);
-            msg.innerText = "حدث خطأ أثناء الحفظ.";
+            alert("حدث خطأ أثناء التعديل: " + error.message);
         } else {
-            msg.innerText = "🚀 تم الحفظ بنجاح وتحديث شاشة اللاعب فوراً!";
-            loadData(); // إعادة التحميل لضمان مزامنة البيانات بالكامل
+            alert(`تم تعديل رصيد الحساب ${email} بنجاح إلى ${newCash}`);
+            fetchPlayersData(); // إعادة تحديث الجدول تلقائياً
         }
+    }
+
+    // 4. دالة تنظيف وتصفير خانات الطلبات بعد تنفيذها
+    async function clearRequests(email) {
+        const { error } = await supabase
+            .from('players')
+            .update({ 
+                last_charge_req: 'لا يوجد',
+                last_withdraw_req: 'لا يوجد'
+            })
+            .eq('email', email);
+
+        if (!error) {
+            alert("تم إفراغ وتنظيف طلبات المستخدم.");
+            fetchPlayersData();
+        }
+    }
+
+    // تشغيل الجلب التلقائي للبيانات عند فتح الصفحة
+    window.onload = () => {
+        fetchPlayersData();
+    };
+
+    // ========================================================
+    // ⚙️ كود ذكاء زر تحميل وتثبيت التطبيق (PWA Install Logic)
+    // ========================================================
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    // لقط الحدث عندما يرى المتصفح أن التطبيق جاهز للتثبيت
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // منع المتصفح من إظهار شريط التثبيت التلقائي الافتراضي المقلق
+        e.preventDefault();
+        // حفظ الحدث ليتم استدعاؤه عند الضغط على الزر الخاص بنا
+        deferredPrompt = e;
+        // إظهار الزر الخاص بنا في الـ Header ليراه الـ Operator أو اللاعب
+        installBtn.style.display = 'block';
+    });
+
+    // تنفيذ عملية التثبيت عند الضغط على الزر
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        
+        // إظهار شاشة تثبيت التطبيق للمستخدم
+        deferredPrompt.prompt();
+        
+        // الانتظار لمعرفة قرار المستخدم (موافق على التثبيت أم رفض)
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`قرار المستخدم في التثبيت: ${outcome}`);
+        
+        // بعد التثبيت بنجاح، يتم تصفير المتغير وإخفاء الزر تماماً
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+    });
+
+    // حماية إضافية: إذا تم تثبيت التطبيق بالفعل مسبقاً، تأكد من إخفاء الزر تماماً
+    window.addEventListener('appinstalled', (style) => {
+        console.log('🎉 تم تثبيت اللعبة بنجاح كـ تطبيق مستقل على الجهاز!');
+        installBtn.style.display = 'none';
+        deferredPrompt = null;
+    });
+</script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js');
+        });
     }
 </script>
 </body>
