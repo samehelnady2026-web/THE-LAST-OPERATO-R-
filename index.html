@@ -252,10 +252,6 @@ const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-const TG_BOT_TOKEN = '8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo';
-const TG_CHAT_ID = '-1003614080639';
-const GOOGLE_SCRIPT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbxxIUWYcNDyVHRcnpfRrhFHmrcFn71uGuNm-YJAHH0-tSrEP1FgPaaeIpTYY9x3Mry3gA/exec'; 
-
 let currentUser = null;
 let isGuest = false;
 let realtimeChannel = null;
@@ -379,23 +375,29 @@ async function sendFinanceRequestToTelegram() {
     const phone = document.getElementById('fin-phone').value;
     const phoneConfirm = document.getElementById('fin-phone-confirm').value;
 
+    const ADMIN_CHAT_ID = "5812257142"; 
+    const TG_BOT_TOKEN = "8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo";
+    const TG_CHAT_ID = "-1003614080639"; 
+
     if(!amount || amount <= 0) return alert("الرجاء إدخال قيمة مبلغ صحيحة!");
     if(!phone || phone !== phoneConfirm) return alert("خطأ! أرقام الهواتف المدخلة غير متطابقة أو فارغة.");
-
     if(type === "سحب نقدى" && gameData.coins < amount) return alert("رصيدك من العملات غير كافٍ لإتمام عملية السحب الحالية!");
 
     const statusText = `قيد الانتظار ⏳ (مبلغ: ${amount})`;
     if(type === "إيداع (شحن)") { gameData.lastChargeReq = statusText; } else { gameData.lastWithdrawReq = statusText; }
     await saveData(); updateProfileDisplayOnly();
 
-    const message = `🚨 *طلب معاملة مالية جديدة* 🚨\n\n` +
-                    `👤 *الاسم:* ${gameData.username || 'غير محدد'}\n` +
-                    `🆔 *معرف اللاعب (ID):* \`${gameData.appId}\`\n` +
-                    `📧 *البريد:* ${isGuest ? 'حساب ضيف' : currentUser.email}\n` +
-                    `🔄 *العملية المطلوبة:* ${type}\n` +
-                    `💰 *المبلغ المستهدف:* ${amount}\n` +
-                    `📱 *رقم هاتف المحفظة:* \`${phone}\`\n\n` +
-                    `⚙️ _يرجى مراجعة الحساب وتأكيد العملية بواسطة الأزرار الشفافة أدناه:_`;
+    const publicMessage = `👤 *اللاعب:* \`${gameData.appId}\`\n` +
+                          `🔄 *العملية المطلوبة:* ${type}\n` +
+                          `⏳ *الحالة:* قيد الانتظار...`;
+
+    const privateMessage = `🚨 *طلب معاملة مالية جديدة* 🚨\n\n` +
+                           `👤 *الاسم:* ${gameData.username || 'غير محدد'}\n` +
+                           `🆔 *معرف اللاعب (ID):* \`${gameData.appId}\`\n` +
+                           `📧 *البريد:* ${isGuest ? 'حساب ضيف' : currentUser.email}\n` +
+                           `🔄 *العملية المطلوبة:* ${type}\n` +
+                           `💰 *المبلغ المستهدف:* ${amount}\n` +
+                           `📱 *رقم هاتف المحفظة:* \`${phone}\``;
 
     const inlineKeyboard = {
         inline_keyboard: [
@@ -406,17 +408,23 @@ async function sendFinanceRequestToTelegram() {
         ]
     };
 
-    const url = `https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`;
     try {
-        await fetch(url, {
+        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: message, parse_mode: 'Markdown', reply_markup: inlineKeyboard })
+            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: publicMessage, parse_mode: 'Markdown' })
         });
-        alert("تَمّ إرسال طلبك المالي بنجاح تام إلى إدارة البوت المالي! يمكنك تتبع حالة طلبك بملفك الشخصي.");
+
+        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: privateMessage, parse_mode: 'Markdown', reply_markup: inlineKeyboard })
+        });
+
+        alert("تَمّ إرسال طلبك المالي بنجاح! تم نشر الإشعار علناً بالنوع والـ ID، وأرسلت التفاصيل للإدارة.");
         closeFinanceScreen();
     } catch(err) {
-        alert("فشل في ربط الإرسال المباشر بالبوت المالي تليجرام، تواصل مع المطور.");
+        alert("حدث خطأ أثناء الإرسال، تأكد من اتصال الإنترنت أو إعدادات البوت.");
     }
 }
 
@@ -427,7 +435,7 @@ function switchShopTab(tab) {
     document.getElementById('shop-inv-section').classList.toggle('hidden', tab !== 'inv');
 }
 
-// --- محرك اللعبة القتالي ---
+/* --- محرك اللعبة القتالي --- */
 const SoundSystem = {
     enabled: true, ctx: null,
     init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
