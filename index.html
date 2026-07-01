@@ -9,6 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
+    <!-- ربط ملف المانيفست الذي جهزته في المستودع -->
+    <link rel="manifest" href="./manifest.json">
+    
     <style>
         :root { --glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(0, 0, 0, 0.1); --neon-blue: #0984e3; --neon-red: #d63031; --neon-green: #2ed573; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
@@ -64,7 +67,11 @@
         .auth-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 10px; }
         .auth-input { padding: 14px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-size: 14px; width: 100%; }
         .guest-btn { background: #636e72 !important; margin-top: 5px; }
-        .download-btn { background: #27ae60 !important; margin-top: 20px; width: 100%; padding: 12px; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        
+        /* أيقونة التحميل الإجبارية الفخمة */
+        .download-btn { background: linear-gradient(135deg, #2ed573, #26af5f) !important; margin-top: 20px; width: 100%; padding: 15px; color: white; border: none; border-radius: 14px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 6px 15px rgba(46, 213, 115, 0.4); transition: 0.3s; animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow { 0% { transform: scale(1); box-shadow: 0 6px 15px rgba(46, 213, 115, 0.4); } 50% { transform: scale(1.02); box-shadow: 0 6px 25px rgba(46, 213, 115, 0.7); } 100% { transform: scale(1); box-shadow: 0 6px 15px rgba(46, 213, 115, 0.4); } }
+        
         .social-links { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
         .social-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 22px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
         .yt-icon { color: #FF0000; border: 1px solid #FF0000; }
@@ -76,6 +83,7 @@
         .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
         .status-badge { padding: 4px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; }
         .status-pending { background: #ffeaa7; color: #d63031; }
+        .status-review { background: #d2e3fc; color: #1a73e8; }
         .status-success { background: #c6f6d5; color: #2ed573; }
         .status-failed { background: #fed7d7; color: #e53e3e; }
     </style>
@@ -109,12 +117,14 @@
         <div style="text-align: center; margin: 10px 0; color: #636e72; font-size: 12px;">أو</div>
         <button class="shop-btn guest-btn" style="padding:15px; font-size:14px;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
         
+        <!-- زر التثبيت الإجباري المطور والذكي -->
+        <button id="installBtn" class="download-btn" style="display: none;" onclick="installApp()"><i class="fas fa-cloud-download-alt"></i> <span>تثبيت التطبيق على جهازك الآن ⚡</span></button>
+
         <div class="social-links">
             <a href="https://www.youtube.com/@THELASTOPERATOR-d1i" target="_blank" class="social-icon yt-icon"><i class="fab fa-youtube"></i></a>
             <a href="https://t.me/TheLastOperator55bot" target="_blank" class="social-icon tg-icon"><i class="fab fa-telegram-plane"></i></a>
             <a href="https://wa.me/201287837118" target="_blank" class="social-icon wa-icon"><i class="fab fa-whatsapp"></i></a>
         </div>
-        <button id="installBtn" class="download-btn" style="display: none;" onclick="installApp()"><i class="fas fa-download"></i> <span>تحميل اللعبة على هاتفك</span></button>
     </div>
 </div>
 
@@ -138,7 +148,7 @@
         <div class="info-row"><span>البريد الإلكتروني:</span><strong id="prof-email">--</strong></div>
         
         <div style="margin-top: 15px;">
-            <label style="font-size: 13px; font-weight: bold;">الاسم المستعار (إختياري):</label>
+            <label style="font-size: 13px; font-weight: bold;">الاسم المستعار:</label>
             <input type="text" id="prof-name-input" class="auth-input" style="padding: 8px; margin-top: 5px;" placeholder="أدخل اسمك هنا">
         </div>
         <div style="margin-top: 10px;">
@@ -266,10 +276,67 @@ function generateShortAppId() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function generateOperatorId() {
+    return `OP-${Math.floor(10000 + Math.random() * 90000)}`;
+}
+
+// 📌 منطق التثبيت الإجباري المحسن لكل المتصفحات (PWA Setup)
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+// تسجيل الـ Service Worker الصادر من مستودعك
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('تم تسجيل الـ Service Worker بنجاح صخري:', reg.scope))
+        .catch(err => console.error('فشل تسجيل الـ SW:', err));
+    });
+}
+
+// مستمع التحميل في كروم وأندرويد وإيدج
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'flex'; // إظهار الزر فوراً
+});
+
+// مستمع للتأكد إذا كان التطبيق محمل بالفعل ومفتوح كنافذة مستقلة
+window.addEventListener('DOMContentLoaded', () => {
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        installBtn.style.display = 'none'; // إخفاء الزر إذا كان مثبتاً ومفتوحاً كتطبيق
+    } else {
+        // إذا كان متصفح سفاري (آيفون) لا يدعم beforeinstallprompt، نكتشفه ونظهر له الزر بإرشاد مخصص
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS && !navigator.standalone) {
+            installBtn.style.display = 'flex';
+            installBtn.innerHTML = `<i class="fas fa-share-alt"></i> <span>اضغط مشاركة ثم "إضافة للشاشة الرئيسية" 📱</span>`;
+            installBtn.onclick = () => alert("على جهاز الآيفون الخاص بك:\n1. اضغط على زر المشاركة (Share) في المتصفح.\n2. اختر 'إضافة إلى الشاشة الرئيسية' (Add to Home Screen).\n⚡ لتثبيت اللعبة كـ تطبيق كامل.");
+        }
+    }
+});
+
+async function installApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+        installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+}
+
+// 📌 منطق حسابات الضيوف الحديدي (حفظ محلي فوري)
 function startAsGuest() {
     isGuest = true; currentUser = null;
     const localData = localStorage.getItem('n_guest_data');
-    if(localData) { gameData = JSON.parse(localData); } else { gameData.appId = "G-" + generateShortAppId(); }
+    if(localData) { 
+        gameData = JSON.parse(localData); 
+    } else { 
+        gameData.appId = "G-" + generateShortAppId(); 
+        gameData.coins = 0; gameData.cash = 0; gameData.maxLevel = 1;
+        gameData.ownedSkins = ['n1']; gameData.activeSkin = 'n1';
+        localStorage.setItem('n_guest_data', JSON.stringify(gameData));
+    }
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('levelMap').classList.remove('hidden');
     buildMap(); GameCore.updateUI();
@@ -295,26 +362,47 @@ async function handleAuth(type) {
 }
 
 async function createPlayerRecord(email) {
-    const generatedId = generateShortAppId();
+    const generatedId = generateOperatorId();
+    const cleanEmail = email.toLowerCase().trim();
     await supabaseClient.from('players').upsert([
-        { email: email, app_id: generatedId, coins: 0, cash: 0, max_level: 1, owned_skins: ['n1'], active_skin: 'n1', last_charge_req: 'لا يوجد طلبيات', last_withdraw_req: 'لا يوجد طلبيات' }
+        { 
+            email: cleanEmail, 
+            operator_id: generatedId, 
+            coins: 0, 
+            cash: 0, 
+            max_level: 1, 
+            owned_skins: ['n1'], 
+            active_skin: 'n1', 
+            last_charge_req: 'لا يوجد طلبيات', 
+            last_withdraw_req: 'لا يوجد طلبيات' 
+        }
     ], { onConflict: 'email' });
 }
 
 async function loadOnlineData() {
-    let { data } = await supabaseClient.from('players').select('*').eq('email', currentUser.email).single();
+    const cleanEmail = currentUser.email.toLowerCase().trim();
+    let { data } = await supabaseClient.from('players').select('*').eq('email', cleanEmail).single();
     if(!data) {
         await createPlayerRecord(currentUser.email);
-        const retry = await supabaseClient.from('players').select('*').eq('email', currentUser.email).single();
+        const retry = await supabaseClient.from('players').select('*').eq('email', cleanEmail).single();
         data = retry.data;
     }
     if(data) {
         gameData = {
-            username: data.username || '', phone: data.phone || '', appId: data.app_id || generateShortAppId(),
-            coins: data.coins, cash: data.cash, maxLevel: data.max_level, ownedSkins: data.owned_skins || ['n1'], 
-            activeSkin: data.active_skin || 'n1', hasLaser: data.has_laser, nukes: data.nukes, 
-            fireRateLevel: data.fire_rate_level || 0, bulletSpeedLevel: data.bullet_speed_level || 0,
-            lastChargeReq: data.last_charge_req || 'لا يوجد طلبيات', lastWithdrawReq: data.last_withdraw_req || 'لا يوجد طلبيات'
+            username: data.username || '', 
+            phone: data.phone_numbers || '', 
+            appId: data.operator_id || generateOperatorId(), 
+            coins: parseInt(data.coins) || 0, 
+            cash: parseInt(data.cash) || 0, 
+            maxLevel: parseInt(data.max_level) || 1, 
+            ownedSkins: Array.isArray(data.owned_skins) ? data.owned_skins : ['n1'], 
+            activeSkin: data.active_skin || 'n1', 
+            hasLaser: data.has_laser, 
+            nukes: data.nukes, 
+            fireRateLevel: data.fire_rate_level || 0, 
+            bulletSpeedLevel: data.bullet_speed_level || 0,
+            lastChargeReq: data.last_charge_req || 'لا يوجد طلبيات', 
+            lastWithdrawReq: data.last_withdraw_req || 'لا يوجد طلبيات'
         };
     }
     document.getElementById('authScreen').classList.add('hidden');
@@ -322,25 +410,47 @@ async function loadOnlineData() {
     buildMap(); GameCore.updateUI();
 }
 
+// 📌 وظيفة الحفظ والمزامنة الحديدية (بدون ارتداد للمستوى أو تجميد)
 async function saveData() {
-    if(isGuest) { localStorage.setItem('n_guest_data', JSON.stringify(gameData)); return; }
-    if(!currentUser) return;
-    await supabaseClient.from('players').update({
-        username: gameData.username, phone: gameData.phone, app_id: gameData.appId,
-        coins: gameData.coins, cash: gameData.cash, max_level: gameData.maxLevel,
-        owned_skins: gameData.ownedSkins, active_skin: gameData.activeSkin,
-        has_laser: gameData.hasLaser, nukes: gameData.nukes, fire_rate_level: gameData.fireRateLevel,
-        bullet_speed_level: gameData.bulletSpeedLevel, last_charge_req: gameData.lastChargeReq, last_withdraw_req: gameData.lastWithdrawReq
-    }).eq('email', currentUser.email);
+    if(isGuest) { 
+        localStorage.setItem('n_guest_data', JSON.stringify(gameData)); 
+        return; 
+    }
+    if(!currentUser || !currentUser.email) return;
+    
+    const cleanEmail = currentUser.email.toLowerCase().trim();
+    
+    // تأمين تحويل المصفوفة لصيغة يقبلها الـ Postgres text[] في سوبابيز لمنع الفشل الصامت
+    const skinsArray = Array.isArray(gameData.ownedSkins) ? gameData.ownedSkins : ['n1'];
+
+    const { error } = await supabaseClient.from('players').update({
+        username: gameData.username, 
+        phone_numbers: gameData.phone, 
+        operator_id: gameData.appId,
+        coins: Number(gameData.coins), 
+        cash: Number(gameData.cash), 
+        max_level: Number(gameData.maxLevel),
+        owned_skins: skinsArray, 
+        active_skin: String(gameData.activeSkin),
+        has_laser: Boolean(gameData.hasLaser), 
+        nukes: Number(gameData.nukes), 
+        fire_rate_level: Number(gameData.fireRateLevel),
+        bullet_speed_level: Number(gameData.bulletSpeedLevel), 
+        last_charge_req: gameData.lastChargeReq, 
+        last_withdraw_req: gameData.lastWithdrawReq
+    }).eq('email', cleanEmail);
+
+    if(error) console.error("خطأ مزامنة السيرفر الصخرية:", error.message);
 }
 
 function setupRealtimeSubscription() {
     if(!currentUser) return;
+    const cleanEmail = currentUser.email.toLowerCase().trim();
     realtimeChannel = supabaseClient.channel('public:players')
-    .on('postgres_changes', { event: 'UPDATE', filter: `email=eq.${currentUser.email}`, schema: 'public', table: 'players' }, payload => {
+    .on('postgres_changes', { event: 'UPDATE', filter: `email=eq.${cleanEmail}`, schema: 'public', table: 'players' }, payload => {
         const data = payload.new;
         gameData.lastChargeReq = data.last_charge_req; gameData.lastWithdrawReq = data.last_withdraw_req;
-        gameData.coins = data.coins; gameData.cash = data.cash;
+        gameData.coins = parseInt(data.coins); gameData.cash = parseInt(data.cash);
         GameCore.updateUI(); updateProfileDisplayOnly();
     }).subscribe();
 }
@@ -356,24 +466,33 @@ function updateProfileDisplayOnly() {
     document.getElementById('prof-name-input').value = gameData.username;
     document.getElementById('prof-phone-input').value = gameData.phone;
     
+    const parseClass = (txt) => {
+        if(txt.includes("تم القبول") || txt.includes("تم التراجع")) return "status-success";
+        if(txt.includes("قيد المراجعة")) return "status-review";
+        if(txt.includes("قيد الانتظار")) return "status-pending";
+        return "status-failed";
+    };
+
     const cEl = document.getElementById('status-charge'); cEl.innerText = gameData.lastChargeReq;
-    cEl.className = "status-badge " + (gameData.lastChargeReq.includes("تم القبول") ? "status-success" : (gameData.lastChargeReq.includes("قيد الانتظار") ? "status-pending" : "status-failed"));
+    cEl.className = "status-badge " + parseClass(gameData.lastChargeReq);
     
     const wEl = document.getElementById('status-withdraw'); wEl.innerText = gameData.lastWithdrawReq;
-    wEl.className = "status-badge " + (gameData.lastWithdrawReq.includes("تم القبول") ? "status-success" : (gameData.lastWithdrawReq.includes("قيد الانتظار") ? "status-pending" : "status-failed"));
+    wEl.className = "status-badge " + parseClass(gameData.lastWithdrawReq);
 }
 
 async function saveProfileData() {
-    gameData.username = document.getElementById('prof-name-input').value;
-    gameData.phone = document.getElementById('prof-phone-input').value;
-    await saveData(); alert("تم حفظ بياناتك الشخصية بنجاح وتأمينها بقاعدة البيانات!");
+    gameData.username = document.getElementById('prof-name-input').value.trim();
+    gameData.phone = document.getElementById('prof-phone-input').value.trim();
+    await saveData(); 
+    alert("تم حفظ بياناتك الشخصية بنجاح وتأمينها بقاعدة البيانات!");
+    updateProfileDisplayOnly();
 }
 
 async function sendFinanceRequestToTelegram() {
     const type = document.getElementById('fin-type').value;
     const amount = parseInt(document.getElementById('fin-amount').value);
-    const phone = document.getElementById('fin-phone').value;
-    const phoneConfirm = document.getElementById('fin-phone-confirm').value;
+    const phone = document.getElementById('fin-phone').value.trim();
+    const phoneConfirm = document.getElementById('fin-phone-confirm').value.trim();
 
     const ADMIN_CHAT_ID = "5812257142"; 
     const TG_BOT_TOKEN = "8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo";
@@ -387,44 +506,23 @@ async function sendFinanceRequestToTelegram() {
     if(type === "إيداع (شحن)") { gameData.lastChargeReq = statusText; } else { gameData.lastWithdrawReq = statusText; }
     await saveData(); updateProfileDisplayOnly();
 
-    const publicMessage = `👤 *اللاعب:* \`${gameData.appId}\`\n` +
-                          `🔄 *العملية المطلوبة:* ${type}\n` +
-                          `⏳ *الحالة:* قيد الانتظار...`;
-
-    const privateMessage = `🚨 *طلب معاملة مالية جديدة* 🚨\n\n` +
-                           `👤 *الاسم:* ${gameData.username || 'غير محدد'}\n` +
-                           `🆔 *معرف اللاعب (ID):* \`${gameData.appId}\`\n` +
-                           `📧 *البريد:* ${isGuest ? 'حساب ضيف' : currentUser.email}\n` +
-                           `🔄 *العملية المطلوبة:* ${type}\n` +
-                           `💰 *المبلغ المستهدف:* ${amount}\n` +
-                           `📱 *رقم هاتف المحفظة:* \`${phone}\``;
+    const publicMessage = `👤 *اللاعب (Operator):* \`${gameData.appId}\`\n🔄 *العملية المطلوبة:* ${type}\n⏳ *الحالة:* قيد الانتظار والمراجعة الأولية... ⏳`;
+    const privateMessage = `🚨 *طلب معاملة مالية جديدة للمراجعة* 🚨\n\n👤 *الاسم:* ${gameData.username || 'غير محدد'}\n🆔 *معرف الأوبريتور:* \`${gameData.appId}\`\n📧 *البريد:* ${isGuest ? 'حساب ضيف' : currentUser.email}\n🔄 *النوع:* ${type}\n💰 *المبلغ:* ${amount}\n📱 *الهاتف:* \`${phone}\``;
 
     const inlineKeyboard = {
         inline_keyboard: [
-            [
-                { text: "✅ قبول وعقد الصفقة", callback_data: `action_approve_${gameData.appId}_${type}_${amount}` },
-                { text: "❌ رفض الطلب تماماً", callback_data: `action_reject_${gameData.appId}_${type}_${amount}` }
-            ]
+            [ { text: "🔍 قيد التقييم والمراجعة", callback_data: `review_${gameData.appId}_${type}_${amount}` } ],
+            [ { text: "✅ قبول وعقد الصفقة", callback_data: `approve_${gameData.appId}_${type}_${amount}` }, { text: "❌ رفض الطلب نهائياً", callback_data: `reject_${gameData.appId}_${type}_${amount}` } ]
         ]
     };
 
     try {
-        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: publicMessage, parse_mode: 'Markdown' })
-        });
-
-        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: privateMessage, parse_mode: 'Markdown', reply_markup: inlineKeyboard })
-        });
-
-        alert("تَمّ إرسال طلبك المالي بنجاح! تم نشر الإشعار علناً بالنوع والـ ID، وأرسلت التفاصيل للإدارة.");
+        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TG_CHAT_ID, text: publicMessage, parse_mode: 'Markdown' }) });
+        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: privateMessage, parse_mode: 'Markdown', reply_markup: inlineKeyboard }) });
+        alert("تَمّ إرسال طلبك المالي بنجاح! تم تعيين الحالة تلقائياً كـ (قيد الانتظار) وإشعار الإدارة.");
         closeFinanceScreen();
     } catch(err) {
-        alert("حدث خطأ أثناء الإرسال، تأكد من اتصال الإنترنت أو إعدادات البوت.");
+        alert("حدث خطأ أثناء الإرسال، تأكد من اتصال الإنترنت.");
     }
 }
 
@@ -435,7 +533,6 @@ function switchShopTab(tab) {
     document.getElementById('shop-inv-section').classList.toggle('hidden', tab !== 'inv');
 }
 
-/* --- محرك اللعبة القتالي --- */
 const SoundSystem = {
     enabled: true, ctx: null,
     init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
@@ -520,7 +617,8 @@ const GameCore = {
                 if(Math.hypot(b.x-f.x, b.y-f.y) < 30) {
                     const color = f.type==='money' ? '#ffd700' : levelConfigs[(this.lvl-1)%5].p;
                     this.spawnParticles(f.x, f.y, color, 12);
-                    gameData.coins += 50; if(f.type==='money') gameData.cash+=2;
+                    gameData.coins += 50;
+                    gameData.cash += 2;
                     this.score += 20; this.fruits.splice(fi,1); this.bullets.splice(bi,1);
                     SoundSystem.play('hit'); this.updateUI(); saveData();
                     if(this.score >= 200) this.win();
@@ -543,7 +641,7 @@ const GameCore = {
         ctx.stroke(); ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.fillText(skin.head, 0, 5); ctx.restore();
         this.fruits.forEach(f => { ctx.font = "35px Arial"; ctx.fillText(f.type==='money'?"💰":levelConfigs[(this.lvl-1)%5].f, f.x, f.y+10); });
         ctx.fillStyle = gameData.hasLaser ? "#00d2ff" : "#2d3436";
-        this.bullets.forEach(b => { if(gameData.hasLaser) { ctx.fillRect(b.x-10, b.y-2, 20, 4); } else { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); } });
+        this.bullets.forEach(b => { if(gameData.hasLaser) { ctx.fillRect(b.x-10, b.y-2, 20, 4); } else { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); fill(); } });
     },
     win() { this.active=false; gameData.maxLevel++; saveData(); confetti(); setTimeout(()=> { buildMap(); this.init(this.lvl+1); }, 1500); },
     loop() { if(this.active) { this.update(); this.draw(); requestAnimationFrame(()=>this.loop()); } },
@@ -668,11 +766,6 @@ function buildMap() {
         grid.appendChild(card);
     }
 }
-
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'flex'; });
-async function installApp() { if (!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt = null; installBtn.style.display = 'none'; }
 
 Joysticks.init();
 </script>
