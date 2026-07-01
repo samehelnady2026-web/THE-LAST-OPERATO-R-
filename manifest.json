@@ -1,16 +1,7 @@
 {
-  "name": "Ninja Saga S Edition",
-  "short_name": "NinjaSaga",
-  "start_url": "index.html",
+  "name": "Operator",
+  "short_name": "Operator",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#f0f2f5",
-  "theme_color": "#0984e3",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "background_color": "#000000"
 }
