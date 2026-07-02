@@ -2,16 +2,13 @@ const CACHE_NAME = 'operator';
 
 // قائمة بجميع ملفات اللعبة والمكتبات الخارجية المطلوبة للعمل أوفلاين
 const ASSETS = [
-  './index.html',
-  './phone-auth.html',
-  './admin.html',
-  './bot.js',
-  './icon.png',
-  './cover.jpg',
-  './manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
-];
+const ASSETS = [
+  '/THE-LAST-OPERATO-R-/index.html',
+  '/THE-LAST-OPERATO-R-/manifest.json',
+  '/THE-LAST-OPERATO-R-/icon.png',
+  '/THE-LAST-OPERATO-R-/sw.js'
+'
+]
 
 // تثبيت ملف الـ Service Worker وحفظ الملفات في الـ Cache
 self.addEventListener('install', (e) => {
