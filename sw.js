@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ninja-saga-v1';
+const CACHE_NAME = 'Operator';
 
 // قائمة بجميع ملفات اللعبة والمكتبات الخارجية المطلوبة للعمل أوفلاين
 const ASSETS = [
@@ -17,7 +17,7 @@ const ASSETS = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('📦 تم حفظ ملفات نينجا ساجا أوفلاين بنجاح!');
+      console.log('📦 تم حفظ ملفات Operator أوفلاين بنجاح!');
       return cache.addAll(ASSETS);
     })
   );
