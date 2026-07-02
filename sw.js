@@ -1,36 +1,21 @@
-const CACHE_NAME = 'operator';
-
-// قائمة بجميع ملفات اللعبة والمكتبات الخارجية المطلوبة للعمل أوفلاين
+const CACHE_NAME = 'last-operator-v1';
 const ASSETS = [
-const ASSETS = [
-  '/THE-LAST-OPERATO-R-/index.html',
-  '/THE-LAST-OPERATO-R-/manifest.json',
-  '/THE-LAST-OPERATO-R-/icon.png',
-  '/THE-LAST-OPERATO-R-/sw.js'
-'
-]
+    './',
+    './index.html',
+    './manifest.json',
+    './icon-192.png'
+];
 
-// تثبيت ملف الـ Service Worker وحفظ الملفات في الـ Cache
+// التثبيت
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('📦 تم حفظ ملفات Operator أوفلاين بنجاح!');
-      return cache.addAll(ASSETS);
-    })
-  );
+    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
 });
 
-// استدعاء الملفات المحفوظة عند تصفح اللعبة أوفلاين
+// استرجاع البيانات (Offline Mode)
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      // إرجاع الملف المحفوظ إذا وجد، وإلا جلبه من السيرفر
-      return response || fetch(e.request).catch(() => {
-        // حماية إضافية في حال عدم توفر الإنترنت تماماً لصفحات معينة
-        if (e.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
-  );
+    e.respondWith(
+        caches.match(e.request).then(response => {
+            return response || fetch(e.request);
+        })
+    );
 });
