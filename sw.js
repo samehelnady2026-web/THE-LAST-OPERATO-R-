@@ -1,4 +1,4 @@
-const CACHE_NAME = 'operator-v2';
+const CACHE_NAME = 'operator';
 
 // قائمة بجميع ملفات اللعبة والمكتبات الخارجية المطلوبة للعمل أوفلاين
 const ASSETS = [
