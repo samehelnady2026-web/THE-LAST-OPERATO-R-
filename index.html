@@ -2,13 +2,44 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>OPERATOR</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="config.js"></script>
     <script src="game-engine.js"></script>
     <script src="ui-manager.js"></script>
     <script src="main.js"></script>
+    <style>
+        /* [انسخ هنا تنسيقات الـ CSS الأصلية التي كانت في أول كود أرسلته لي] */
+        body { margin: 0; background: #000; overflow: hidden; }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-    </body>
+
+    <div id="authScreen" class="screen">
+        <h1>OPERATOR</h1>
+        <input type="email" id="authEmail" placeholder="البريد الإلكتروني">
+        <input type="password" id="authPass" placeholder="كلمة المرور">
+        <button onclick="handleAuth('login')">تسجيل دخول</button>
+        <button onclick="loginAsGuest()">دخول كضيف</button>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <div id="hud" style="position:absolute; top:10px; z-index:1000;">
+            <button onclick="UIManager.toggleMarket(true)">🛒 السوق</button>
+            <button onclick="UIManager.toggleSettings(true)">⚙️ ضبط</button>
+        </div>
+        <canvas id="game"></canvas>
+    </div>
+
+    <div id="settingsModal" class="popup" style="display:none;">
+        <div class="popup-content">
+            <h2>🎚️ الإعدادات</h2>
+            <button onclick="UIManager.toggleSettings(false)">إغلاق</button>
+        </div>
+    </div>
+
+</body>
 </html>
