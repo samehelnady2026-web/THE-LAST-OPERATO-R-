@@ -96,6 +96,10 @@
         .yt-icon { color: #FF0000; border: 1px solid #FF0000; }
         .tg-icon { color: #0088cc; border: 1px solid #0088cc; }
         .wa-icon { color: #25D366; border: 1px solid #25D366; }
+        .error-msg { color: #d63031; font-size: 12px; margin-top: 8px; text-align: center; padding: 8px; background: #ffebee; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .success-msg { color: #2ed573; font-size: 12px; margin-top: 8px; text-align: center; padding: 8px; background: #f0fff4; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .loading { opacity: 0.6; pointer-events: none; }
+        .btn-disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -120,10 +124,11 @@
 <div id="authScreen" class="screen">
     <h1 style="color: var(--neon-blue); margin: 15px 0; font-weight: 900; letter-spacing: 2px;">NINJA SAGA</h1>
     <div class="auth-form">
-        <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
-        <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input">
-        <button class="shop-btn" style="padding:15px; font-size:14px;" onclick="handleAuth('login')">تسجيل دخول</button>
-        <button class="shop-btn" style="padding:15px; font-size:14px; background:#2d3436;" onclick="handleAuth('signup')">إنشاء حساب جديد</button>
+        <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input" autocomplete="email">
+        <input type="password" id="authPass" placeholder="كلمة المرور" class="auth-input" autocomplete="current-password">
+        <button class="shop-btn" style="padding:15px; font-size:14px;" id="loginBtn" onclick="handleAuth('login')">🔓 تسجيل دخول</button>
+        <button class="shop-btn" style="padding:15px; font-size:14px; background:#2d3436;" id="signupBtn" onclick="handleAuth('signup')">✨ إنشاء حساب جديد</button>
+        <div id="authMessage"></div>
         <div style="text-align: center; margin: 10px 0; color: #636e72; font-size: 12px;">أو</div>
         <button class="shop-btn guest-btn" style="padding:15px; font-size:14px;" onclick="startAsGuest()">🎮 دخول كـ لاعب ضيف</button>
         
@@ -148,10 +153,12 @@
 
 <div id="levelMap" class="screen hidden">
     <h1 style="color: var(--neon-blue); margin: 20px 0; font-weight: 900;">NINJA SAGA</h1>
-    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;">
+        <div class="stat-badge">🆔 <span id="m-playerid">---</span></div>
+        <div class="stat-badge">⭐ <span id="m-points">0</span></div>
         <div class="stat-badge">🪙 <span id="m-coins">0</span></div>
         <div class="stat-badge">💵 <span id="m-cash">0</span></div>
-        <div class="stat-badge" onclick="logout()" style="background:#fab1a0;">🚪 خروج</div>
+        <div class="stat-badge" onclick="logout()" style="background:#fab1a0; cursor: pointer;">🚪 خروج</div>
     </div>
     <div class="level-grid" id="grid"></div>
 </div>
@@ -162,12 +169,13 @@
             <div class="stat-badge" onclick="exitToMap()">🏠 خروج</div>
             <div class="stat-badge">❤️ <span id="h-lives">5</span></div>
             <div class="stat-badge">🎯 <span id="h-score">0</span></div>
+            <div class="stat-badge">⭐ <span id="h-points">0</span></div>
             <div class="stat-badge">🪙 <span id="h-coins">0</span></div>
             <div class="stat-badge">💵 <span id="h-cash">0</span></div>
         </div>
         <div style="display:flex; gap:5px;">
             <div class="stat-badge" onclick="SoundSystem.toggle()" id="sound-btn">🔊</div>
-            <div class="stat-badge" onclick="toggleShop(true)">🛒 السوق</div>
+            <div class="stat-badge" onclick="toggleShop(true)" style="cursor: pointer;">🛒 السوق</div>
         </div>
     </div>
     <canvas id="game"></canvas>
@@ -198,16 +206,7 @@
 </div>
 
 <script>
-/* دالة كشف اللعبة */
-function revealGame() {
-    const ws = document.getElementById('welcomeScreen');
-    ws.style.opacity = '0';
-    setTimeout(() => {
-        ws.classList.add('hidden');
-        SoundSystem.init(); 
-    }, 800);
-}
-
+// ============ Supabase الإعدادات ============
 const SB_URL = 'https://ctnuuvdakmqpbuzhrsos.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bnV1dmRha21xcGJ1emhyc29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODczMzIsImV4cCI6MjA4NzE2MzMzMn0.0X_W6fnko1HezciPTISwnNCNxBUwps-QlAwxqIv3NRw';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -221,8 +220,6 @@ let gameData = {
     coins: 0,
     cash: 0,
     maxLevel: 1,
-    walletNumber: "",
-    walletType: "",
     ownedSkins: ["n1"],
     activeSkin: "n1",
     hasLaser: false,
@@ -230,66 +227,187 @@ let gameData = {
     fireRateLevel: 0
 };
 
+// ============ دوال عامة ============
+function revealGame() {
+    const ws = document.getElementById('welcomeScreen');
+    ws.style.opacity = '0';
+    setTimeout(() => {
+        ws.classList.add('hidden');
+        SoundSystem.init(); 
+    }, 800);
+}
+
 function generatePlayerId(){
     return "PLY-" +
     Math.random().toString(36).substring(2,6).toUpperCase() +
     Date.now().toString(36).toUpperCase();
 }
 
-// --- وظائف الدخول والضيف المحسنة (المُعدلة والمُصلحة لتطابق قاعدة بياناتك) ---
+function showAuthMessage(msg, isError = false) {
+    const msgEl = document.getElementById('authMessage');
+    msgEl.innerHTML = `<div class="${isError ? 'error-msg' : 'success-msg'}">
+        ${isError ? '❌' : '✅'} ${msg}
+    </div>`;
+    setTimeout(() => { msgEl.innerHTML = ''; }, 4000);
+}
 
+// ============ المصادقة ============
 function startAsGuest() {
     isGuest = true;
     currentUser = null;
+    gameData.playerId = generatePlayerId();
+    
     const localData = localStorage.getItem('n_guest_data');
     if(localData) gameData = JSON.parse(localData);
+    
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('levelMap').classList.remove('hidden');
-    buildMap(); GameCore.updateUI();
+    buildMap(); 
+    GameCore.updateUI();
+    showAuthMessage('مرحباً باللاعب الضيف! 👋', false);
 }
 
 async function handleAuth(type) {
-    const email = document.getElementById('authEmail').value;
-    const pass = document.getElementById('authPass').value;
-    if(!email || !pass) return alert("يرجى إدخال البريد وكلمة المرور");
-
-    if(type === 'signup') {
-        const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
-        if(error) return alert(error.message);
-        await createPlayerRecord(email);
-        alert("تم إنشاء الحساب بنجاح! يمكنك الدخول الآن.");
-    } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-        if(error) return alert(error.message);
-        currentUser = data.user;
-        isGuest = false;
-        await loadOnlineData();
+    const email = document.getElementById('authEmail').value.trim();
+    const pass = document.getElementById('authPass').value.trim();
+    
+    // التحقق من الصحة
+    if(!email || !pass) {
+        showAuthMessage('الرجاء ملء جميع الحقول', true);
+        return;
     }
-}
+    
+    if(pass.length < 6) {
+        showAuthMessage('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true);
+        return;
+    }
 
-async function createPlayerRecord(email) {
-    await supabaseClient.from('players').upsert([
-        { email: email, coins: 0, cash: 0, max_level: 1, owned_skins: ['n1'], active_skin: 'n1' }
-    ], { onConflict: 'email' });
+    const btn = type === 'signup' ? document.getElementById('signupBtn') : document.getElementById('loginBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+        if(type === 'signup') {
+            // إنشاء حساب جديد
+            const { data: signupData, error: signupError } = await supabaseClient.auth.signUp({ 
+                email: email, 
+                password: pass
+            });
+            
+            if(signupError) {
+                showAuthMessage(`خطأ: ${signupError.message}`, true);
+                throw signupError;
+            }
+
+            // إنشاء سجل اللاعب
+            gameData.playerId = generatePlayerId();
+            const { error: insertError } = await supabaseClient.from('players').insert([
+                {
+                    user_id: signupData.user.id,
+                    email: email,
+                    player_id: gameData.playerId,
+                    points: 0,
+                    coins: 0,
+                    cash: 0,
+                    max_level: 1,
+                    owned_skins: ['n1'],
+                    active_skin: 'n1',
+                    has_laser: false,
+                    nukes: 0,
+                    fire_rate_level: 0
+                }
+            ]);
+
+            if(insertError) {
+                console.warn('ملاحظة عند إنشاء السجل:', insertError);
+            }
+
+            showAuthMessage('✅ تم إنشاء الحساب بنجاح! يمكنك الدخول الآن.', false);
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPass').value = '';
+        } else {
+            // تسجيل الدخول
+            const { data: loginData, error: loginError } = await supabaseClient.auth.signInWithPassword({ 
+                email: email, 
+                password: pass 
+            });
+            
+            if(loginError) {
+                showAuthMessage(`خطأ الدخول: ${loginError.message}`, true);
+                throw loginError;
+            }
+
+            if(!loginData.user) {
+                showAuthMessage('فشل الدخول. الرجاء المحاولة مجدداً.', true);
+                throw new Error('No user returned');
+            }
+
+            currentUser = loginData.user;
+            isGuest = false;
+            await loadOnlineData();
+            showAuthMessage('✅ تم الدخول بنجاح!', false);
+        }
+    } catch(err) {
+        console.error('خطأ المصادقة:', err);
+        showAuthMessage(`خطأ: ${err.message}`, true);
+    } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
 }
 
 async function loadOnlineData() {
-    let { data } = await supabaseClient.from('players').select('*').eq('email', currentUser.email).single();
-    if(!data) {
-        await createPlayerRecord(currentUser.email);
-        const retry = await supabaseClient.from('players').select('*').eq('email', currentUser.email).single();
-        data = retry.data;
+    try {
+        const { data, error } = await supabaseClient
+            .from('players')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
+        
+        if(error && error.code !== 'PGRST116') {
+            console.warn('خطأ تحميل البيانات:', error);
+        }
+
+        if(data) {
+            gameData = {
+                playerId: data.player_id || generatePlayerId(),
+                points: data.points || 0,
+                coins: data.coins || 0,
+                cash: data.cash || 0,
+                maxLevel: data.max_level || 1,
+                ownedSkins: data.owned_skins || ['n1'],
+                activeSkin: data.active_skin || 'n1',
+                hasLaser: data.has_laser || false,
+                nukes: data.nukes || 0,
+                fireRateLevel: data.fire_rate_level || 0
+            };
+        } else {
+            // إنشاء سجل جديد إذا لم يكن موجوداً
+            gameData.playerId = generatePlayerId();
+            await supabaseClient.from('players').insert([{
+                user_id: currentUser.id,
+                email: currentUser.email,
+                player_id: gameData.playerId,
+                points: 0,
+                coins: 0,
+                cash: 0,
+                max_level: 1,
+                owned_skins: ['n1'],
+                active_skin: 'n1',
+                has_laser: false,
+                nukes: 0,
+                fire_rate_level: 0
+            }]);
+        }
+    } catch(err) {
+        console.error('خطأ تحميل البيانات:', err);
+        gameData.playerId = generatePlayerId();
     }
-    if(data) {
-        gameData = {
-            coins: data.coins, cash: data.cash, maxLevel: data.max_level,
-            ownedSkins: data.owned_skins || ['n1'], activeSkin: data.active_skin || 'n1',
-            hasLaser: data.has_laser, nukes: data.nukes, fireRateLevel: data.fire_rate_level
-        };
-    }
+    
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('levelMap').classList.remove('hidden');
-    buildMap(); GameCore.updateUI();
+    buildMap(); 
+    GameCore.updateUI();
 }
 
 async function saveData() {
@@ -297,15 +415,34 @@ async function saveData() {
         localStorage.setItem('n_guest_data', JSON.stringify(gameData));
         return;
     }
+    
     if(!currentUser) return;
-    await supabaseClient.from('players').update({
-        coins: gameData.coins, cash: gameData.cash, max_level: gameData.maxLevel,
-        owned_skins: gameData.ownedSkins, active_skin: gameData.activeSkin,
-        has_laser: gameData.hasLaser, nukes: gameData.nukes, fire_rate_level: gameData.fireRateLevel
-    }).eq('email', currentUser.email);
+    
+    try {
+        const { error } = await supabaseClient.from('players').update({
+            points: gameData.points,
+            coins: gameData.coins,
+            cash: gameData.cash,
+            max_level: gameData.maxLevel,
+            owned_skins: gameData.ownedSkins,
+            active_skin: gameData.activeSkin,
+            has_laser: gameData.hasLaser,
+            nukes: gameData.nukes,
+            fire_rate_level: gameData.fireRateLevel
+        }).eq('user_id', currentUser.id);
+
+        if(error) {
+            console.warn('تحذير الحفظ:', error);
+            // حفظ محلي كخطة احتياطية
+            localStorage.setItem('n_guest_data', JSON.stringify(gameData));
+        }
+    } catch(err) {
+        console.error('خطأ الحفظ:', err);
+        localStorage.setItem('n_guest_data', JSON.stringify(gameData));
+    }
 }
 
-// --- منطق تثبيت التطبيق (PWA INSTALL) المطور ---
+// ============ تثبيت التطبيق ============
 let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
 
@@ -328,8 +465,7 @@ window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
 });
 
-// --- محرك اللعبة ---
-
+// ============ نظام الصوت ============
 const SoundSystem = {
     enabled: true, ctx: null,
     init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
@@ -343,6 +479,7 @@ const SoundSystem = {
     toggle() { this.enabled = !this.enabled; document.getElementById('sound-btn').innerText = this.enabled ? '🔊' : '🔇'; }
 };
 
+// ============ إعدادات المستويات والشخصيات ============
 const levelConfigs = [
     {f:"🍓", p:"#ff4757", bg:"linear-gradient(135deg, #fff5f5, #fed7d7)"}, 
     {f:"🍌", p:"#ffa502", bg:"linear-gradient(135deg, #fffaf0, #feebc8)"}, 
@@ -363,11 +500,13 @@ const skins = [
     { id:'n9', head:'👵', name:'جدة', p:1500, p2:60, t:'hybrid' }
 ];
 
+// ============ محرك اللعبة ============
 const GameCore = {
     active: false, paused: false, lvl: 1, score: 0, frame: 0,
     player: { x: 0, y: 0, vx: 0, vy: 0, lives: 5 },
     fruits: [], bullets: [], particles: [], shootDir: { x: 0, y: 0 },
     lastShoot: 0,
+    
     init(lvl) {
         this.lvl = lvl; this.active = true; this.paused = false; this.score = 0;
         this.player.lives = 5; this.fruits = []; this.bullets = []; this.particles = [];
@@ -379,6 +518,7 @@ const GameCore = {
         this.player.x = cvs.width/2; this.player.y = cvs.height/2;
         this.updateUI(); this.loop();
     },
+    
     spawnParticles(x, y, color, count = 10) {
         for(let i=0; i<count; i++) {
             this.particles.push({
@@ -387,24 +527,36 @@ const GameCore = {
             });
         }
     },
+    
     updateUI() {
         const u = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
-        u('h-score', this.score); u('h-lives', this.player.lives); u('h-coins', gameData.coins);
-        u('h-cash', gameData.cash); u('m-coins', gameData.coins); u('m-cash', gameData.cash);
+        u('h-score', this.score);
+        u('h-lives', this.player.lives);
+        u('h-points', gameData.points);
+        u('h-coins', gameData.coins);
+        u('h-cash', gameData.cash);
+        u('m-playerid', gameData.playerId);
+        u('m-points', gameData.points);
+        u('m-coins', gameData.coins);
+        u('m-cash', gameData.cash);
         document.getElementById('nuke-btn').classList.toggle('hidden', gameData.nukes <= 0);
     },
+    
     update() {
         if(!this.active || this.paused) return;
         this.frame++;
         this.player.x += this.player.vx; this.player.y += this.player.vy;
         this.player.x = Math.max(30, Math.min(window.innerWidth-30, this.player.x));
         this.player.y = Math.max(100, Math.min(window.innerHeight-30, this.player.y));
+        
         let rate = 300 - (gameData.fireRateLevel * 50);
         if ((Math.abs(this.shootDir.x) > 0.1 || Math.abs(this.shootDir.y) > 0.1) && Date.now() - this.lastShoot > rate) {
             this.bullets.push({ x: this.player.x, y: this.player.y, vx: this.shootDir.x * 22, vy: this.shootDir.y * 22 });
             this.lastShoot = Date.now(); SoundSystem.play('shoot');
         }
+        
         if(Math.random() < 0.04) this.spawnEnemy();
+        
         this.fruits.forEach((f, i) => {
             f.x += f.vx; f.y += f.vy;
             if(Math.hypot(this.player.x-f.x, this.player.y-f.y) < 35) {
@@ -413,24 +565,33 @@ const GameCore = {
                 if(this.player.lives <= 0) exitToMap();
             }
         });
+        
         this.bullets.forEach((b, bi) => {
             b.x += b.vx; b.y += b.vy;
             this.fruits.forEach((f, fi) => {
                 if(Math.hypot(b.x-f.x, b.y-f.y) < 30) {
                     const color = f.type==='money' ? '#ffd700' : levelConfigs[(this.lvl-1)%5].p;
                     this.spawnParticles(f.x, f.y, color, 12);
-                    gameData.coins += 50; if(f.type==='money') gameData.cash+=2;
-                    this.score += 20; this.fruits.splice(fi,1); this.bullets.splice(bi,1);
-                    SoundSystem.play('hit'); this.updateUI(); saveData();
+                    gameData.coins += 50;
+                    gameData.points += 10;
+                    if(f.type==='money') gameData.cash+=2;
+                    this.score += 20; 
+                    this.fruits.splice(fi,1); 
+                    this.bullets.splice(bi,1);
+                    SoundSystem.play('hit'); 
+                    this.updateUI(); 
+                    saveData();
                     if(this.score >= 200) this.win();
                 }
             });
         });
+        
         this.particles.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy; p.life -= 0.03;
             if(p.life <= 0) this.particles.splice(i, 1);
         });
     },
+    
     draw() {
         const ctx = document.getElementById('game').getContext('2d');
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -447,8 +608,18 @@ const GameCore = {
         ctx.fillStyle = gameData.hasLaser ? "#00d2ff" : "#2d3436";
         this.bullets.forEach(b => { if(gameData.hasLaser) { ctx.fillRect(b.x-10, b.y-2, 20, 4); } else { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); } });
     },
-    win() { this.active=false; gameData.maxLevel++; saveData(); confetti(); setTimeout(()=> { buildMap(); exitToMap(); }, 1500); },
+    
+    win() { 
+        this.active=false; 
+        gameData.maxLevel++; 
+        gameData.points += 100;
+        saveData(); 
+        confetti(); 
+        setTimeout(()=> { buildMap(); exitToMap(); }, 1500); 
+    },
+    
     loop() { if(this.active) { this.update(); this.draw(); requestAnimationFrame(()=>this.loop()); } },
+    
     spawnEnemy() {
         const side = Math.random(); let x, y, vx=0, vy=0, s=3;
         if(side<0.25){ x=window.innerWidth; y=Math.random()*window.innerHeight; vx=-s; }
@@ -459,12 +630,23 @@ const GameCore = {
     }
 };
 
+// ============ وظائف أخرى ============
 function logout() { location.reload(); }
-function exitToMap() { GameCore.active = false; document.getElementById('game-container').style.display='none'; document.getElementById('levelMap').classList.remove('hidden'); buildMap(); GameCore.updateUI(); }
+
+function exitToMap() { 
+    GameCore.active = false; 
+    document.getElementById('game-container').style.display='none'; 
+    document.getElementById('levelMap').classList.remove('hidden'); 
+    buildMap(); 
+    GameCore.updateUI(); 
+}
+
 function toggleShop(show) { 
-    GameCore.paused = show; document.getElementById('shopPopup').style.display = show?'flex':'none'; 
+    GameCore.paused = show; 
+    document.getElementById('shopPopup').style.display = show?'flex':'none'; 
     if(show) { renderSkins(); renderWeapons(); } else if(GameCore.active) GameCore.loop(); 
 }
+
 function renderSkins() {
     const list = document.getElementById('skins-list'); list.innerHTML = '';
     skins.forEach(s => {
@@ -474,6 +656,7 @@ function renderSkins() {
         list.innerHTML += `<div class="shop-item"><span>${s.head} ${s.name}</span><button class="shop-btn" onclick="buySkin('${s.id}')" style="background:${active?'#2ed573':(owned?'#0984e3':'#2d3436')}">${active?'مفعل':(owned?'تفعيل':priceTag)}</button></div>`;
     });
 }
+
 function renderWeapons() {
     const list = document.getElementById('weapons-list'); list.innerHTML = '';
     list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser?'disabled':''}>${gameData.hasLaser?'تم الشراء':'150000 🪙'}</button></div>`;
@@ -483,6 +666,7 @@ function renderWeapons() {
         list.innerHTML += `<div class="shop-item"><span>🔥 كثافة الرصاص (${gameData.fireRateLevel+1}/4)</span><button class="shop-btn" onclick="buyWeapon('fr')">${cost} 🪙</button></div>`;
     }
 }
+
 function buySkin(id) {
     const s = skins.find(x => x.id === id);
     if(gameData.ownedSkins.includes(id)) { gameData.activeSkin = id; }
@@ -495,6 +679,7 @@ function buySkin(id) {
     }
     saveData(); renderSkins(); GameCore.updateUI();
 }
+
 function buyWeapon(type) {
     if(type==='laser' && gameData.coins >= 150000) { gameData.coins-=150000; gameData.hasLaser=true; }
     else if(type==='nuke' && gameData.coins >= 20000) { gameData.coins-=20000; gameData.nukes++; }
@@ -504,9 +689,12 @@ function buyWeapon(type) {
     }
     saveData(); renderWeapons(); GameCore.updateUI();
 }
-function useNuke() { if(gameData.nukes > 0) { gameData.nukes--; gameData.maxLevel += 3; saveData(); confetti(); exitToMap(); } }
+
+function useNuke() { if(gameData.nukes > 0) { gameData.nukes--; gameData.maxLevel += 3; gameData.points += 50; saveData(); confetti(); exitToMap(); } }
+
 function exchange() { if(gameData.coins >= 100) { gameData.coins -= 100; gameData.cash += 2; saveData(); GameCore.updateUI(); } }
 
+// ============ نظام Joystick ============
 const Joysticks = {
     mID: null, sID: null,
     init() {
@@ -525,7 +713,9 @@ const Joysticks = {
                 }
             }
         };
-        window.addEventListener("touchstart", h, {passive:false}); window.addEventListener("touchmove", h, {passive:false}); window.addEventListener("touchend", h);
+        window.addEventListener("touchstart", h, {passive:false}); 
+        window.addEventListener("touchmove", h, {passive:false}); 
+        window.addEventListener("touchend", h);
     },
     set(type, t) { const r = document.getElementById(type+'Joy').getBoundingClientRect(); this[type+'C'] = {x:r.left+42, y:r.top+42}; },
     move(t, type) {
@@ -547,6 +737,7 @@ function buildMap() {
     }
 }
 
+// ============ التهيئة ============
 Joysticks.init();
 </script>
 </body>
