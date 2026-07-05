@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0984e3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OPERATORE">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230984e3' width='192' height='192'/><text x='50%' y='50%' font-size='100' fill='white' text-anchor='middle' dominant-baseline='central'>⚡</text></svg>">
     <title>OPERATORE - EDITION</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,6 +20,345 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
         body { background: #f0f2f5; height: 100vh; overflow: hidden; touch-action: none; color: #2d3436; transition: background 0.5s ease; }
         
+        /* --- منفذة إنهاء المستوى --- */
+        #levelCompleteModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .level-complete-content {
+            background: white;
+            width: 90%;
+            max-width: 380px;
+            padding: 30px 20px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+            animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes popUp {
+            0% { 
+                transform: scale(0.3) rotateX(-90deg);
+                opacity: 0;
+            }
+            50% { transform: scale(1.05) rotateX(10deg); }
+            100% { 
+                transform: scale(1) rotateX(0deg);
+                opacity: 1;
+            }
+        }
+
+        .level-complete-header {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .stars-container {
+            font-size: 60px;
+            animation: starBurst 0.8s ease-out;
+            margin-bottom: 10px;
+        }
+
+        @keyframes starBurst {
+            0% { 
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% { transform: scale(1.2); }
+            100% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .level-complete-title {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-blue), #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            animation: slideInDown 0.6s ease;
+        }
+
+        @keyframes slideInDown {
+            from { 
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .level-number {
+            font-size: 18px;
+            color: #636e72;
+            margin-bottom: 20px;
+        }
+
+        .rewards-container {
+            background: linear-gradient(135deg, #f0f2f5, #ecf0f1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .reward-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            animation: scaleIn 0.5s ease forwards;
+            animation-delay: var(--delay);
+        }
+
+        @keyframes scaleIn {
+            0% { 
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .reward-icon {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .reward-label {
+            font-size: 12px;
+            color: #636e72;
+            margin-bottom: 5px;
+        }
+
+        .reward-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .reward-plus {
+            color: #2ed573;
+            font-size: 14px;
+        }
+
+        .difficulty-info {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideInUp 0.6s ease 0.3s both;
+        }
+
+        @keyframes slideInUp {
+            from { 
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .next-level-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--neon-blue), #0756c8);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            animation: slideInUp 0.6s ease 0.5s both;
+        }
+
+        .next-level-btn:active {
+            transform: scale(0.98);
+        }
+
+        .particle-effect {
+            position: absolute;
+            font-size: 30px;
+            pointer-events: none;
+            animation: particleFloat 1.5s ease-out forwards;
+        }
+
+        @keyframes particleFloat {
+            0% { 
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* --- منفذة التحميل الإجباري --- */
+        #installForceModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .install-force-content {
+            background: white;
+            width: 90%;
+            max-width: 350px;
+            padding: 30px 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .install-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .install-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--neon-blue);
+            margin-bottom: 10px;
+        }
+
+        .install-desc {
+            font-size: 14px;
+            color: #636e72;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .install-benefits {
+            background: #f0f2f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 13px;
+            color: #2d3436;
+        }
+
+        .install-benefits li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .install-benefits li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        .install-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .install-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .install-btn.primary {
+            background: linear-gradient(135deg, var(--neon-blue), #0756c8);
+            color: white;
+        }
+
+        .install-btn.primary:active {
+            transform: scale(0.98);
+        }
+
+        .install-btn.secondary {
+            background: #ecf0f1;
+            color: #2d3436;
+        }
+
+        .install-btn.secondary:active {
+            transform: scale(0.98);
+        }
+
+        .install-progress {
+            width: 100%;
+            height: 4px;
+            background: #ecf0f1;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .install-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), #00d2ff);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
         /* --- واجهة الترحيب المضافة OPERATORE --- */
         #welcomeScreen {
             background: #ffffff;
@@ -120,12 +465,91 @@
         .edit-form { display: flex; flex-direction: column; gap: 12px; }
         .edit-form input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
         .edit-form button { padding: 12px; background: #0984e3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-       .shop-sec { margin-bottom: 20px; }
-.shop-sec label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
- 
+        .shop-sec { margin-bottom: 20px; }
+        .shop-sec label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        .float-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--glass); border: 2px solid var(--neon-blue); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; }
+        
+        /* --- أزرار الخريطة الطافية --- */
+        #map-floating-controls { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 10px; touch-action: none; cursor: move; }
     </style> 
 </head>
 <body>
+
+<!-- منفذة إنهاء المستوى -->
+<div id="levelCompleteModal">
+    <div class="level-complete-content">
+        <div class="level-complete-header">
+            <div class="stars-container">⭐⭐⭐</div>
+            <div class="level-complete-title">مبروك! 🎉</div>
+            <div class="level-number">أكملت المستوى <span id="completedLevel">1</span></div>
+        </div>
+
+        <div class="difficulty-info">
+            <i class="fas fa-bolt"></i>
+            <span id="difficultyText">الصعوبة متوسطة</span>
+        </div>
+
+        <div class="rewards-container">
+            <div class="reward-item" style="--delay: 0s;">
+                <div class="reward-icon">⭐</div>
+                <div class="reward-label">نقاط</div>
+                <div class="reward-value">
+                    +<span id="rewardPoints">50</span>
+                </div>
+            </div>
+            <div class="reward-item" style="--delay: 0.1s;">
+                <div class="reward-icon">🪙</div>
+                <div class="reward-label">عملات</div>
+                <div class="reward-value">
+                    +<span id="rewardCoins">100</span>
+                </div>
+            </div>
+            <div class="reward-item" style="--delay: 0.2s;">
+                <div class="reward-icon">💵</div>
+                <div class="reward-label">كاش</div>
+                <div class="reward-value">
+                    +<span id="rewardCash">1</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="next-level-btn" onclick="goToNextLevel()">
+            <i class="fas fa-arrow-right"></i>
+            <span>المستوى التالي</span>
+        </button>
+    </div>
+</div>
+
+<!-- منفذة التحميل الإجباري -->
+<div id="installForceModal">
+    <div class="install-force-content">
+        <div class="install-icon">📱</div>
+        <div class="install-title">حمّل اللعبة الآن!</div>
+        <div class="install-desc">استمتع بتجربة لعبة ممتعة بدون إعلانات</div>
+        
+        <ul class="install-benefits">
+            <li>⚡ تحميل أسرع</li>
+            <li>🎮 تجربة أفضل</li>
+            <li>💾 استخدام أقل للإنترنت</li>
+            <li>🔔 إشعارات اللعبة</li>
+        </ul>
+
+        <div class="install-progress">
+            <div class="install-progress-bar"></div>
+        </div>
+
+        <div class="install-buttons">
+            <button class="install-btn primary" onclick="forceInstallApp()">
+                <i class="fas fa-download"></i>
+                <span>تحميل الآن</span>
+            </button>
+            <button class="install-btn secondary" onclick="dismissInstallModal()">
+                <i class="fas fa-times"></i>
+                <span>لاحقاً</span>
+            </button>
+        </div>
+    </div>
+</div>
 
 <div id="welcomeScreen">
     <div class="hero-center">
@@ -234,53 +658,67 @@
         <div class="stat-badge" onclick="logout()" style="background:#fab1a0; cursor: pointer;">🚪 خروج</div>
     </div>
     <div class="level-grid" id="grid"></div>
-</div>
-
-<div id="game-container" style="position: fixed; inset: 0; display: none;"><div id="hud">
-    <div style="display:flex; gap:5px;">
-        <div class="stat-badge" onclick="exitToMap()">🏠 خروج</div>
-        <!-- تم تقليل العناصر لضمان عدم الازدحام -->
-        <div class="stat-badge">❤️ <span id="h-lives">5</span></div>
-        <div class="stat-badge">🎯 <span id="h-score">0</span></div>
-    </div>
-    <div style="display:flex; gap:5px;">
-        <!-- أزرار التحكم -->
-        <div class="stat-badge" onclick="toggleSettings()" style="cursor: pointer;">⚙️</div>
-        <div class="stat-badge" onclick="toggleShop(true)" style="cursor: pointer;">🛒 السوق</div>
-        <div class="stat-badge" onclick="SoundSystem.toggle()" id="sound-btn">🔊</div>
+    
+    <!-- أزرار الخريطة الطافية -->
+    <div id="map-floating-controls">
+        <div class="float-btn" onclick="toggleMapSettings()">⚙️</div>
+        <div class="float-btn" onclick="toggleMapShop()">🛒</div>
     </div>
 </div>
 
-       
+<div id="game-container" style="position: fixed; inset: 0; display: none;">
+    
+    <div id="hud">
         <div style="display:flex; gap:5px;">
-            <div class="stat-badge" onclick="SoundSystem.toggle()" id="sound-btn">🔊</div>
-            <div class="stat-badge" onclick="toggleShop(true)" style="cursor: pointer;">🛒 السوق</div>
+            <div class="stat-badge" onclick="exitToMap()">🏠 خروج</div>
+            <div class="stat-badge">❤️ <span id="h-lives">5</span></div>
+            <div class="stat-badge">🎯 <span id="h-score">0</span></div>
+            <div class="stat-badge">🪙 <span id="h-coins">0</span></div>
         </div>
     </div>
-    <canvas id="game"></canvas>
-    <div id="special-actions">
-        <div id="nuke-btn" class="action-btn hidden" onclick="useNuke()">☢️</div>
+
+    <div id="floating-controls" style="position: fixed; top: 100px; right: 10px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; touch-action: none; cursor: move;">
+        <div class="float-btn" onclick="toggleSettings()">⚙️</div>
+        <div class="float-btn" onclick="toggleShop(true)">🛒</div>
     </div>
+
+    <canvas id="game"></canvas>
+    
     <div id="moveJoy" class="joystick-base"><div id="moveStick" class="stick"></div></div>
     <div id="shootJoy" class="joystick-base"><div id="shootStick" class="stick"></div></div>
 </div>
 
+<!-- منافذ السوق والإعدادات -->
 <div id="shopPopup" class="popup">
     <div class="popup-content">
-        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر الملكي</h2>
-        <div class="shop-sec">
-            <h4 style="color:var(--neon-blue); margin-bottom:8px;">👕 الشخصيات</h4>
-            <div id="skins-list"></div>
+        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر والبنك</h2>
+        <div id="skins-list"></div>
+        <div id="weapons-list"></div>
+        
+        <div class="shop-sec" style="border-top: 2px solid #ddd; padding-top:10px;">
+            <h4 style="color:orange;">🏦 العمليات البنكية</h4>
+            <button onclick="showDepositModal()" class="shop-btn" style="width:100%; margin-bottom:5px; background:#27ae60;">💰 إيداع (تليجرام)</button>
+            <button onclick="showWithdrawModal()" class="shop-btn" style="width:100%; background:#d63031;">💸 سحب (تليجرام)</button>
         </div>
-        <div class="shop-sec">
-            <h4 style="color:var(--neon-red); margin-bottom:8px;">⚔️ الأسلحة والقدرات</h4>
-            <div id="weapons-list"></div>
+        
+        <button onclick="toggleShop(false)" style="width:100%; padding:10px; margin-top:10px;">إغلاق</button>
+    </div>
+</div>
+
+<!-- منافذ السوق والإعدادات - صفحة الخريطة -->
+<div id="mapShopPopup" class="popup">
+    <div class="popup-content">
+        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر والبنك</h2>
+        <div id="map-skins-list"></div>
+        <div id="map-weapons-list"></div>
+        
+        <div class="shop-sec" style="border-top: 2px solid #ddd; padding-top:10px;">
+            <h4 style="color:orange;">🏦 العمليات البنكية</h4>
+            <button onclick="showDepositModal()" class="shop-btn" style="width:100%; margin-bottom:5px; background:#27ae60;">💰 إيداع (تليجرام)</button>
+            <button onclick="showWithdrawModal()" class="shop-btn" style="width:100%; background:#d63031;">💸 سحب (تليجرام)</button>
         </div>
-        <div class="shop-sec">
-            <h4 style="color:orange; margin-bottom:8px;">🏦 البنك</h4>
-            <div class="shop-item"><span>100 🪙 ➔ 2 💵</span><button class="shop-btn" onclick="exchange()">تحويل</button></div>
-        </div>
-        <button onclick="toggleShop(false)" style="width:100%; padding:12px; border-radius:12px; background:#2d3436; color:white; border:none; font-weight:bold;">العودة للقتال</button>
+        
+        <button onclick="toggleMapShop()" style="width:100%; padding:10px; margin-top:10px;">إغلاق</button>
     </div>
 </div>
 
@@ -308,15 +746,54 @@
     </div>
 </div>
 
+<!-- منفذة الإعدادات للعبة -->
+<div id="settingsPopup" class="popup" style="display: none;">
+    <div class="popup-content">
+        <h2 style="text-align:center; margin-bottom:15px;">⚙️ إعدادات OPERATORE</h2>
+        
+        <div class="shop-sec">
+            <label>حجم الاستيك: <span id="stickSizeVal">35</span></label>
+            <input type="range" min="20" max="60" value="35" oninput="updateStickSize(this.value)" style="width:100%">
+        </div>
+
+        <div class="shop-sec">
+            <label>حجم اللاعب: <span id="playerSizeVal">40</span></label>
+            <input type="range" min="20" max="80" value="40" oninput="updatePlayerSize(this.value)" style="width:100%">
+        </div>
+
+        <button onclick="toggleSettings()" style="width:100%; padding:12px; background:#2d3436; color:white; border-radius:12px; border:none; margin-top:10px;">حفظ وإغلاق</button>
+    </div>
+</div>
+
+<!-- منفذة الإعدادات لصفحة الخريطة -->
+<div id="mapSettingsPopup" class="popup" style="display: none;">
+    <div class="popup-content">
+        <h2 style="text-align:center; margin-bottom:15px;">⚙️ إعدادات OPERATORE</h2>
+        
+        <div class="shop-sec">
+            <label>حجم الخط: <span id="mapFontSizeVal">16</span></label>
+            <input type="range" min="12" max="24" value="16" oninput="updateMapFontSize(this.value)" style="width:100%">
+        </div>
+
+        <div class="shop-sec">
+            <label>مستوى الصوت: <span id="mapVolVal">100</span>%</label>
+            <input type="range" min="0" max="100" value="100" oninput="updateVolume(this.value)" style="width:100%">
+        </div>
+
+        <button onclick="toggleMapSettings()" style="width:100%; padding:12px; background:#2d3436; color:white; border-radius:12px; border:none; margin-top:10px;">حفظ وإغلاق</button>
+    </div>
+</div>
+
 <script>
+
 // ============ Supabase الإعدادات ============
 const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
 // Telegram Bot Token و Chat ID
-const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';
-const TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID_HERE';
+const TELEGRAM_BOT_TOKEN = '8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo';
+const TELEGRAM_CHAT_ID = '-1003614080639';
 
 let currentUser = null;
 let isGuest = false;
@@ -339,13 +816,154 @@ let gameData = {
     fireRateLevel: 0
 };
 
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+const installForceModal = document.getElementById('installForceModal');
+let dismissedCount = 0;
+
+// ============ دالة حساب المكافآت حسب المستوى ============
+function calculateRewards(level) {
+    return {
+        points: level * 50,           // 50، 100، 150، 200...
+        coins: 100 + (level * 30),    // 130، 160، 190...
+        cash: level >= 2 ? Math.ceil(level / 3) : 0  // من المستوى 2 فما فوق
+    };
+}
+
+function getLevelDifficulty(level) {
+    if (level <= 5) return '🟢 سهل';
+    if (level <= 15) return '🟡 متوسط';
+    if (level <= 30) return '🔴 صعب';
+    if (level <= 50) return '🔥 متطرف';
+    return '💀 جحيمي';
+}
+
+// ============ دالة التحميل الإجباري ============
+function showInstallForceModal() {
+    setTimeout(() => {
+        installForceModal.style.display = 'flex';
+        animateProgressBar();
+    }, 2000);
+}
+
+function animateProgressBar() {
+    const progressBar = document.querySelector('.install-progress-bar');
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 100) progress = 100;
+        progressBar.style.width = progress + '%';
+        if (progress === 100) clearInterval(interval);
+    }, 500);
+}
+
+function forceInstallApp() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('تم قبول التثبيت');
+                dismissInstallModal();
+            } else {
+                console.log('تم رفض التثبيت');
+                dismissedCount++;
+                if (dismissedCount < 3) {
+                    setTimeout(() => {
+                        showInstallForceModal();
+                    }, 30000);
+                }
+            }
+        });
+        deferredPrompt = null;
+    }
+}
+
+function dismissInstallModal() {
+    installForceModal.style.display = 'none';
+    document.querySelector('.install-progress-bar').style.width = '0%';
+}
+
+// ============ دالة إنهاء المستوى ============
+function showLevelCompleteModal(level) {
+    const rewards = calculateRewards(level);
+    const difficulty = getLevelDifficulty(level);
+    
+    // تحديث البيانات
+    gameData.points += rewards.points;
+    gameData.coins += rewards.coins;
+    gameData.cash += rewards.cash;
+    gameData.maxLevel++;
+    
+    // تحديث المنفذة
+    document.getElementById('completedLevel').innerText = level;
+    document.getElementById('rewardPoints').innerText = rewards.points;
+    document.getElementById('rewardCoins').innerText = rewards.coins;
+    document.getElementById('rewardCash').innerText = rewards.cash;
+    document.getElementById('difficultyText').innerText = difficulty;
+    
+    // إظهار المنفذة مع الاحتفالية
+    const modal = document.getElementById('levelCompleteModal');
+    modal.style.display = 'flex';
+    
+    // تأثير الاحتفالية
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
+    
+    // إضافة تأثير الجسيمات
+    createParticleEffect();
+    
+    // حفظ البيانات
+    saveData();
+}
+
+function createParticleEffect() {
+    const particles = ['🌟', '✨', '🎉', '🎊', '⭐', '💫'];
+    const modal = document.querySelector('.level-complete-content');
+    
+    for (let i = 0; i < 12; i++) {
+        setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.className = 'particle-effect';
+            particle.textContent = particles[Math.floor(Math.random() * particles.length)];
+            
+            const angle = (Math.PI * 2 * i) / 12;
+            const distance = 150;
+            const tx = Math.cos(angle) * distance;
+            const ty = Math.sin(angle) * distance;
+            
+            particle.style.setProperty('--tx', tx + 'px');
+            particle.style.setProperty('--ty', ty + 'px');
+            particle.style.left = modal.offsetWidth / 2 + 'px';
+            particle.style.top = modal.offsetHeight / 2 + 'px';
+            
+            modal.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 1500);
+        }, i * 50);
+    }
+}
+
+function goToNextLevel() {
+    const nextLevel = GameCore.lvl + 1;
+    dismissLevelCompleteModal();
+    GameCore.init(nextLevel);
+}
+
+function dismissLevelCompleteModal() {
+    document.getElementById('levelCompleteModal').style.display = 'none';
+}
+
 // ============ دوال عامة ============
 function revealGame() {
     const ws = document.getElementById('welcomeScreen');
     ws.style.opacity = '0';
     setTimeout(() => {
         ws.classList.add('hidden');
-        SoundSystem.init(); 
+        SoundSystem.init();
+        showInstallForceModal();
     }, 800);
 }
 
@@ -384,6 +1002,7 @@ function startAsGuest() {
     buildMap(); 
     GameCore.updateUI();
     showAuthMessage('مرحباً باللاعب الضيف! 👋', false);
+    showInstallForceModal();
 }
 
 async function handleAuth(type) {
@@ -541,6 +1160,8 @@ async function loadOnlineData() {
         buildMap(); 
         GameCore.updateUI();
     }
+    
+    showInstallForceModal();
 }
 
 async function saveData() {
@@ -623,6 +1244,7 @@ async function saveProfileChanges() {
 // ============ عمليات الإيداع والسحب ============
 function showDepositModal() {
     document.getElementById('depositModal').style.display = 'flex';
+    dismissInstallModal();
 }
 
 function closeDepositModal() {
@@ -632,6 +1254,7 @@ function closeDepositModal() {
 
 function showWithdrawModal() {
     document.getElementById('withdrawModal').style.display = 'flex';
+    dismissInstallModal();
 }
 
 function closeWithdrawModal() {
@@ -647,7 +1270,7 @@ async function processDeposit() {
         return;
     }
 
-    const message = `💰 طلب إيداع جديد:\n\n👤 الاسم: ${userProfile.name}\n📧 البريد: ${currentUser.email}\n🆔 معرف OPERATORE: ${userProfile.operator_id}\n💸 المبلغ: ${amount} دولار`;
+    const message = `💰 طلب إيداع جديد:\n\n👤 الاسم: ${userProfile.name}\n📧 البريد: ${currentUser?.email || 'ضيف'}\n🆔 معرف OPERATORE: ${userProfile.operator_id}\n💸 المبلغ: ${amount} دولار`;
     
     await sendTelegramMessage(message);
     alert(`✅ تم إرسال طلب الإيداع (${amount} دولار) للفريق. سيتم معالجته قريباً!`);
@@ -667,7 +1290,7 @@ async function processWithdraw() {
         return;
     }
 
-    const message = `💸 طلب سحب جديد:\n\n👤 الاسم: ${userProfile.name}\n📧 البريد: ${currentUser.email}\n🆔 معرف OPERATORE: ${userProfile.operator_id}\n💰 المبلغ: ${amount} دولار`;
+    const message = `💸 طلب سحب جديد:\n\n👤 الاسم: ${userProfile.name}\n📧 البريد: ${currentUser?.email || 'ضيف'}\n🆔 معرف OPERATORE: ${userProfile.operator_id}\n💰 المبلغ: ${amount} دولار`;
     
     await sendTelegramMessage(message);
     alert(`✅ تم إرسال طلب السحب (${amount} دولار) للفريق. سيتم معالجته قريباً!`);
@@ -693,9 +1316,6 @@ async function sendTelegramMessage(message) {
 }
 
 // ============ تثبيت التطبيق ============
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -713,6 +1333,7 @@ async function installApp() {
 window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
     installBtn.style.display = 'none';
+    dismissInstallModal();
 });
 
 // ============ نظام الصوت ============
@@ -747,7 +1368,6 @@ const SoundSystem = {
     },
     toggle() { 
         this.enabled = !this.enabled; 
-        document.getElementById('sound-btn').innerText = this.enabled ? '🔊' : '🔇'; 
     }
 };
 
@@ -786,6 +1406,8 @@ const GameCore = {
     particles: [], 
     shootDir: { x: 0, y: 0 },
     lastShoot: 0,
+    enemySpeed: 3,
+    targetScore: 200,
     
     init(lvl) {
         this.lvl = lvl; 
@@ -796,6 +1418,12 @@ const GameCore = {
         this.fruits = []; 
         this.bullets = []; 
         this.particles = [];
+        
+        // زيادة صعوبة المستوى
+        this.enemySpeed = 3 + (lvl * 0.3); // سرعة الفواكه تزداد مع المستوى
+        this.targetScore = 200 + (lvl * 50); // الهدف يزداد
+        
+        dismissInstallModal();
         document.getElementById('levelMap').classList.add('hidden');
         document.getElementById('game-container').style.display = 'block';
         document.body.style.background = levelConfigs[(lvl-1)%5].bg;
@@ -834,7 +1462,6 @@ const GameCore = {
         u('m-points', gameData.points);
         u('m-coins', gameData.coins);
         u('m-cash', gameData.cash);
-        document.getElementById('nuke-btn').classList.toggle('hidden', gameData.nukes <= 0);
     },
     
     update() {
@@ -887,7 +1514,7 @@ const GameCore = {
                     SoundSystem.play('hit'); 
                     this.updateUI(); 
                     saveData();
-                    if(this.score >= 200) this.win();
+                    if(this.score >= this.targetScore) this.win();
                 }
             });
         });
@@ -958,11 +1585,10 @@ const GameCore = {
     
     win() { 
         this.active = false; 
-        gameData.maxLevel++; 
-        gameData.points += 100;
-        saveData(); 
         confetti(); 
-        setTimeout(() => { buildMap(); exitToMap(); }, 1500); 
+        setTimeout(() => { 
+            showLevelCompleteModal(this.lvl);
+        }, 500); 
     },
     
     loop() { 
@@ -975,7 +1601,8 @@ const GameCore = {
     
     spawnEnemy() {
         const side = Math.random(); 
-        let x, y, vx = 0, vy = 0, s = 3;
+        let x, y, vx = 0, vy = 0;
+        let s = this.enemySpeed; // استخدام السرعة المتغيرة
         if(side < 0.25){ 
             x = window.innerWidth; 
             y = Math.random() * window.innerHeight; 
@@ -1025,6 +1652,27 @@ function toggleShop(show) {
     }
 }
 
+function toggleMapShop() {
+    const popup = document.getElementById('mapShopPopup');
+    if(popup.style.display === 'flex') {
+        popup.style.display = 'none';
+    } else {
+        popup.style.display = 'flex';
+        renderMapSkins();
+        renderMapWeapons();
+    }
+}
+
+function toggleSettings() {
+    const s = document.getElementById('settingsPopup');
+    s.style.display = s.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function toggleMapSettings() {
+    const s = document.getElementById('mapSettingsPopup');
+    s.style.display = s.style.display === 'flex' ? 'none' : 'flex';
+}
+
 function renderSkins() {
     const list = document.getElementById('skins-list'); 
     list.innerHTML = '';
@@ -1036,8 +1684,30 @@ function renderSkins() {
     });
 }
 
+function renderMapSkins() {
+    const list = document.getElementById('map-skins-list'); 
+    list.innerHTML = '';
+    skins.forEach(s => {
+        const owned = gameData.ownedSkins.includes(s.id);
+        const active = gameData.activeSkin === s.id;
+        let priceTag = s.t === 'hybrid' ? `${s.p}🪙+${s.p2}💵` : `${s.p} ${s.t === 'coin' ? '🪙' : '💵'}`;
+        list.innerHTML += `<div class="shop-item"><span>${s.head} ${s.name}</span><button class="shop-btn" onclick="buySkin('${s.id}')" style="background:${active ? '#2ed573' : (owned ? '#0984e3' : '#2d3436')}">${active ? 'مفعل' : (owned ? 'تفعيل' : priceTag)}</button></div>`;
+    });
+}
+
 function renderWeapons() {
     const list = document.getElementById('weapons-list'); 
+    list.innerHTML = '';
+    list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser ? 'disabled' : ''}>${gameData.hasLaser ? 'تم الشراء' : '150000 🪙'}</button></div>`;
+    list.innerHTML += `<div class="shop-item"><span>☢️ قنبلة نووية</span><button class="shop-btn" onclick="buyWeapon('nuke')">20000 🪙</button></div>`;
+    if(gameData.fireRateLevel < 4) {
+        let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
+        list.innerHTML += `<div class="shop-item"><span>🔥 كثافة الرصاص (${gameData.fireRateLevel+1}/4)</span><button class="shop-btn" onclick="buyWeapon('fr')">${cost} 🪙</button></div>`;
+    }
+}
+
+function renderMapWeapons() {
+    const list = document.getElementById('map-weapons-list'); 
     list.innerHTML = '';
     list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser ? 'disabled' : ''}>${gameData.hasLaser ? 'تم الشراء' : '150000 🪙'}</button></div>`;
     list.innerHTML += `<div class="shop-item"><span>☢️ قنبلة نووية</span><button class="shop-btn" onclick="buyWeapon('nuke')">20000 🪙</button></div>`;
@@ -1074,6 +1744,7 @@ function buySkin(id) {
     }
     saveData(); 
     renderSkins(); 
+    renderMapSkins();
     GameCore.updateUI();
 }
 
@@ -1095,6 +1766,7 @@ function buyWeapon(type) {
     }
     saveData(); 
     renderWeapons(); 
+    renderMapWeapons();
     GameCore.updateUI();
 }
 
@@ -1194,15 +1866,9 @@ function buildMap() {
         grid.appendChild(card);
     }
 }
-// دوال الضبط الجديدة
-function toggleSettings() {
-    const s = document.getElementById('settingsPopup');
-    s.style.display = s.style.display === 'flex' ? 'none' : 'flex';
-}
 
 function updateStickSize(val) {
     document.getElementById('stickSizeVal').innerText = val;
-    // تحديث حجم قاعدة الاستيك في الواجهة
     document.querySelectorAll('.stick').forEach(el => {
         el.style.width = val + 'px';
         el.style.height = val + 'px';
@@ -1211,31 +1877,24 @@ function updateStickSize(val) {
 
 function updatePlayerSize(val) {
     document.getElementById('playerSizeVal').innerText = val;
-    // تحديث حجم اللاعب في محرك اللعبة
     GameCore.player.renderSize = val; 
+}
+
+function updateMapFontSize(val) {
+    document.getElementById('mapFontSizeVal').innerText = val;
+    document.getElementById('levelMap').style.fontSize = val + 'px';
+}
+
+function updateVolume(val) {
+    document.getElementById('mapVolVal').innerText = val;
+    if(SoundSystem.ctx) {
+        SoundSystem.ctx.destination.maxChannelCount = parseInt(val);
+    }
 }
 
 // ============ التهيئة ============
 Joysticks.init();
+
 </script>
-<!-- نافذة ضبط اللعبة -->
-<div id="settingsPopup" class="popup" style="display: none;">
-    <div class="popup-content">
-        <h2 style="text-align:center; margin-bottom:15px;">⚙️ إعدادات OPERATORE</h2>
-        
-        <div class="shop-sec">
-            <label>حجم الاستيك: <span id="stickSizeVal">35</span></label>
-            <input type="range" min="20" max="60" value="35" oninput="updateStickSize(this.value)" style="width:100%">
-        </div>
-
-        <div class="shop-sec">
-            <label>حجم اللاعب: <span id="playerSizeVal">40</span></label>
-            <input type="range" min="20" max="80" value="40" oninput="updatePlayerSize(this.value)" style="width:100%">
-        </div>
-
-        <button onclick="toggleSettings()" style="width:100%; padding:12px; background:#2d3436; color:white; border-radius:12px; border:none; margin-top:10px;">حفظ وإغلاق</button>
-    </div>
-</div>
-
 </body>
-</html>
+    </html>
