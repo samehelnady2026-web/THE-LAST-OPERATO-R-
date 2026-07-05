@@ -1,4 +1,4 @@
-const CACHE_NAME = 'last-operator-v1';
+const CACHE_NAME = 'operator';
 const ASSETS = [
     './',
     './index.html',
