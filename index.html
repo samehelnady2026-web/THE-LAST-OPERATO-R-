@@ -120,7 +120,10 @@
         .edit-form { display: flex; flex-direction: column; gap: 12px; }
         .edit-form input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
         .edit-form button { padding: 12px; background: #0984e3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    </style>
+       .shop-sec { margin-bottom: 20px; }
+.shop-sec label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+ 
+    </style> 
 </head>
 <body>
 
@@ -233,16 +236,22 @@
     <div class="level-grid" id="grid"></div>
 </div>
 
-<div id="game-container" style="position: fixed; inset: 0; display: none;">
-    <div id="hud">
-        <div style="display:flex; gap:5px;">
-            <div class="stat-badge" onclick="exitToMap()">🏠 خروج</div>
-            <div class="stat-badge">❤️ <span id="h-lives">5</span></div>
-            <div class="stat-badge">🎯 <span id="h-score">0</span></div>
-            <div class="stat-badge">⭐ <span id="h-points">0</span></div>
-            <div class="stat-badge">🪙 <span id="h-coins">0</span></div>
-            <div class="stat-badge">💵 <span id="h-cash">0</span></div>
-        </div>
+<div id="game-container" style="position: fixed; inset: 0; display: none;"><div id="hud">
+    <div style="display:flex; gap:5px;">
+        <div class="stat-badge" onclick="exitToMap()">🏠 خروج</div>
+        <!-- تم تقليل العناصر لضمان عدم الازدحام -->
+        <div class="stat-badge">❤️ <span id="h-lives">5</span></div>
+        <div class="stat-badge">🎯 <span id="h-score">0</span></div>
+    </div>
+    <div style="display:flex; gap:5px;">
+        <!-- أزرار التحكم -->
+        <div class="stat-badge" onclick="toggleSettings()" style="cursor: pointer;">⚙️</div>
+        <div class="stat-badge" onclick="toggleShop(true)" style="cursor: pointer;">🛒 السوق</div>
+        <div class="stat-badge" onclick="SoundSystem.toggle()" id="sound-btn">🔊</div>
+    </div>
+</div>
+
+       
         <div style="display:flex; gap:5px;">
             <div class="stat-badge" onclick="SoundSystem.toggle()" id="sound-btn">🔊</div>
             <div class="stat-badge" onclick="toggleShop(true)" style="cursor: pointer;">🛒 السوق</div>
@@ -1185,9 +1194,48 @@ function buildMap() {
         grid.appendChild(card);
     }
 }
+// دوال الضبط الجديدة
+function toggleSettings() {
+    const s = document.getElementById('settingsPopup');
+    s.style.display = s.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function updateStickSize(val) {
+    document.getElementById('stickSizeVal').innerText = val;
+    // تحديث حجم قاعدة الاستيك في الواجهة
+    document.querySelectorAll('.stick').forEach(el => {
+        el.style.width = val + 'px';
+        el.style.height = val + 'px';
+    });
+}
+
+function updatePlayerSize(val) {
+    document.getElementById('playerSizeVal').innerText = val;
+    // تحديث حجم اللاعب في محرك اللعبة
+    GameCore.player.renderSize = val; 
+}
 
 // ============ التهيئة ============
 Joysticks.init();
 </script>
+<!-- نافذة ضبط اللعبة -->
+<div id="settingsPopup" class="popup" style="display: none;">
+    <div class="popup-content">
+        <h2 style="text-align:center; margin-bottom:15px;">⚙️ إعدادات OPERATORE</h2>
+        
+        <div class="shop-sec">
+            <label>حجم الاستيك: <span id="stickSizeVal">35</span></label>
+            <input type="range" min="20" max="60" value="35" oninput="updateStickSize(this.value)" style="width:100%">
+        </div>
+
+        <div class="shop-sec">
+            <label>حجم اللاعب: <span id="playerSizeVal">40</span></label>
+            <input type="range" min="20" max="80" value="40" oninput="updatePlayerSize(this.value)" style="width:100%">
+        </div>
+
+        <button onclick="toggleSettings()" style="width:100%; padding:12px; background:#2d3436; color:white; border-radius:12px; border:none; margin-top:10px;">حفظ وإغلاق</button>
+    </div>
+</div>
+
 </body>
 </html>
