@@ -20,7 +20,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
         body { background: #f0f2f5; height: 100vh; overflow: hidden; touch-action: none; color: #2d3436; transition: background 0.5s ease; }
         
-        /* --- منفذة إنهاء المستوى --- */
         #levelCompleteModal {
             position: fixed;
             inset: 0;
@@ -228,7 +227,430 @@
             }
         }
 
-        /* --- منفذة التحميل الإجباري --- */
+        #buyLifeModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .buy-life-content {
+            background: white;
+            width: 90%;
+            max-width: 380px;
+            padding: 30px 20px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+            animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .buy-life-icon {
+            font-size: 80px;
+            margin-bottom: 15px;
+            animation: heartBeat 0.6s ease;
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .buy-life-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #d63031;
+            margin-bottom: 10px;
+        }
+
+        .buy-life-desc {
+            font-size: 14px;
+            color: #636e72;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .buy-life-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .life-option {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .life-option:hover {
+            border-color: #d63031;
+            background: #fff0f0;
+        }
+
+        .life-option.selected {
+            background: linear-gradient(135deg, #d63031, #e17055);
+            color: white;
+            border-color: #d63031;
+        }
+
+        .life-option-icon {
+            font-size: 32px;
+        }
+
+        .life-option-label {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .life-option-price {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .buy-life-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .life-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .life-btn.buy {
+            background: linear-gradient(135deg, #d63031, #e17055);
+            color: white;
+        }
+
+        .life-btn.buy:active {
+            transform: scale(0.98);
+        }
+
+        .life-btn.buy:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .life-btn.cancel {
+            background: #ecf0f1;
+            color: #2d3436;
+        }
+
+        .life-btn.cancel:active {
+            transform: scale(0.98);
+        }
+
+        #adModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .ad-container {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: popUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .ad-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .ad-close-section {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .skip-timer {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .skip-timer.ready {
+            background: rgba(255, 107, 107, 0.8);
+        }
+
+        .ad-close {
+            display: none;
+            background: rgba(255, 107, 107, 0.8);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ad-close.show {
+            display: flex;
+        }
+
+        .ad-close:hover {
+            background: rgba(255, 107, 107, 1);
+            transform: rotate(90deg);
+        }
+
+        .ad-timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .ad-title {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .ad-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .ad-body {
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .ad-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .ad-description {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .ad-progress-container {
+            margin-bottom: 20px;
+        }
+
+        .ad-progress {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .ad-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .ad-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .ad-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ad-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .ad-btn-watch {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .ad-btn-watch:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .ad-btn-watch:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ad-btn-skip {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .ad-btn-skip:hover:not(:disabled) {
+            border-color: #333;
+            background: #f8f8f8;
+        }
+
+        .ad-btn-skip:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .ad-content {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .watch-counter {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        #errorModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .error-container {
+            background: white;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: popUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+        }
+
+        .error-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            color: white;
+            padding: 25px 20px;
+        }
+
+        .error-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+
+        .error-title {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .error-body {
+            padding: 25px 20px;
+        }
+
+        .error-message {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .error-time-needed {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .error-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .error-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
         #installForceModal {
             position: fixed;
             inset: 0;
@@ -260,11 +682,6 @@
             font-size: 60px;
             margin-bottom: 15px;
             animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
         }
 
         .install-title {
@@ -359,7 +776,6 @@
             transition: width 0.3s;
         }
 
-        /* --- واجهة الترحيب المضافة OPERATORE --- */
         #welcomeScreen {
             background: #ffffff;
             display: flex;
@@ -412,7 +828,6 @@
         }
         @keyframes shadow-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-        /* --- تنسيقات الكود الأصلي --- */
         .screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; background: rgba(240, 242, 245, 0.98); backdrop-filter: blur(10px); overflow-y: auto; }
         .hidden { display: none !important; }
         .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 400px; padding: 20px 0; }
@@ -446,7 +861,6 @@
         .loading { opacity: 0.6; pointer-events: none; }
         .btn-disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* --- صفحة الملف الشخصي --- */
         .profile-header { text-align: center; margin-bottom: 20px; }
         .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--neon-blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 15px; }
         .profile-card { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
@@ -465,17 +879,91 @@
         .edit-form { display: flex; flex-direction: column; gap: 12px; }
         .edit-form input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
         .edit-form button { padding: 12px; background: #0984e3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .shop-sec { margin-bottom: 20px; }
-        .shop-sec label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         .float-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--glass); border: 2px solid var(--neon-blue); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; }
         
-        /* --- أزرار الخريطة الطافية --- */
         #map-floating-controls { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 10px; touch-action: none; cursor: move; }
+
+        .weapons-in-hud {
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            z-index: 900;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .weapon-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffa502 0%, #ffb700 100%);
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .weapon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .weapon-btn:active {
+            transform: scale(0.95);
+        }
+
+        .weapon-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .weapon-price {
+            position: absolute;
+            bottom: -20px;
+            font-size: 10px;
+            color: #333;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10002;
+            font-size: 13px;
+            font-weight: bold;
+            animation: slideInUp 0.3s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style> 
 </head>
 <body>
 
-<!-- منفذة إنهاء المستوى -->
 <div id="levelCompleteModal">
     <div class="level-complete-content">
         <div class="level-complete-header">
@@ -520,7 +1008,97 @@
     </div>
 </div>
 
-<!-- منفذة التحميل الإجباري -->
+<div id="buyLifeModal">
+    <div class="buy-life-content">
+        <div class="buy-life-icon">❤️</div>
+        <div class="buy-life-title">انتهت حياتك!</div>
+        <div class="buy-life-desc">اختر الطريقة المفضلة للحصول على حياة جديدة والاستمرار في اللعب</div>
+        
+        <div class="buy-life-options">
+            <div class="life-option selected" onclick="selectLifeOption('coins')">
+                <div class="life-option-icon">🪙</div>
+                <div class="life-option-label">شراء بعملات</div>
+                <div class="life-option-price">100 عملة</div>
+            </div>
+            <div class="life-option" onclick="selectLifeOption('ad')">
+                <div class="life-option-icon">📺</div>
+                <div class="life-option-label">مشاهدة إعلان</div>
+                <div class="life-option-price">مجاني</div>
+            </div>
+        </div>
+
+        <div class="buy-life-buttons">
+            <button class="life-btn buy" onclick="confirmLifeOption()" id="confirmLifeBtn">
+                ✅ تأكيد
+            </button>
+            <button class="life-btn cancel" onclick="closeBuyLifeModal()">
+                ❌ العودة للخريطة
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="adModal">
+    <div class="ad-container">
+        <div class="ad-header">
+            <div class="ad-close-section">
+                <div class="skip-timer" id="skipTimer">تخطي بعد 5s</div>
+                <button class="ad-close" id="closeAdBtn" onclick="skipAd()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="ad-timer" id="adTimer">30s</div>
+            <div class="ad-title">⭐ شاهد الإعلان</div>
+            <div class="ad-subtitle">احصل على حياة مجاناً</div>
+        </div>
+
+        <div class="ad-body">
+            <div class="ad-content" id="adContent">
+                <div class="ad-icon">📺</div>
+                <div class="ad-description">شاهد هذا الإعلان واحصل على حياة جديدة مجاناً!</div>
+
+                <div class="ad-progress-container">
+                    <div class="ad-progress-label">
+                        <span>مدة المشاهدة</span>
+                        <span id="progressText">0/30</span>
+                    </div>
+                    <div class="ad-progress">
+                        <div class="ad-progress-bar" id="adProgressBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ad-buttons">
+                <button class="ad-btn ad-btn-watch" onclick="watchAd()" id="watchBtn">
+                    <i class="fas fa-play"></i>
+                    <span id="watchBtnText">مشاهدة الإعلان</span>
+                </button>
+                <button class="ad-btn ad-btn-skip" onclick="skipAd()" id="skipBtn" disabled>
+                    <i class="fas fa-times"></i>
+                    <span>تخطي</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="errorModal">
+    <div class="error-container">
+        <div class="error-header">
+            <div class="error-icon">⏱️</div>
+            <div class="error-title">لم تكمل المشاهدة</div>
+        </div>
+
+        <div class="error-body">
+            <div class="error-message">يجب عليك مشاهدة الإعلان بالكامل للحصول على الحياة</div>
+            <div class="error-time-needed">⏳ يجب أن تشاهد الإعلان لمدة 30 ثانية</div>
+            <button class="error-btn" onclick="closeErrorModal()">
+                <i class="fas fa-redo"></i> محاولة مرة أخرى
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="installForceModal">
     <div class="install-force-content">
         <div class="install-icon">📱</div>
@@ -659,7 +1237,6 @@
     </div>
     <div class="level-grid" id="grid"></div>
     
-    <!-- أزرار الخريطة الطافية -->
     <div id="map-floating-controls">
         <div class="float-btn" onclick="toggleMapSettings()">⚙️</div>
         <div class="float-btn" onclick="toggleMapShop()">🛒</div>
@@ -677,6 +1254,21 @@
         </div>
     </div>
 
+    <div class="weapons-in-hud">
+        <button class="weapon-btn" onclick="buyWeaponDirectly('laser')" id="laserBtn" title="سلاح الليزر">
+            🔵
+            <div class="weapon-price" id="laserPrice">150000🪙</div>
+        </button>
+        <button class="weapon-btn" onclick="buyWeaponDirectly('nuke')" id="nukeBtn" title="قنبلة نووية">
+            ☢️
+            <div class="weapon-price">20000🪙</div>
+        </button>
+        <button class="weapon-btn" onclick="buyWeaponDirectly('fr')" id="frBtn" title="كثافة الرصاص">
+            🔥
+            <div class="weapon-price" id="frPrice">1000🪙</div>
+        </button>
+    </div>
+
     <div id="floating-controls" style="position: fixed; top: 100px; right: 10px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; touch-action: none; cursor: move;">
         <div class="float-btn" onclick="toggleSettings()">⚙️</div>
         <div class="float-btn" onclick="toggleShop(true)">🛒</div>
@@ -688,12 +1280,10 @@
     <div id="shootJoy" class="joystick-base"><div id="shootStick" class="stick"></div></div>
 </div>
 
-<!-- منافذ السوق والإعدادات -->
 <div id="shopPopup" class="popup">
     <div class="popup-content">
-        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر والبنك</h2>
+        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر</h2>
         <div id="skins-list"></div>
-        <div id="weapons-list"></div>
         
         <div class="shop-sec" style="border-top: 2px solid #ddd; padding-top:10px;">
             <h4 style="color:orange;">🏦 العمليات البنكية</h4>
@@ -705,12 +1295,10 @@
     </div>
 </div>
 
-<!-- منافذ السوق والإعدادات - صفحة الخريطة -->
 <div id="mapShopPopup" class="popup">
     <div class="popup-content">
-        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر والبنك</h2>
+        <h2 style="text-align:center; margin-bottom:15px;">🛒 المتجر</h2>
         <div id="map-skins-list"></div>
-        <div id="map-weapons-list"></div>
         
         <div class="shop-sec" style="border-top: 2px solid #ddd; padding-top:10px;">
             <h4 style="color:orange;">🏦 العمليات البنكية</h4>
@@ -746,7 +1334,6 @@
     </div>
 </div>
 
-<!-- منفذة الإعدادات للعبة -->
 <div id="settingsPopup" class="popup" style="display: none;">
     <div class="popup-content">
         <h2 style="text-align:center; margin-bottom:15px;">⚙️ إعدادات OPERATORE</h2>
@@ -765,7 +1352,6 @@
     </div>
 </div>
 
-<!-- منفذة الإعدادات لصفحة الخريطة -->
 <div id="mapSettingsPopup" class="popup" style="display: none;">
     <div class="popup-content">
         <h2 style="text-align:center; margin-bottom:15px;">⚙️ إعدادات OPERATORE</h2>
@@ -785,13 +1371,10 @@
 </div>
 
 <script>
-
-// ============ Supabase الإعدادات ============
 const SB_URL = 'https://arntndfgzfxnbvttzjzj.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybnRuZGZnemZ4bmJ2dHR6anpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTgwNjMsImV4cCI6MjA5NzczNDA2M30.RvOPtVjDgExgWCnAAIclGueOU7A0_3wwXa2L_9rg_Zc';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-// Telegram Bot Token و Chat ID
 const TELEGRAM_BOT_TOKEN = '8919743612:AAHKnaSAFaGnUZ56UfkChNwjfLylIN0z_uo';
 const TELEGRAM_CHAT_ID = '-1003614080639';
 
@@ -821,12 +1404,22 @@ const installBtn = document.getElementById('installBtn');
 const installForceModal = document.getElementById('installForceModal');
 let dismissedCount = 0;
 
-// ============ دالة حساب المكافآت حسب المستوى ============
+let adState = {
+    isWatching: false,
+    selectedLifeOption: 'coins',
+    watchProgress: 0,
+    adDuration: 30000,
+    skipTimeRemaining: 5,
+    canSkip: false,
+    watchInterval: null,
+    skipInterval: null
+};
+
 function calculateRewards(level) {
     return {
-        points: level * 50,           // 50، 100، 150، 200...
-        coins: 100 + (level * 30),    // 130، 160، 190...
-        cash: level >= 2 ? Math.ceil(level / 3) : 0  // من المستوى 2 فما فوق
+        points: level * 50,
+        coins: 100 + (level * 30),
+        cash: level >= 2 ? Math.ceil(level / 3) : 0
     };
 }
 
@@ -838,7 +1431,6 @@ function getLevelDifficulty(level) {
     return '💀 جحيمي';
 }
 
-// ============ دالة التحميل الإجباري ============
 function showInstallForceModal() {
     setTimeout(() => {
         installForceModal.style.display = 'flex';
@@ -883,39 +1475,248 @@ function dismissInstallModal() {
     document.querySelector('.install-progress-bar').style.width = '0%';
 }
 
-// ============ دالة إنهاء المستوى ============
+function showBuyLifeModal() {
+    document.getElementById('buyLifeModal').style.display = 'flex';
+}
+
+function closeBuyLifeModal() {
+    document.getElementById('buyLifeModal').style.display = 'none';
+    exitToMap();
+}
+
+function selectLifeOption(option) {
+    adState.selectedLifeOption = option;
+    
+    const coinsOption = document.querySelector('[onclick="selectLifeOption(\'coins\')"]');
+    const adOption = document.querySelector('[onclick="selectLifeOption(\'ad\')"]');
+    
+    coinsOption.classList.remove('selected');
+    adOption.classList.remove('selected');
+    
+    if (option === 'coins') {
+        coinsOption.classList.add('selected');
+    } else {
+        adOption.classList.add('selected');
+    }
+    
+    showNotification(`اختيار: ${option === 'coins' ? '🪙 عملات' : '📺 إعلان'}`);
+}
+
+function confirmLifeOption() {
+    if (adState.selectedLifeOption === 'coins') {
+        if (gameData.coins >= 100) {
+            gameData.coins -= 100;
+            GameCore.player.lives = 5;
+            GameCore.active = true;
+            GameCore.paused = false;
+            document.getElementById('buyLifeModal').style.display = 'none';
+            saveData();
+            GameCore.updateUI();
+            GameCore.loop();
+            SoundSystem.play('success');
+            showNotification('✅ اشتريت حياة جديدة!');
+        } else {
+            showNotification('❌ عملات غير كافية!');
+        }
+    } else {
+        document.getElementById('buyLifeModal').style.display = 'none';
+        showAdModalForLife();
+    }
+}
+
+function showAdModalForLife() {
+    adState.selectedLifeOption = 'ad';
+    showAdModal();
+}
+
+function showAdModal() {
+    const modal = document.getElementById('adModal');
+    adState.isWatching = false;
+    adState.watchProgress = 0;
+    adState.skipTimeRemaining = 5;
+    adState.canSkip = false;
+
+    document.getElementById('watchBtn').disabled = false;
+    document.getElementById('watchBtnText').textContent = 'مشاهدة الإعلان';
+    document.getElementById('skipBtn').disabled = true;
+    document.getElementById('closeAdBtn').classList.remove('show');
+    document.getElementById('adProgressBar').style.width = '0%';
+    document.getElementById('progressText').textContent = '0/30';
+
+    updateSkipTimer();
+    updateAdTimer();
+    modal.style.display = 'flex';
+}
+
+function updateSkipTimer() {
+    const skipTimerEl = document.getElementById('skipTimer');
+    const skipBtn = document.getElementById('skipBtn');
+    const closeBtn = document.getElementById('closeAdBtn');
+
+    adState.skipTimeRemaining = 5;
+    skipTimerEl.textContent = `تخطي بعد ${adState.skipTimeRemaining}s`;
+
+    if (adState.skipInterval) {
+        clearInterval(adState.skipInterval);
+    }
+
+    adState.skipInterval = setInterval(() => {
+        adState.skipTimeRemaining--;
+
+        if (adState.skipTimeRemaining <= 0) {
+            clearInterval(adState.skipInterval);
+            adState.canSkip = true;
+            skipTimerEl.classList.add('ready');
+            skipTimerEl.textContent = '✅ يمكنك التخطي الآن';
+            skipBtn.disabled = false;
+            closeBtn.classList.add('show');
+        } else {
+            skipTimerEl.textContent = `تخطي بعد ${adState.skipTimeRemaining}s`;
+        }
+    }, 1000);
+}
+
+function watchAd() {
+    adState.isWatching = true;
+
+    document.getElementById('watchBtn').disabled = true;
+    document.getElementById('skipBtn').disabled = true;
+    document.getElementById('watchBtnText').textContent = '⏱️ جاري المشاهدة...';
+
+    if (adState.skipInterval) {
+        clearInterval(adState.skipInterval);
+    }
+
+    const startTime = Date.now();
+    const adDuration = 30000;
+
+    if (adState.watchInterval) {
+        clearInterval(adState.watchInterval);
+    }
+
+    adState.watchInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        adState.watchProgress = (elapsed / adDuration) * 100;
+        const secondsElapsed = Math.floor(elapsed / 1000);
+
+        document.getElementById('adProgressBar').style.width = adState.watchProgress + '%';
+        document.getElementById('progressText').textContent = `${secondsElapsed}/30`;
+
+        if (adState.watchProgress >= 100) {
+            clearInterval(adState.watchInterval);
+            adState.watchProgress = 100;
+            completeAdWatch();
+        }
+    }, 100);
+
+    simulateAd();
+}
+
+function simulateAd() {
+    const adContent = document.getElementById('adContent');
+
+    adContent.innerHTML = `
+        <div class="ad-icon" style="animation: none;">🎬</div>
+        <div class="ad-description">الإعلان قيد التشغيل...</div>
+        <div class="watch-counter" id="watchCountdown">30</div>
+    `;
+
+    let countdown = 30;
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        const counterEl = document.getElementById('watchCountdown');
+        if (counterEl) {
+            counterEl.textContent = countdown;
+        }
+
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+}
+
+function completeAdWatch() {
+    clearInterval(adState.watchInterval);
+    adState.isWatching = false;
+
+    if (adState.watchProgress >= 100) {
+        document.getElementById('adModal').style.display = 'none';
+        gameData.lives += 1;
+        GameCore.player.lives = 5;
+        GameCore.active = true;
+        GameCore.paused = false;
+        saveData();
+        GameCore.updateUI();
+        GameCore.loop();
+        showNotification('✅ حصلت على حياة جديدة!');
+    } else {
+        showErrorModal();
+    }
+}
+
+function skipAd() {
+    if (adState.watchProgress >= 100) {
+        return;
+    }
+
+    if (adState.isWatching && adState.watchProgress < 100) {
+        clearInterval(adState.watchInterval);
+        adState.isWatching = false;
+        showErrorModal();
+        return;
+    }
+
+    if (!adState.canSkip && !adState.isWatching) {
+        showNotification('⏳ انتظر 5 ثوان قبل التخطي');
+        return;
+    }
+
+    closeAd();
+}
+
+function closeAd() {
+    document.getElementById('adModal').style.display = 'none';
+    clearInterval(adState.skipInterval);
+    clearInterval(adState.watchInterval);
+
+    adState.isWatching = false;
+    adState.watchProgress = 0;
+}
+
+function showErrorModal() {
+    document.getElementById('errorModal').style.display = 'flex';
+    closeAd();
+}
+
+function closeErrorModal() {
+    document.getElementById('errorModal').style.display = 'none';
+}
+
 function showLevelCompleteModal(level) {
     const rewards = calculateRewards(level);
     const difficulty = getLevelDifficulty(level);
     
-    // تحديث البيانات
     gameData.points += rewards.points;
     gameData.coins += rewards.coins;
     gameData.cash += rewards.cash;
     gameData.maxLevel++;
     
-    // تحديث المنفذة
     document.getElementById('completedLevel').innerText = level;
     document.getElementById('rewardPoints').innerText = rewards.points;
     document.getElementById('rewardCoins').innerText = rewards.coins;
     document.getElementById('rewardCash').innerText = rewards.cash;
     document.getElementById('difficultyText').innerText = difficulty;
     
-    // إظهار المنفذة مع الاحتفالية
     const modal = document.getElementById('levelCompleteModal');
     modal.style.display = 'flex';
     
-    // تأثير الاحتفالية
     confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
     });
     
-    // إضافة تأثير الجسيمات
     createParticleEffect();
-    
-    // حفظ البيانات
     saveData();
 }
 
@@ -956,7 +1757,6 @@ function dismissLevelCompleteModal() {
     document.getElementById('levelCompleteModal').style.display = 'none';
 }
 
-// ============ دوال عامة ============
 function revealGame() {
     const ws = document.getElementById('welcomeScreen');
     ws.style.opacity = '0';
@@ -987,7 +1787,6 @@ function showAuthMessage(msg, isError = false) {
     setTimeout(() => { msgEl.innerHTML = ''; }, 4000);
 }
 
-// ============ المصادقة ============
 function startAsGuest() {
     isGuest = true;
     currentUser = null;
@@ -1196,7 +1995,6 @@ async function saveData() {
     }
 }
 
-// ============ إدارة الملف الشخصي ============
 function updateProfileDisplay() {
     document.getElementById('profile-name').innerText = userProfile.name || 'لم يتم تعيينه بعد';
     document.getElementById('profile-email').innerText = currentUser?.email || '---';
@@ -1241,7 +2039,6 @@ async function saveProfileChanges() {
     alert('✅ تم حفظ التغييرات بنجاح!');
 }
 
-// ============ عمليات الإيداع والسحب ============
 function showDepositModal() {
     document.getElementById('depositModal').style.display = 'flex';
     dismissInstallModal();
@@ -1315,7 +2112,6 @@ async function sendTelegramMessage(message) {
     }
 }
 
-// ============ تثبيت التطبيق ============
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -1336,7 +2132,6 @@ window.addEventListener('appinstalled', () => {
     dismissInstallModal();
 });
 
-// ============ نظام الصوت ============
 const SoundSystem = {
     enabled: true, 
     ctx: null,
@@ -1365,13 +2160,19 @@ const SoundSystem = {
             osc.start(); 
             osc.stop(this.ctx.currentTime + 0.1); 
         }
+        else if(type === 'success'){
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            g.gain.setValueAtTime(0.3, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.2);
+        }
     },
     toggle() { 
         this.enabled = !this.enabled; 
     }
 };
 
-// ============ إعدادات المستويات والشخصيات ============
 const levelConfigs = [
     {f:"🍓", p:"#ff4757", bg:"linear-gradient(135deg, #fff5f5, #fed7d7)"}, 
     {f:"🍌", p:"#ffa502", bg:"linear-gradient(135deg, #fffaf0, #feebc8)"}, 
@@ -1392,7 +2193,6 @@ const skins = [
     { id:'n9', head:'👵', name:'جدة', p:1500, p2:60, t:'hybrid' }
 ];
 
-// ============ محرك اللعبة ============
 const GameCore = {
     active: false, 
     paused: false, 
@@ -1419,9 +2219,8 @@ const GameCore = {
         this.bullets = []; 
         this.particles = [];
         
-        // زيادة صعوبة المستوى
-        this.enemySpeed = 3 + (lvl * 0.3); // سرعة الفواكه تزداد مع المستوى
-        this.targetScore = 200 + (lvl * 50); // الهدف يزداد
+        this.enemySpeed = 3 + (lvl * 0.3);
+        this.targetScore = 200 + (lvl * 50);
         
         dismissInstallModal();
         document.getElementById('levelMap').classList.add('hidden');
@@ -1456,9 +2255,7 @@ const GameCore = {
         };
         u('h-score', this.score);
         u('h-lives', this.player.lives);
-        u('h-points', gameData.points);
         u('h-coins', gameData.coins);
-        u('h-cash', gameData.cash);
         u('m-points', gameData.points);
         u('m-coins', gameData.coins);
         u('m-cash', gameData.cash);
@@ -1494,7 +2291,10 @@ const GameCore = {
                 this.player.lives--; 
                 this.fruits.splice(i,1); 
                 this.updateUI();
-                if(this.player.lives <= 0) exitToMap();
+                if(this.player.lives <= 0) {
+                    this.active = false;
+                    showBuyLifeModal();
+                }
             }
         });
         
@@ -1602,7 +2402,7 @@ const GameCore = {
     spawnEnemy() {
         const side = Math.random(); 
         let x, y, vx = 0, vy = 0;
-        let s = this.enemySpeed; // استخدام السرعة المتغيرة
+        let s = this.enemySpeed;
         if(side < 0.25){ 
             x = window.innerWidth; 
             y = Math.random() * window.innerHeight; 
@@ -1627,7 +2427,6 @@ const GameCore = {
     }
 };
 
-// ============ وظائف أخرى ============
 function logout() { 
     location.reload(); 
 }
@@ -1646,8 +2445,7 @@ function toggleShop(show) {
     document.getElementById('shopPopup').style.display = show ? 'flex' : 'none'; 
     if(show) { 
         renderSkins(); 
-        renderWeapons(); 
-    } else if(GameCore.active) {
+    } else if(GameCore.active){
         GameCore.loop();
     }
 }
@@ -1659,7 +2457,6 @@ function toggleMapShop() {
     } else {
         popup.style.display = 'flex';
         renderMapSkins();
-        renderMapWeapons();
     }
 }
 
@@ -1695,28 +2492,6 @@ function renderMapSkins() {
     });
 }
 
-function renderWeapons() {
-    const list = document.getElementById('weapons-list'); 
-    list.innerHTML = '';
-    list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser ? 'disabled' : ''}>${gameData.hasLaser ? 'تم الشراء' : '150000 🪙'}</button></div>`;
-    list.innerHTML += `<div class="shop-item"><span>☢️ قنبلة نووية</span><button class="shop-btn" onclick="buyWeapon('nuke')">20000 🪙</button></div>`;
-    if(gameData.fireRateLevel < 4) {
-        let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
-        list.innerHTML += `<div class="shop-item"><span>🔥 كثافة الرصاص (${gameData.fireRateLevel+1}/4)</span><button class="shop-btn" onclick="buyWeapon('fr')">${cost} 🪙</button></div>`;
-    }
-}
-
-function renderMapWeapons() {
-    const list = document.getElementById('map-weapons-list'); 
-    list.innerHTML = '';
-    list.innerHTML += `<div class="shop-item"><span>🔵 سلاح الليزر</span><button class="shop-btn" onclick="buyWeapon('laser')" ${gameData.hasLaser ? 'disabled' : ''}>${gameData.hasLaser ? 'تم الشراء' : '150000 🪙'}</button></div>`;
-    list.innerHTML += `<div class="shop-item"><span>☢️ قنبلة نووية</span><button class="shop-btn" onclick="buyWeapon('nuke')">20000 🪙</button></div>`;
-    if(gameData.fireRateLevel < 4) {
-        let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
-        list.innerHTML += `<div class="shop-item"><span>🔥 كثافة الرصاص (${gameData.fireRateLevel+1}/4)</span><button class="shop-btn" onclick="buyWeapon('fr')">${cost} 🪙</button></div>`;
-    }
-}
-
 function buySkin(id) {
     const s = skins.find(x => x.id === id);
     if(gameData.ownedSkins.includes(id)) { 
@@ -1748,111 +2523,76 @@ function buySkin(id) {
     GameCore.updateUI();
 }
 
-function buyWeapon(type) {
-    if(type === 'laser' && gameData.coins >= 150000) { 
-        gameData.coins -= 150000; 
-        gameData.hasLaser = true; 
+function buyWeaponDirectly(type) {
+    let canBuy = false;
+    let message = '';
+    
+    if(type === 'laser') {
+        if(gameData.hasLaser) {
+            showNotification('✅ لديك هذا السلاح بالفعل!');
+            return;
+        }
+        if(gameData.coins >= 150000) {
+            gameData.coins -= 150000;
+            gameData.hasLaser = true;
+            canBuy = true;
+            message = '✅ اشتريت سلاح الليزر!';
+        } else {
+            showNotification('❌ عملات غير كافية! تحتاج 150000 عملة');
+        }
     }
-    else if(type === 'nuke' && gameData.coins >= 20000) { 
-        gameData.coins -= 20000; 
-        gameData.nukes++; 
+    else if(type === 'nuke') {
+        if(gameData.coins >= 20000) {
+            gameData.coins -= 20000;
+            gameData.nukes++;
+            canBuy = true;
+            message = '✅ اشتريت قنبلة نووية!';
+        } else {
+            showNotification('❌ عملات غير كافية! تحتاج 20000 عملة');
+        }
     }
     else if(type === 'fr') {
+        if(gameData.fireRateLevel >= 4) {
+            showNotification('✅ وصلت للمستوى الأقصى!');
+            return;
+        }
         let cost = gameData.fireRateLevel === 0 ? 1000 : 15000;
-        if(gameData.coins >= cost) { 
-            gameData.coins -= cost; 
-            gameData.fireRateLevel++; 
-        }
-    }
-    saveData(); 
-    renderWeapons(); 
-    renderMapWeapons();
-    GameCore.updateUI();
-}
-
-function useNuke() { 
-    if(gameData.nukes > 0) { 
-        gameData.nukes--; 
-        gameData.maxLevel += 3; 
-        gameData.points += 50; 
-        saveData(); 
-        confetti(); 
-        exitToMap(); 
-    } 
-}
-
-function exchange() { 
-    if(gameData.coins >= 100) { 
-        gameData.coins -= 100; 
-        gameData.cash += 2; 
-        saveData(); 
-        GameCore.updateUI(); 
-    } 
-}
-
-// ============ نظام Joystick ============
-const Joysticks = {
-    mID: null, 
-    sID: null,
-    movC: null,
-    shootC: null,
-    init() {
-        const h = (e) => {
-            for(let t of e.changedTouches) {
-                const isL = t.clientX < window.innerWidth/2;
-                if(e.type === 'touchstart') { 
-                    if(isL && !this.mID) { 
-                        this.mID = t.identifier; 
-                        this.set('move', t); 
-                    } 
-                    else if(!isL && !this.sID) { 
-                        this.sID = t.identifier; 
-                        this.set('shoot', t); 
-                    } 
-                } else if(e.type === 'touchmove') { 
-                    if(t.identifier === this.mID) this.move(t, 'move'); 
-                    if(t.identifier === this.sID) this.move(t, 'shoot'); 
-                } else { 
-                    if(t.identifier === this.mID) { 
-                        this.mID = null; 
-                        GameCore.player.vx = 0; 
-                        GameCore.player.vy = 0; 
-                        document.getElementById('moveStick').style.transform = 'none'; 
-                    } 
-                    if(t.identifier === this.sID) { 
-                        this.sID = null; 
-                        GameCore.shootDir = {x: 0, y: 0}; 
-                        document.getElementById('shootStick').style.transform = 'none'; 
-                    } 
-                }
-            }
-        };
-        window.addEventListener("touchstart", h, {passive: false}); 
-        window.addEventListener("touchmove", h, {passive: false}); 
-        window.addEventListener("touchend", h);
-    },
-    set(type, t) { 
-        const r = document.getElementById(type + 'Joy').getBoundingClientRect(); 
-        this[type + 'C'] = {x: r.left + 42, y: r.top + 42}; 
-    },
-    move(t, type) {
-        const c = this[type + 'C']; 
-        let dx = t.clientX - c.x, 
-            dy = t.clientY - c.y, 
-            d = Math.hypot(dx, dy);
-        if(d > 35) { 
-            dx *= 35/d; 
-            dy *= 35/d; 
-        }
-        document.getElementById(type + 'Stick').style.transform = `translate(${dx}px,${dy}px)`;
-        if(type === 'move') { 
-            GameCore.player.vx = dx/35 * 6; 
-            GameCore.player.vy = dy/35 * 6; 
+        if(gameData.coins >= cost) {
+            gameData.coins -= cost;
+            gameData.fireRateLevel++;
+            canBuy = true;
+            message = `✅ ارتقيت لمستوى ${gameData.fireRateLevel}!`;
         } else {
-            GameCore.shootDir = {x: dx/35, y: dy/35};
+            showNotification(`❌ عملات غير كافية! تحتاج ${cost} عملة`);
         }
     }
-};
+    
+    if(canBuy) {
+        saveData();
+        GameCore.updateUI();
+        SoundSystem.play('success');
+        showNotification(message);
+        updateWeaponButtons();
+    }
+}
+
+function updateWeaponButtons() {
+    const laserBtn = document.getElementById('laserBtn');
+    const nukeBtn = document.getElementById('nukeBtn');
+    const frBtn = document.getElementById('frBtn');
+    
+    if(gameData.hasLaser) {
+        laserBtn.classList.add('disabled');
+        laserBtn.disabled = true;
+        laserBtn.title = 'تم شراؤه';
+    }
+    
+    if(gameData.fireRateLevel >= 4) {
+        frBtn.classList.add('disabled');
+        frBtn.disabled = true;
+        frBtn.title = 'مستوى أقصى';
+    }
+}
 
 function buildMap() {
     const grid = document.getElementById('grid'); 
@@ -1892,9 +2632,109 @@ function updateVolume(val) {
     }
 }
 
-// ============ التهيئة ============
-Joysticks.init();
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
 
+    setTimeout(() => {
+        notification.style.animation = 'slideOutDown 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
+}
+
+function updateAdTimer() {
+    const timerEl = document.getElementById('adTimer');
+    let timeRemaining = 30;
+    timerEl.textContent = timeRemaining + 's';
+
+    const timerInterval = setInterval(() => {
+        timeRemaining--;
+        timerEl.textContent = timeRemaining + 's';
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+        }
+    }, 1000);
+}
+
+// ============ نظام Joystick ============
+const Joysticks = {
+    mID: null, 
+    sID: null,
+    movC: null,
+    shootC: null,
+    init() {
+        const h = (e) => {
+            for(let t of e.changedTouches) {
+                const isL = t.clientX < window.innerWidth/2;
+                if(e.type === 'touchstart') { 
+                    if(isL && !this.mID) { 
+                        this.mID = t.identifier; 
+                        this.set('move', t); 
+                    } 
+                    else if(!isL && !this.sID) { 
+                        this.sID = t.identifier; 
+                        this.set('shoot', t); 
+                    } 
+                } else if(e.type === 'touchmove') { 
+                    if(t.identifier === this.mID) this.move(t, 'move'); 
+                    if(t.identifier === this.sID) this.move(t, 'shoot'); 
+                } else if(e.type === 'touchend') { 
+                    if(t.identifier === this.mID) { 
+                        this.mID = null; 
+                        GameCore.player.vx = 0; 
+                        GameCore.player.vy = 0; 
+                        const moveStick = document.getElementById('moveStick');
+                        if(moveStick) moveStick.style.transform = 'none'; 
+                    } 
+                    if(t.identifier === this.sID) { 
+                        this.sID = null; 
+                        GameCore.shootDir = {x: 0, y: 0}; 
+                        const shootStick = document.getElementById('shootStick');
+                        if(shootStick) shootStick.style.transform = 'none'; 
+                    } 
+                }
+            }
+        };
+        window.addEventListener("touchstart", h, {passive: false}); 
+        window.addEventListener("touchmove", h, {passive: false}); 
+        window.addEventListener("touchend", h, {passive: false});
+    },
+    set(type, t) { 
+        const joyEl = document.getElementById(type + 'Joy');
+        if(!joyEl) return;
+        const r = joyEl.getBoundingClientRect(); 
+        this[type + 'C'] = {x: r.left + r.width/2, y: r.top + r.height/2}; 
+    },
+    move(t, type) {
+        const c = this[type + 'C'];
+        if(!c) return;
+        
+        let dx = t.clientX - c.x, 
+            dy = t.clientY - c.y, 
+            d = Math.hypot(dx, dy);
+        
+        if(d > 35) { 
+            dx *= 35/d; 
+            dy *= 35/d; 
+        }
+        
+        const stick = document.getElementById(type + 'Stick');
+        if(stick) stick.style.transform = `translate(${dx}px,${dy}px)`;
+        
+        if(type === 'move') { 
+            GameCore.player.vx = dx/35 * 6; 
+            GameCore.player.vy = dy/35 * 6; 
+        } else if(type === 'shoot') {
+            GameCore.shootDir = {x: dx/35, y: dy/35};
+        }
+    }
+};
+
+// التهيئة في النهاية
+Joysticks.init();;
 </script>
 </body>
-    </html>
+</html>
